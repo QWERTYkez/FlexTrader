@@ -51,7 +51,7 @@ namespace FlexTrader.Exchanges
             catch { return null; }
         }
 
-        public abstract IEnumerable<Candle> GetCandles(string baseAsset, string quoteAsset, CandleIntervalKey interval,
+        public abstract List<Candle> GetCandles(string baseAsset, string quoteAsset, CandleIntervalKey interval,
             int? count = null, DateTime? startTime = null, DateTime? endTime = null);
 
         public static Dictionary<CandleIntervalKey, TimeSpan> AllCandleIntervals { get; } =

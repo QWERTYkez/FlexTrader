@@ -25,6 +25,9 @@ namespace FlexTrader.MVVM.Views
         public MainView()
         {
             InitializeComponent();
+            ((ViewModels.MainViewModel)DataContext).Initialize(this.Dispatcher);
         }
+
+        
     }
 }

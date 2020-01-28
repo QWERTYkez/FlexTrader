@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace FlexTrader.MVVM.ViewModels 
 {
@@ -37,11 +38,18 @@ namespace FlexTrader.MVVM.ViewModels
 
         public void Inicialize()
         {
+            ChartBackground = Brushes.Black;
+
+
+
             Exchange ex = new Binance();
 
-            newCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15);
+            NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15);
         }
 
-        public IEnumerable<Candle> newCandles { get; set; }
+        public List<Candle> NewCandles { get; set; }
+
+        public Brush ChartBackground { get; set; }
+
     }
 }

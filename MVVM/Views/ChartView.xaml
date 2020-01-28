@@ -31,6 +31,22 @@
         <vm:ChartViewModel />
     </UserControl.DataContext>
     <Grid>
-        <ContentPresenter Content="{Binding chart}" />
+        <Grid
+        x:Name="ChartGRD"
+        Background="{Binding ChartBackground}"
+        ClipToBounds="True"
+        SizeChanged="ChartGRD_SizeChanged">
+            <Grid RenderTransformOrigin="0.5,0.5">
+                <ItemsControl x:Name="LayersControl" />
+                <Grid.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="-1" ScaleY="-1" />
+                        <TranslateTransform x:Name="Translate" />
+                        <ScaleTransform x:Name="Scale" />
+                    </TransformGroup>
+                </Grid.RenderTransform>
+            </Grid>
+        </Grid>
+        <Grid Background="Red" Height="10" HorizontalAlignment="Right" Width="10"/>
     </Grid>
 </UserControl>

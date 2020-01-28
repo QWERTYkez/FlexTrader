@@ -16,9 +16,11 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using FlexTrader.Exchanges;
 using FlexTrader.MVVM.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -40,7 +42,10 @@ namespace FlexTrader.MVVM.Views
             var DContext = DataContext as ChartViewModel;
             DContext.PropertyChanged += DContext_PropertyChanged;
             {
-                ChartCanvas = new DrawingCanvas();
+                var Layers = new List<DrawingCanvas>();
+                CandlesLayer = new DrawingCanvas(); Layers.Add(CandlesLayer);
+                // add layer
+                LayersControl.ItemsSource = Layers;
             }
             DContext.Inicialize();
         }
@@ -51,19 +56,54 @@ namespace FlexTrader.MVVM.Views
 
             switch (e.PropertyName)
             {
-                case "newCandles":
+                case "NewCandles":
                     {
-                        if (DContext.newCandles != null)
-                        {
-
-                        }
+                        if (DContext.NewCandles != null && DContext.NewCandles.Count > 0)
+                            DrawNewCandles(DContext.NewCandles);
                     }
                     break;
             }
         }
 
-        private DrawingCanvas ChartCanvas;
+        private double ChHeight => ChartGRD.ActualHeight;
+        private double ChWidth => ChartGRD.ActualWidth;
+        private double Delta;
+        private double Min;
+        private void ChartGRD_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Translate.Y = Min + Delta * 0.5 - ChHeight * 0.5;
+            Scale.ScaleY = ChHeight / Delta;
+        }
+        private DateTime? StartTime;
+        private void DrawNewCandles(IEnumerable<Candle> newCandles)
+        {
+            if (StartTime == null)
+                StartTime = newCandles.Last().TimeStamp;
 
+            Min = 145;
+            double max = 345;
+            double delta = max - Min;
+            max += delta * 0.05;
+            Min -= delta * 0.05;
+            Delta = max - Min;
 
+            Dispatcher.Invoke(() => 
+            {
+                var dvisual = new DrawingVisual();
+                CandlesLayer.AddVisual(dvisual);
+                CandlesLayer.Background = Brushes.Black;
+                using (var dc = dvisual.RenderOpen())
+                {
+                    dc.DrawRectangle(Brushes.Lime, null, new Rect(new Point(5, 145), new Point(15, 345)));
+                    dc.DrawRectangle(Brushes.Red, null, new Rect(new Point(5, 240), new Point(15, 250)));
+                }
+            });
+
+            ChartGRD_SizeChanged(null, null);
+        }
+        
+        private readonly DrawingCanvas CandlesLayer;
+
+        
     }
 }

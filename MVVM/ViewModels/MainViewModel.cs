@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace FlexTrader.MVVM.ViewModels
 {
@@ -35,6 +36,14 @@ namespace FlexTrader.MVVM.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        public ChartView Chart { get; set; } = new ChartView();
+        public Dispatcher Dispatcher { get; internal set; }
+        internal void Initialize(Dispatcher dispatcher)
+        {
+            Dispatcher = dispatcher;
+            Chart = new ChartView();
+        }
+
+        public ChartView Chart { get; set; }
+        
     }
 }

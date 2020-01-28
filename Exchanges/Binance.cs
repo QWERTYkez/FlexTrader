@@ -62,7 +62,7 @@ namespace FlexTrader.Exchanges
             var req = BaseGet<GenInfo>("/api/v1/exchangeInfo").symbols;
         }
 
-        public override IEnumerable<Candle> GetCandles(string baseAsset, string quoteAsset, CandleIntervalKey interval, 
+        public override List<Candle> GetCandles(string baseAsset, string quoteAsset, CandleIntervalKey interval, 
             int? count = null, DateTime? startTime = null, DateTime? endTime = null)
         {
             //string req = $"/api/v1/klines?symbol={baseAsset}{quoteAsset}";
@@ -106,7 +106,7 @@ namespace FlexTrader.Exchanges
                 var JSON = System.IO.File.ReadAllText("JSON.txt");
 
                 return JsonConvert.DeserializeObject<List<List<decimal>>>(JSON)
-                    .Select(o => new Candle(o[0], o[1], o[2], o[3], o[4], o[5]));
+                    .Select(o => new Candle(o[0], o[1], o[2], o[3], o[4], o[5])).ToList();
             }
             catch { return null; }
         }
