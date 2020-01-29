@@ -39,14 +39,15 @@ namespace FlexTrader.MVVM.ViewModels
         public void Inicialize()
         {
             ChartBackground = Brushes.Black;
+            TickSize = 0.01;
 
 
-
-            Exchange ex = new Binance();
-
+            Binance ex = new Binance();
+            //ex.GeneralInfo();
             NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15);
         }
 
+        public double TickSize { get; set; }
         public List<Candle> NewCandles { get; set; }
 
         public Brush ChartBackground { get; set; }

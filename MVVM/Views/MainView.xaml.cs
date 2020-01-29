@@ -20,12 +20,12 @@ using System.Windows;
 
 namespace FlexTrader.MVVM.Views
 {
-    public partial class MainView : Window
+    public partial class MainView : ChartWindow
     {
         public MainView()
         {
             InitializeComponent();
-            ((ViewModels.MainViewModel)DataContext).Initialize(this.Dispatcher);
+            ((ViewModels.MainViewModel)DataContext).Initialize(this);
         }
 
         

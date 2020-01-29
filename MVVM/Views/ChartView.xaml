@@ -32,10 +32,11 @@
     </UserControl.DataContext>
     <Grid>
         <Grid
-        x:Name="ChartGRD"
-        Background="{Binding ChartBackground}"
-        ClipToBounds="True"
-        SizeChanged="ChartGRD_SizeChanged">
+            x:Name="ChartGRD"
+            Background="{Binding ChartBackground}"
+            ClipToBounds="True"
+            MouseDown="ChartGRD_MouseDown"
+            SizeChanged="ChartGRD_SizeChanged">
             <Grid RenderTransformOrigin="0.5,0.5">
                 <ItemsControl x:Name="LayersControl" />
                 <Grid.RenderTransform>
@@ -47,6 +48,5 @@
                 </Grid.RenderTransform>
             </Grid>
         </Grid>
-        <Grid Background="Red" Height="10" HorizontalAlignment="Right" Width="10"/>
     </Grid>
 </UserControl>

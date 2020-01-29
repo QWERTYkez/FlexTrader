@@ -57,9 +57,11 @@ namespace FlexTrader.Exchanges
                 .ToDictionary(i => i.Key, i => i.Value);
         }
 
-        private void GeneralInfo()
+        public void GeneralInfo()
         {
             var req = BaseGet<GenInfo>("/api/v1/exchangeInfo").symbols;
+
+            var rr = req.Where(r => r.baseAsset == "ETH" && r.quoteAsset == "USDT").ToList();
         }
 
         public override List<Candle> GetCandles(string baseAsset, string quoteAsset, CandleIntervalKey interval, 
@@ -97,7 +99,7 @@ namespace FlexTrader.Exchanges
             //try
             //{
             //    return BaseGet<List<List<decimal>>>(req)
-            //    .Select(o => new Candle(o[0], o[1], o[2], o[3], o[4], o[5]));
+            //    .Select(o => new Candle(o[0], o[1], o[2], o[3], o[4], o[5])).ToList();
             //}
 
 
@@ -137,9 +139,9 @@ namespace FlexTrader.Exchanges
                 public class Filter
                 {
                     public string filterType { get; set; }
-                    public string minPrice { get; set; }
-                    public string maxPrice { get; set; }
-                    public string tickSize { get; set; }
+                    public double minPrice { get; set; }
+                    public double maxPrice { get; set; }
+                    public double tickSize { get; set; }
                     public string multiplierUp { get; set; }
                     public string multiplierDown { get; set; }
                     public int? avgPriceMins { get; set; }

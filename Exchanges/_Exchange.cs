@@ -37,16 +37,12 @@ namespace FlexTrader.Exchanges
             try
             {
                 var request = WebRequest.Create($"{Endpoint}{req}");
-                using (var response = request.GetResponse())
-                {
-                    using (var stream = response.GetResponseStream())
-                    {
-                        using (var reader = new System.IO.StreamReader(stream))
-                        {
-                            return JsonConvert.DeserializeObject<T>(reader.ReadToEnd(), converters);
-                        }
-                    }
-                }
+                using var response = request.GetResponse();
+                using var stream = response.GetResponseStream();
+                using var reader = new System.IO.StreamReader(stream);
+                var reqs = reader.ReadToEnd();
+                System.IO.File.WriteAllText("JSON.txt", reqs);
+                return JsonConvert.DeserializeObject<T>(reqs, converters);
             }
             catch { return null; }
         }
@@ -106,12 +102,17 @@ namespace FlexTrader.Exchanges
             this.Volume = Volume;
         }
 
+        public bool UP => Close > Open;
         public DateTime TimeStamp { get; private set; }
         public decimal Open { get; private set; }
+        public double OpenD => Convert.ToDouble(Open);
         public decimal High { get; set; }
+        public double HighD => Convert.ToDouble(High);
         public decimal Low { get; set; }
+        public double LowD => Convert.ToDouble(Low);
         public decimal Close { get; set; }
-        public bool UP => Close > Open;
+        public double CloseD => Convert.ToDouble(Close);
         public decimal Volume { get; set; }
+        public double VolumeD => Convert.ToDouble(Volume);
     }
 }

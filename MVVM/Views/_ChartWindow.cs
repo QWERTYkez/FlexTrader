@@ -16,34 +16,36 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using FlexTrader.MVVM.Views;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Threading;
+using System.Windows;
+using System.Windows.Input;
 
-namespace FlexTrader.MVVM.ViewModels
+namespace FlexTrader.MVVM.Views
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class ChartWindow : Window
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName]string prop = "")
+        public event Action<Vector> Moving;
+        public ChartWindow()
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+            this.MouseLeave += (obj, e) => CanMoving = false;
+            this.MouseLeftButtonUp += (obj, e) => CanMoving = false;
+            this.MouseMove += (obj, e) =>
+            {
+                if (CanMoving)
+                {
+                    Moving.Invoke(e.GetPosition(this) - StartPosition);
+                }
+            };
         }
 
-        public Dispatcher Dispatcher { get; internal set; }
-        internal void Initialize(ChartWindow mainView)
+        private Point StartPosition;
+        private bool CanMoving;
+        internal void StartMoveChart(ChartView CV, MouseButtonEventArgs e)
         {
-            Dispatcher = mainView.Dispatcher;
-            Chart = new ChartView(mainView);
+            StartPosition = e.GetPosition(this);
+            CanMoving = true;
         }
-
-        public ChartView Chart { get; set; }
-        
     }
 }
