@@ -20,6 +20,7 @@ using FlexTrader.Exchanges;
 using FlexTrader.MVVM.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -46,6 +47,8 @@ namespace FlexTrader.MVVM.Views
                 StartMoveChart += mainView.StartMoveChart;
                 mainView.Moving += MoveChart;
             }
+            CurrentScale.X = ScaleX.ScaleX;
+            CurrentScale.Y = ScaleY.ScaleY;
             {
                 var DC = DataContext as ChartViewModel;
                 DC.PropertyChanged += DContext_PropertyChanged;
@@ -99,8 +102,7 @@ namespace FlexTrader.MVVM.Views
                 var x = ChangesCounter;
                 Thread.Sleep(100);
                 if (x != ChangesCounter) return;
-                if (e.WidthChanged) HorizontalReset();
-                else if (e.HeightChanged) VerticalReset();
+                HorizontalReset();
             });
         }
         private bool VerticalLock = true;
@@ -108,22 +110,21 @@ namespace FlexTrader.MVVM.Views
         {
             if (VerticalLock)
             {
-                var Y = Min + Delta * 0.5 - ChHeight * 0.5;
-                var ScaleY = ChHeight / Delta;
-                Dispatcher.Invoke(() => { Translate.Y = Y; Scale.ScaleY = ScaleY; });
+                CurrentTranslate.Y = Min + Delta * 0.5 - ChHeight * 0.5;
+                CurrentScale.Y = ChHeight / Delta;
+                Dispatcher.Invoke(() => 
+                { 
+                    Translate.Y = CurrentTranslate.Y;
+                    ScaleY.ScaleY = CurrentScale.Y; 
+                });
             }
         }
-        private async void HorizontalReset()
+        private void HorizontalReset()
         {
             if (StartTime.HasValue && DeltaTime.HasValue)
             {
-                DateTime TimeA = DateTime.Now;
-                DateTime TimeB = DateTime.Now;
-                await Dispatcher.InvokeAsync(() => 
-                {
-                    TimeA = StartTime.Value - Math.Ceiling((ChWidth + Translate.X) / 15) * DeltaTime.Value;
-                    TimeB = StartTime.Value - Math.Ceiling(Translate.X / 15) * DeltaTime.Value;
-                });
+                var TimeA = StartTime.Value - Math.Ceiling(((ChWidth / CurrentScale.X + CurrentTranslate.X) / 15)) * DeltaTime.Value;
+                var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
 
                 var currentCandles = from c in AllCandles.AsParallel()
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
@@ -196,30 +197,58 @@ namespace FlexTrader.MVVM.Views
         private readonly DrawingCanvas CandlesLayer;
 
         public event Action<ChartView, MouseButtonEventArgs> StartMoveChart;
-        private async void ChartGRD_MouseDown(object sender, MouseButtonEventArgs e)
+        private void ChartGRD_MouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
-            await Dispatcher.InvokeAsync(() => LastTranslateCector = new Vector(Translate.X, Translate.Y));
+            LastTranslateCector = CurrentTranslate;
             StartMoveChart?.Invoke(this, e);
         }
         private Vector LastTranslateCector;
-        private void MoveChart(Vector vec)
+        private Vector CurrentTranslate;
+        private Vector CurrentScale;
+        private async void MoveChart(Vector vec)
         {
             if (VerticalLock)
             {
-                Dispatcher.Invoke(() =>
+                CurrentTranslate.X = LastTranslateCector.X + vec.X / CurrentScale.X;
+                await Dispatcher.InvokeAsync(() =>
                 {
-                    Translate.X = LastTranslateCector.X + vec.X;
-                    Task.Run(() => HorizontalReset());
+                    Translate.X = CurrentTranslate.X;
                 });
+                _ = Task.Run(() => HorizontalReset());
             }
             else
             {
+                CurrentTranslate.X = LastTranslateCector.X + vec.X / CurrentScale.X;
+                CurrentTranslate.Y = LastTranslateCector.Y + vec.Y / CurrentScale.Y;
                 Dispatcher.Invoke(() =>
                 {
-                    Translate.X = LastTranslateCector.X + vec.X;
-                    Translate.Y = LastTranslateCector.Y + vec.Y / Scale.ScaleY;
+                    Translate.X = CurrentTranslate.X;
+                    Translate.Y = CurrentTranslate.Y;
                 });
+            }
+            
+        }
+
+        private async void MouseWheelSpinning(object sender, MouseWheelEventArgs e)
+        {
+            if (e.Delta > 0)
+            {
+                CurrentScale.X *= 1.1;
+                await Dispatcher.InvokeAsync(() => 
+                {
+                    ScaleX.ScaleX = CurrentScale.X;
+                });
+                HorizontalReset();
+            }
+            else
+            {
+                CurrentScale.X /= 1.1;
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    ScaleX.ScaleX = CurrentScale.X;
+                });
+                HorizontalReset();
             }
             
         }

@@ -30,21 +30,26 @@
     <UserControl.DataContext>
         <vm:ChartViewModel />
     </UserControl.DataContext>
-    <Grid>
+    <Grid PreviewMouseWheel="MouseWheelSpinning">
         <Grid
             x:Name="ChartGRD"
             Background="{Binding ChartBackground}"
             ClipToBounds="True"
             MouseDown="ChartGRD_MouseDown"
             SizeChanged="ChartGRD_SizeChanged">
-            <Grid RenderTransformOrigin="0.5,0.5">
-                <ItemsControl x:Name="LayersControl" />
+            <Grid RenderTransformOrigin="1,0.5">
+                <Grid RenderTransformOrigin="0.5,0.5">
+                    <ItemsControl x:Name="LayersControl" />
+                    <Grid.RenderTransform>
+                        <TransformGroup>
+                            <RotateTransform Angle="180" />
+                            <TranslateTransform x:Name="Translate" />
+                            <ScaleTransform x:Name="ScaleY" />
+                        </TransformGroup>
+                    </Grid.RenderTransform>
+                </Grid>
                 <Grid.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform ScaleX="-1" ScaleY="-1" />
-                        <TranslateTransform x:Name="Translate" />
-                        <ScaleTransform x:Name="Scale" />
-                    </TransformGroup>
+                    <ScaleTransform x:Name="ScaleX" />
                 </Grid.RenderTransform>
             </Grid>
         </Grid>

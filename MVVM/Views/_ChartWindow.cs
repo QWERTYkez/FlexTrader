@@ -29,10 +29,10 @@ namespace FlexTrader.MVVM.Views
         public event Action<Vector> Moving;
         public ChartWindow()
         {
-            this.MouseLeave += (obj, e) => CanMoving = false;
             this.MouseLeftButtonUp += (obj, e) => CanMoving = false;
             this.MouseMove += (obj, e) =>
             {
+                if (e.LeftButton == MouseButtonState.Released) CanMoving = false;
                 if (CanMoving)
                 {
                     Moving.Invoke(e.GetPosition(this) - StartPosition);
