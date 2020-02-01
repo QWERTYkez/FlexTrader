@@ -21,6 +21,7 @@ using FlexTrader.MVVM.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -43,21 +44,30 @@ namespace FlexTrader.MVVM.Views
         public ChartView(ChartWindow mainView)
         {
             InitializeComponent();
+
+            //ChartWindowInitialize
             {
                 StartMoveChart += mainView.StartMoveChart;
                 mainView.Moving += MoveChart;
             }
-            CurrentScale.X = ScaleX.ScaleX;
-            CurrentScale.Y = ScaleY.ScaleY;
+
+            //ChartGRDInitialize
+            {
+                CurrentScale.X = ScaleX.ScaleX;
+                CurrentScale.Y = ScaleY.ScaleY;
+
+                var Layers = new List<DrawingCanvas>();
+                CandlesLayer = new DrawingCanvas(); Layers.Add(CandlesLayer);
+                // add layer
+                LayersControl.ItemsSource = Layers;
+            }
+
+            PriceLineInitialize();
+
+            //DataContextInitialize
             {
                 var DC = DataContext as ChartViewModel;
                 DC.PropertyChanged += DContext_PropertyChanged;
-                {
-                    var Layers = new List<DrawingCanvas>();
-                    CandlesLayer = new DrawingCanvas(); Layers.Add(CandlesLayer);
-                    // add layer
-                    LayersControl.ItemsSource = Layers;
-                }
                 DC.Inicialize();
             }
         }
@@ -83,6 +93,12 @@ namespace FlexTrader.MVVM.Views
                             AllCandles.AddRange(DC.NewCandles);
                             DrawNewCandles(DC.NewCandles);
                         }
+                    }
+                    break;
+                case "FontSize":
+                    {
+                        PricesFontSize = DC.FontSize;
+                        RedrawPrices();
                     }
                     break;
             }
@@ -117,6 +133,7 @@ namespace FlexTrader.MVVM.Views
                     Translate.Y = CurrentTranslate.Y;
                     ScaleY.ScaleY = CurrentScale.Y; 
                 });
+                RedrawPrices();
             }
         }
         private void HorizontalReset()
@@ -147,14 +164,15 @@ namespace FlexTrader.MVVM.Views
         private double TickSize = 0.00000001;
         private Brush UpBrush = Brushes.Lime;
         private Brush DownBrush = Brushes.Red;
-        private Pen ShadowPen = new Pen(Brushes.Gray, 2);
+        private Pen UpPen = new Pen(Brushes.Lime, 4);
+        private Pen DownPen = new Pen(Brushes.Red, 4);
         private readonly object parallelkey = new object();
         private void DrawNewCandles(List<Candle> newCandles)
         {
             if (StartTime == null)
                 StartTime = newCandles.Last().TimeStamp;
 
-            var DrawTeplates = new List<(Point PointA,
+            var DrawTeplates = new List<(Pen ShadowPen, Point PointA,
                 Point PointB, Brush BodyBrush, Rect Rect)>();
             Parallel.ForEach(newCandles, c => 
             {
@@ -163,8 +181,8 @@ namespace FlexTrader.MVVM.Views
                 var low = c.LowD / TickSize;
                 var high = c.HighD / TickSize;
                 var x = 7.5 + (StartTime.Value - c.TimeStamp) * 15 / DeltaTime.Value;
-                var x1 = x + 5;
-                var x2 = x - 5;
+                var x1 = x + 6;
+                var x2 = x - 6;
 
                 var PointA = new Point(x, low);
                 var PointB = new Point(x, high);
@@ -172,8 +190,8 @@ namespace FlexTrader.MVVM.Views
 
                 lock (parallelkey)
                 {
-                    if (c.UP) DrawTeplates.Add((PointA, PointB, UpBrush, Rect));
-                    else DrawTeplates.Add((PointA, PointB, DownBrush, Rect));
+                    if (c.UP) DrawTeplates.Add((UpPen, PointA, PointB, UpBrush, Rect));
+                    else DrawTeplates.Add((DownPen, PointA, PointB, DownBrush, Rect));
                 }
             });
 
@@ -186,7 +204,7 @@ namespace FlexTrader.MVVM.Views
                 using var dc = dvisual.RenderOpen();
                 foreach (var dt in DrawTeplates)
                 {
-                    dc.DrawLine(ShadowPen, dt.PointA, dt.PointB);
+                    dc.DrawLine(dt.ShadowPen, dt.PointA, dt.PointB);
                     dc.DrawRectangle(dt.BodyBrush, null, dt.Rect);
                 }
             });
@@ -251,6 +269,103 @@ namespace FlexTrader.MVVM.Views
                 HorizontalReset();
             }
             
+        }
+
+        //PriceLine
+        private void PriceLineInitialize()
+        {
+            PricesFontSize = 18;
+
+            PricesVisual = new DrawingVisual();
+            PriceLine.AddVisual(PricesVisual);
+        }
+        private DrawingVisual PricesVisual;
+
+        private double PricesFontSize;
+        private Brush FontBrush = Brushes.White;
+        private static readonly Typeface Font = new Typeface("Agency FB");
+        private void RedrawPrices()
+        {
+            if (ChHeight == 0) return;
+            double count = Math.Floor((ChHeight / (PricesFontSize * 3)));
+            var step = (Delta * TickSize) / count;
+
+            double n = 1;
+            int d = 0;
+            while (step > 10)
+            {
+                step /= 10;
+                n *= 10;
+            }
+            while (step < 1)
+            {
+                step *= 10;
+                n /= 10;
+                d += 1;
+            }
+
+            if (step > 5) step = 5 * n;
+            else if (step > 4) step = 4 * n;
+            else if (step > 2.5) { step = 2.5 * n; d += 1; }
+            else if (step > 2) step = 2 * n;
+            else if (step > 1) step = 1 * n;
+
+            string f = null;
+            if (d > 0)
+            {
+                f = "0.";
+                var x = 0;
+                while (d != x)
+                {
+                    f += "0"; x += 1;
+                }
+            }
+
+            var price = Math.Round(step * Math.Ceiling((Min * TickSize) / step), d);
+            var coordiate = PriceToHeightRotate(price);
+            var pricesToDraw = new List<(FormattedText price, Point coor)>();
+            var pixelsPerDip = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
+            do
+            {
+                var ft = new FormattedText
+                        (
+                            "-" + price.ToString(f),
+                            CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            Font,
+                            PricesFontSize,
+                            FontBrush,
+                            pixelsPerDip
+                        );
+                var pt = new Point(0, coordiate - ft.Height / 2);
+                pricesToDraw.Add((ft, pt));
+                price = Math.Round(price + step, d);
+                coordiate = PriceToHeightRotate(price);
+            } 
+            while (coordiate > 0);
+
+            var nWidth = pricesToDraw.Select(p => p.price.Width).Max();
+            Dispatcher.Invoke(() => 
+            {
+                using var pdc = PricesVisual.RenderOpen();
+
+                foreach (var pr in pricesToDraw)
+                {
+                    pdc.DrawText(pr.price, pr.coor);
+                }
+                PriceLine.Width = nWidth;
+            });
+
+            
+        }
+
+        private double PriceToHeight(double price)
+        {
+            return (ChHeight / (Delta * TickSize)) * (price - Min * TickSize);
+        }
+        private double PriceToHeightRotate(double price)
+        {
+            return (ChHeight * (Delta * TickSize - price + Min * TickSize)) / (Delta * TickSize);
         }
     }
 }

@@ -51,6 +51,5 @@ namespace FlexTrader.MVVM.ViewModels
         public List<Candle> NewCandles { get; set; }
 
         public Brush ChartBackground { get; set; }
-
     }
 }

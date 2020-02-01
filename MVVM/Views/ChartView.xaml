@@ -23,6 +23,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:FlexTrader.MVVM.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mvvm="clr-namespace:FlexTrader.MVVM"
     xmlns:vm="clr-namespace:FlexTrader.MVVM.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -30,7 +31,15 @@
     <UserControl.DataContext>
         <vm:ChartViewModel />
     </UserControl.DataContext>
-    <Grid PreviewMouseWheel="MouseWheelSpinning">
+    <Grid Background="{Binding ChartBackground}" PreviewMouseWheel="MouseWheelSpinning">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <Grid
             x:Name="ChartGRD"
             Background="{Binding ChartBackground}"
@@ -53,5 +62,14 @@
                 </Grid.RenderTransform>
             </Grid>
         </Grid>
+        <mvvm:DrawingCanvas x:Name="PriceLine" Grid.Column="1" />
+        <mvvm:DrawingCanvas
+            x:Name="TimeLine"
+            Grid.Row="1"
+            RenderTransformOrigin="0.5,0.5">
+            <mvvm:DrawingCanvas.RenderTransform>
+                <RotateTransform Angle="180" />
+            </mvvm:DrawingCanvas.RenderTransform>
+        </mvvm:DrawingCanvas>
     </Grid>
 </UserControl>
