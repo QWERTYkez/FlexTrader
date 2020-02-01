@@ -95,12 +95,6 @@ namespace FlexTrader.MVVM.Views
                         }
                     }
                     break;
-                case "FontSize":
-                    {
-                        PricesFontSize = DC.FontSize;
-                        RedrawPrices();
-                    }
-                    break;
             }
         }
 
