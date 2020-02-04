@@ -47,6 +47,8 @@ namespace FlexTrader.MVVM.Views
 
             //ChartWindowInitialize
             {
+                StartYScaling += mainView.StartYScaling;
+                mainView.ScalingY += ScalingY;
                 StartMoveChart += mainView.StartMoveChart;
                 mainView.Moving += MoveChart;
             }
@@ -57,6 +59,7 @@ namespace FlexTrader.MVVM.Views
                 CurrentScale.Y = ScaleY.ScaleY;
 
                 var Layers = new List<DrawingCanvas>();
+
                 CandlesLayer = new DrawingCanvas(); Layers.Add(CandlesLayer);
                 // add layer
                 LayersControl.ItemsSource = Layers;
@@ -127,8 +130,8 @@ namespace FlexTrader.MVVM.Views
                     Translate.Y = CurrentTranslate.Y;
                     ScaleY.ScaleY = CurrentScale.Y; 
                 });
-                RedrawPrices();
             }
+            RedrawPrices();
         }
         private void HorizontalReset()
         {
@@ -193,7 +196,6 @@ namespace FlexTrader.MVVM.Views
             {
                 var dvisual = new DrawingVisual();
                 CandlesLayer.AddVisual(dvisual);
-                CandlesLayer.Background = Brushes.Black;
 
                 using var dc = dvisual.RenderOpen();
                 foreach (var dt in DrawTeplates)
@@ -205,15 +207,15 @@ namespace FlexTrader.MVVM.Views
 
             VerticalReset();
         }
-        
+
         private readonly DrawingCanvas CandlesLayer;
 
-        public event Action<ChartView, MouseButtonEventArgs> StartMoveChart;
-        private void ChartGRD_MouseDown(object sender, MouseButtonEventArgs e)
+        public event Action<MouseButtonEventArgs> StartMoveChart;
+        private void MovingChart(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
             LastTranslateCector = CurrentTranslate;
-            StartMoveChart?.Invoke(this, e);
+            StartMoveChart?.Invoke(e);
         }
         private Vector LastTranslateCector;
         private Vector CurrentTranslate;
@@ -269,21 +271,32 @@ namespace FlexTrader.MVVM.Views
         private void PriceLineInitialize()
         {
             PricesFontSize = 18;
+            Font = new Typeface(new FontFamily("Agency FB"), 
+                FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+            FontBrush = Brushes.White;
+            PricePen = new Pen(Brushes.DarkGray, 1);
+
+            PriceGridVisual = new DrawingVisual();
+            PriceGridLayer.AddVisual(PriceGridVisual);
 
             PricesVisual = new DrawingVisual();
             PriceLine.AddVisual(PricesVisual);
         }
         private DrawingVisual PricesVisual;
+        private DrawingVisual PriceGridVisual;
 
         private double PricesFontSize;
-        private Brush FontBrush = Brushes.White;
-        private static readonly Typeface Font = new Typeface("Agency FB");
+        private Brush FontBrush;
+        private Typeface Font;
+        private Pen PricePen;
         private void RedrawPrices()
         {
             if (ChHeight == 0) return;
-            double count = Math.Floor((ChHeight / (PricesFontSize * 3)));
-            var step = (Delta * TickSize) / count;
+            var delta = (ChHeight / CurrentScale.Y);
+            var min = Min + (Delta - delta) / 2;
 
+            double count = Math.Floor((ChHeight / (PricesFontSize * 6)));
+            var step = (delta * TickSize) / count;
             double n = 1;
             int d = 0;
             while (step > 10)
@@ -315,15 +328,16 @@ namespace FlexTrader.MVVM.Views
                 }
             }
 
-            var price = Math.Round(step * Math.Ceiling((Min * TickSize) / step), d);
-            var coordiate = PriceToHeightRotate(price);
-            var pricesToDraw = new List<(FormattedText price, Point coor)>();
+            var price = Math.Round(step * Math.Ceiling((min * TickSize) / step), d);
+            var coordiate = PriceToHeight(price, delta, min);
+            var pricesToDraw = new List<(FormattedText price, Point coor, 
+                Pen pen, Point A, Point B, Point G, Point H)>();
             var pixelsPerDip = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
             do
             {
                 var ft = new FormattedText
                         (
-                            "-" + price.ToString(f),
+                            price.ToString(f),
                             CultureInfo.CurrentCulture,
                             FlowDirection.LeftToRight,
                             Font,
@@ -331,35 +345,69 @@ namespace FlexTrader.MVVM.Views
                             FontBrush,
                             pixelsPerDip
                         );
-                var pt = new Point(0, coordiate - ft.Height / 2);
-                pricesToDraw.Add((ft, pt));
+                var Y = coordiate - ft.Height / 2;
+                pricesToDraw.Add((ft, 
+                    new Point(6, Y), PricePen, 
+                    new Point(0, coordiate), new Point(3, coordiate),
+                    new Point(0, coordiate), new Point(4096, coordiate)));
                 price = Math.Round(price + step, d);
-                coordiate = PriceToHeightRotate(price);
+                coordiate = PriceToHeight(price, delta, min);
             } 
             while (coordiate > 0);
 
-            var nWidth = pricesToDraw.Select(p => p.price.Width).Max();
+            var nWidth = pricesToDraw.Select(p => p.price.Width).Max() + 6;
             Dispatcher.Invoke(() => 
             {
-                using var pdc = PricesVisual.RenderOpen();
-
+                using var pvc = PricesVisual.RenderOpen();
+                using var pgvc = PriceGridVisual.RenderOpen();
                 foreach (var pr in pricesToDraw)
                 {
-                    pdc.DrawText(pr.price, pr.coor);
+                    pvc.DrawText(pr.price, pr.coor);
+                    pvc.DrawLine(pr.pen, pr.A, pr.B);
+                    pgvc.DrawLine(pr.pen, pr.G, pr.H);
                 }
                 PriceLine.Width = nWidth;
             });
-
-            
         }
 
-        private double PriceToHeight(double price)
+        private double PriceToHeight(double price, double delta, double min)
         {
-            return (ChHeight / (Delta * TickSize)) * (price - Min * TickSize);
+            return (ChHeight * (delta * TickSize - price + min * TickSize)) / (delta * TickSize);
         }
-        private double PriceToHeightRotate(double price)
+
+        public event Action<MouseButtonEventArgs> StartYScaling;
+        private double LastScaleY;
+        private void PriceLine_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            return (ChHeight * (Delta * TickSize - price + Min * TickSize)) / (Delta * TickSize);
+            e.Handled = true;
+            if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
+            LastScaleY = CurrentScale.Y;
+            VerticalLock = false;
+            StartYScaling?.Invoke(e);
+        }
+        private void ScalingY(double Y)
+        {
+            var X = Y / 50;
+            if (Y > 0)
+            {
+                var Z = ChHeight / (CurrentScale.Y * TickSize) - 5 * ChHeight;
+                if (Z > 0)
+                {
+                    CurrentScale.Y = LastScaleY * (1 + X);
+                    ScaleY.ScaleY = CurrentScale.Y;
+                    RedrawPrices();
+                }
+                return;
+            }
+            else if (Y < 0)
+            {
+                CurrentScale.Y = LastScaleY / (1 - X);
+                ScaleY.ScaleY = CurrentScale.Y;
+                RedrawPrices();
+                return;
+            }
+            ScaleY.ScaleY = LastScaleY;
+            RedrawPrices();
         }
     }
 }

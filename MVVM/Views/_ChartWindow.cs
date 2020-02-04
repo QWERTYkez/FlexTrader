@@ -17,8 +17,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows;
 using System.Windows.Input;
 
@@ -27,25 +25,44 @@ namespace FlexTrader.MVVM.Views
     public class ChartWindow : Window
     {
         public event Action<Vector> Moving;
-        public ChartWindow()
-        {
-            this.MouseLeftButtonUp += (obj, e) => CanMoving = false;
-            this.MouseMove += (obj, e) =>
-            {
-                if (e.LeftButton == MouseButtonState.Released) CanMoving = false;
-                if (CanMoving)
-                {
-                    Moving.Invoke(e.GetPosition(this) - StartPosition);
-                }
-            };
-        }
-
+        public event Action<double> ScalingY;
+        public event Action<double> ScalingX;
         private Point StartPosition;
-        private bool CanMoving;
-        internal void StartMoveChart(ChartView CV, MouseButtonEventArgs e)
+
+        internal void StartMoveChart(MouseButtonEventArgs e)
         {
             StartPosition = e.GetPosition(this);
-            CanMoving = true;
+            this.MouseLeftButtonUp += (obj, e) => this.MouseMove -= MovingAct;
+            this.MouseMove += MovingAct;
+        }
+        private void MovingAct(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Released) this.MouseMove -= MovingAct;
+            Moving.Invoke(e.GetPosition(this) - StartPosition);
+        }
+
+        internal void StartYScaling(MouseButtonEventArgs e)
+        {
+            StartPosition = e.GetPosition(this);
+            this.MouseLeftButtonUp += (obj, e) => this.MouseMove -= ScalingYAct;
+            this.MouseMove += ScalingYAct;
+        }
+        private void ScalingYAct(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Released) this.MouseMove -= ScalingYAct;
+            ScalingY.Invoke((e.GetPosition(this) - StartPosition).Y);
+        }
+
+        internal void StartXScaling(MouseButtonEventArgs e)
+        {
+            StartPosition = e.GetPosition(this);
+            this.MouseLeftButtonUp += (obj, e) => this.MouseMove -= ScalingXAct;
+            this.MouseMove += ScalingXAct;
+        }
+        private void ScalingXAct(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Released) this.MouseMove -= ScalingXAct;
+            ScalingX.Invoke((e.GetPosition(this) - StartPosition).X);
         }
     }
 }
