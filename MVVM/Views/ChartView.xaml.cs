@@ -401,7 +401,6 @@ namespace FlexTrader.MVVM.Views
                 PriceLine.Width = nWidth;
             });
         }
-
         private double PriceToHeight(double price, double delta, double min)
         {
             return (ChHeight * (delta * TickSize - price + min * TickSize)) / (delta * TickSize);
@@ -422,20 +421,20 @@ namespace FlexTrader.MVVM.Views
             Task.Run(() =>
             {
                 var X = Y / 50;
-                if (Y > 0)
+                if (Y < 0)
                 {
                     var Z = ChHeight / (CurrentScale.Y * TickSize) - 5 * ChHeight;
                     if (Z > 0)
                     {
-                        CurrentScale.Y = LastScaleY * (1 + X);
+                        CurrentScale.Y = LastScaleY * (1 - X);
                         Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
                         RedrawPrices();
                     }
                     return;
                 }
-                else if (Y < 0)
+                else if (Y > 0)
                 {
-                    CurrentScale.Y = LastScaleY / (1 - X);
+                    CurrentScale.Y = LastScaleY / (1 + X);
                     Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
                     RedrawPrices();
                     return;
@@ -691,7 +690,7 @@ namespace FlexTrader.MVVM.Views
                             dt.Day.ToString(),
                             CultureInfo.CurrentCulture,
                             FlowDirection.LeftToRight,
-                            FontText,
+                            FontNumeric,
                             BaseFontSize,
                             FontBrush,
                             pixelsPerDip
@@ -713,7 +712,7 @@ namespace FlexTrader.MVVM.Views
                             dt.ToString("H:mm"),
                             CultureInfo.CurrentCulture,
                             FlowDirection.LeftToRight,
-                            FontText,
+                            FontNumeric,
                             BaseFontSize,
                             FontBrush,
                             pixelsPerDip
