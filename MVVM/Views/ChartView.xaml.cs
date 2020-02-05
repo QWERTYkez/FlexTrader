@@ -49,6 +49,8 @@ namespace FlexTrader.MVVM.Views
             {
                 StartYScaling += mainView.StartYScaling;
                 mainView.ScalingY += ScalingY;
+                StartXScaling += mainView.StartXScaling;
+                mainView.ScalingX += ScalingX;
                 StartMoveChart += mainView.StartMoveChart;
                 mainView.Moving += MoveChart;
             }
@@ -268,27 +270,38 @@ namespace FlexTrader.MVVM.Views
             }
         }
 
-        private async void MouseWheelSpinning(object sender, MouseWheelEventArgs e)
+        private void MouseWheelSpinning(object sender, MouseWheelEventArgs e)
         {
-            if (e.Delta > 0)
+            Task.Run(async () => 
             {
-                CurrentScale.X *= 1.1;
-                await Dispatcher.InvokeAsync(() => 
+                if (e.Delta > 0)
                 {
-                    ScaleX.ScaleX = CurrentScale.X;
-                });
-                HorizontalReset();
-            }
-            else
-            {
-                CurrentScale.X /= 1.1;
-                await Dispatcher.InvokeAsync(() =>
+                    var nScale = CurrentScale.X * 1.1;
+                    var TimeA = StartTime.Value - Math.Ceiling(((ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime.Value;
+                    var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
+                    var currentCandles = from c in AllCandles.AsParallel()
+                                         where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
+                                         select c;
+
+
+                    if (currentCandles.Count() < 1 || ChWidth / 100 > (TimeB - TimeA) / DeltaTime.Value) return;
+                    CurrentScale.X = nScale;
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        ScaleX.ScaleX = CurrentScale.X;
+                    });
+                    HorizontalReset();
+                }
+                else
                 {
-                    ScaleX.ScaleX = CurrentScale.X;
-                });
-                HorizontalReset();
-            }
-            
+                    CurrentScale.X /= 1.1;
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        ScaleX.ScaleX = CurrentScale.X;
+                    });
+                    HorizontalReset();
+                }
+            });
         }
 
 
@@ -406,27 +419,30 @@ namespace FlexTrader.MVVM.Views
         }
         private void ScalingY(double Y)
         {
-            var X = Y / 50;
-            if (Y > 0)
+            Task.Run(() =>
             {
-                var Z = ChHeight / (CurrentScale.Y * TickSize) - 5 * ChHeight;
-                if (Z > 0)
+                var X = Y / 50;
+                if (Y > 0)
                 {
-                    CurrentScale.Y = LastScaleY * (1 + X);
-                    ScaleY.ScaleY = CurrentScale.Y;
-                    RedrawPrices();
+                    var Z = ChHeight / (CurrentScale.Y * TickSize) - 5 * ChHeight;
+                    if (Z > 0)
+                    {
+                        CurrentScale.Y = LastScaleY * (1 + X);
+                        Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
+                        RedrawPrices();
+                    }
+                    return;
                 }
-                return;
-            }
-            else if (Y < 0)
-            {
-                CurrentScale.Y = LastScaleY / (1 - X);
-                ScaleY.ScaleY = CurrentScale.Y;
+                else if (Y < 0)
+                {
+                    CurrentScale.Y = LastScaleY / (1 - X);
+                    Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
+                    RedrawPrices();
+                    return;
+                }
+                Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
                 RedrawPrices();
-                return;
-            }
-            ScaleY.ScaleY = LastScaleY;
-            RedrawPrices();
+            });
         }
 
         //TimeLine
@@ -712,5 +728,47 @@ namespace FlexTrader.MVVM.Views
         private double TimeToWidth(DateTime dt, DateTime A, DateTime B) => ChWidth * ((dt - A) / (B - A));
         private double MiniFontSize;
         private DateTime WidthToTime(double width, DateTime A, DateTime B) => A + (width / ChWidth) * (B - A);
+
+        public event Action<MouseButtonEventArgs> StartXScaling;
+        private double LastScaleX;
+        private void TimeLine_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+            if (e.ClickCount == 2) {  return; }
+            LastScaleX = CurrentScale.X;
+            StartXScaling?.Invoke(e);
+        }
+        private void ScalingX(double X)
+        {
+            Task.Run(() =>
+            {
+                var Y = -X / 50;
+                if (X > 0)
+                {
+                    CurrentScale.X = LastScaleX / (1 - Y);
+                    Dispatcher.Invoke(() => ScaleX.ScaleX = CurrentScale.X);
+                    HorizontalReset();
+                    return;
+                }
+                else if (X < 0)
+                {
+                    var nScale = LastScaleX * (1 + Y);
+                    var TimeA = StartTime.Value - Math.Ceiling(((ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime.Value;
+                    var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
+                    var currentCandles = from c in AllCandles.AsParallel()
+                                         where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
+                                         select c;
+                    
+
+                    if (currentCandles.Count() < 1 || ChWidth / 100 > (TimeB - TimeA) / DeltaTime.Value) return;
+                    CurrentScale.X = nScale;
+                    Dispatcher.Invoke(() => ScaleX.ScaleX = CurrentScale.X);
+                    HorizontalReset();
+                    return;
+                }
+                Dispatcher.Invoke(() => ScaleX.ScaleX = LastScaleX);
+                HorizontalReset();
+            });
+        }
     }
 }

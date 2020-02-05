@@ -88,6 +88,7 @@
             x:Name="TimeLine"
             Grid.Row="2"
             Background="{Binding ChartBackground}"
-            ClipToBounds="True" />
+            ClipToBounds="True" 
+            PreviewMouseDown="TimeLine_MouseDown"/>
     </Grid>
 </UserControl>
