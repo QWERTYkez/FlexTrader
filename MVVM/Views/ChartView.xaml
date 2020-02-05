@@ -42,16 +42,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Border
-            Grid.Row="1"
-            Grid.ColumnSpan="2"
-            BorderBrush="Gray"
-            BorderThickness="1" />
-        <Border
-            Grid.RowSpan="2"
-            Grid.Column="1"
-            BorderBrush="Gray"
-            BorderThickness="1" />
         <mvvm:DrawingCanvas
             x:Name="GridLayer"
             Background="{Binding ChartBackground}"
@@ -60,6 +50,7 @@
             x:Name="ChartGRD"
             Grid.ColumnSpan="2"
             Margin="2,0,0,0"
+            ClipToBounds="True"
             PreviewMouseDown="MovingChart"
             SizeChanged="ChartGRD_SizeChanged">
             <Grid RenderTransformOrigin="1,0.5">
@@ -78,6 +69,16 @@
                 </Grid.RenderTransform>
             </Grid>
         </Grid>
+        <Border
+            Grid.Row="1"
+            Grid.ColumnSpan="2"
+            BorderBrush="Gray"
+            BorderThickness="1" />
+        <Border
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            BorderBrush="Gray"
+            BorderThickness="1" />
         <mvvm:DrawingCanvas
             x:Name="PriceLine"
             Grid.Column="2"
@@ -88,7 +89,7 @@
             x:Name="TimeLine"
             Grid.Row="2"
             Background="{Binding ChartBackground}"
-            ClipToBounds="True" 
-            PreviewMouseDown="TimeLine_MouseDown"/>
+            ClipToBounds="True"
+            PreviewMouseDown="TimeLine_MouseDown" />
     </Grid>
 </UserControl>

@@ -284,7 +284,7 @@ namespace FlexTrader.MVVM.Views
                                          select c;
 
 
-                    if (currentCandles.Count() < 1 || ChWidth / 100 > (TimeB - TimeA) / DeltaTime.Value) return;
+                    if (currentCandles.Count() < 1 || ChWidth / MaxCandleSize > (TimeB - TimeA) / DeltaTime.Value) return;
                     CurrentScale.X = nScale;
                     await Dispatcher.InvokeAsync(() =>
                     {
@@ -468,7 +468,7 @@ namespace FlexTrader.MVVM.Views
                 var TimeA = StartTime.Value - ((ChWidth / CurrentScale.X + CurrentTranslate.X - 7.5) / 15) * DeltaTime.Value;
                 var TimeB = StartTime.Value - ((CurrentTranslate.X - 7.5) / 15) * DeltaTime.Value;
 
-                double count = Math.Floor((ChWidth / (BaseFontSize * 15)));
+                double count = Math.Floor((ChWidth / (BaseFontSize * 10)));
                 var step = (TimeB - TimeA) / count;
                 int Ystep = 0; int Mstep = 0; int Dstep = 0; int Hstep = 0; int Mnstep = 0;
 
@@ -725,16 +725,25 @@ namespace FlexTrader.MVVM.Views
                     new Point(width, 0), new Point(width, 4096)));
             }
         }
-        private double TimeToWidth(DateTime dt, DateTime A, DateTime B) => ChWidth * ((dt - A) / (B - A));
+        private double TimeToWidth(DateTime dt, DateTime A, DateTime B) => ChWidth * ((dt - A) / (B - A)) + 2;
         private double MiniFontSize;
         private DateTime WidthToTime(double width, DateTime A, DateTime B) => A + (width / ChWidth) * (B - A);
 
         public event Action<MouseButtonEventArgs> StartXScaling;
         private double LastScaleX;
+        private double MaxCandleSize = 175;
         private void TimeLine_MouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
-            if (e.ClickCount == 2) {  return; }
+            if (e.ClickCount == 2) 
+            {
+                CurrentScale.X = 1;
+                ScaleX.ScaleX = 1;
+                CurrentTranslate.X = 0;
+                Translate.X = 0;
+                Task.Run(() => HorizontalReset());
+                return; 
+            }
             LastScaleX = CurrentScale.X;
             StartXScaling?.Invoke(e);
         }
@@ -760,7 +769,7 @@ namespace FlexTrader.MVVM.Views
                                          select c;
                     
 
-                    if (currentCandles.Count() < 1 || ChWidth / 100 > (TimeB - TimeA) / DeltaTime.Value) return;
+                    if (currentCandles.Count() < 1 || ChWidth / MaxCandleSize > (TimeB - TimeA) / DeltaTime.Value) return;
                     CurrentScale.X = nScale;
                     Dispatcher.Invoke(() => ScaleX.ScaleX = CurrentScale.X);
                     HorizontalReset();
