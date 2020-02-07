@@ -40,7 +40,12 @@ namespace FlexTrader.MVVM.ViewModels
         {
             ChartBackground = Brushes.Black;
             TickSize = 0.01;
-
+            BaseFontSize = 18;
+            FontBrush = Brushes.White;
+            LinesThickness = 1;
+            LinesBrush = Brushes.DarkGray;
+            CursorThickness = 1;
+            CursorBrush = Brushes.Cyan;
 
             Binance ex = new Binance();
             //ex.GeneralInfo();
@@ -51,5 +56,13 @@ namespace FlexTrader.MVVM.ViewModels
         public List<Candle> NewCandles { get; set; }
 
         public Brush ChartBackground { get; set; }
+        public double BaseFontSize { get; set; }
+        public Brush FontBrush { get; set; }
+
+        public double LinesThickness { get; set; }
+        public Brush LinesBrush { get; set; }
+        
+        public double CursorThickness { get; set; }
+        public Brush CursorBrush { get; set; }
     }
 }

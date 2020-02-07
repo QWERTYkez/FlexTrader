@@ -47,33 +47,28 @@ namespace FlexTrader.MVVM.Views
 
             //ChartWindowInitialize
             {
-                StartYScaling += mainView.StartYScaling;
-                mainView.ScalingY += ScalingY;
-                StartXScaling += mainView.StartXScaling;
-                mainView.ScalingX += ScalingX;
-                StartMoveChart += mainView.StartMoveChart;
-                mainView.Moving += MoveChart;
+                StartMoveCursor += mainView.StartMoveCursor;
+                mainView.Moving += vec => 
+                {
+                    switch (EventType)
+                    {
+                        case 1: MoveChart(vec); break;
+                        case 2: ScalingY(vec.Y); break;
+                        case 3: ScalingX(vec.X);  break;
+                    }
+                };
             }
 
             //ChartGRDInitialize
             {
                 CurrentScale.X = ScaleX.ScaleX;
                 CurrentScale.Y = ScaleY.ScaleY;
-
-                var Layers = new List<DrawingCanvas>();
-
-                CandlesLayer = new DrawingCanvas(); Layers.Add(CandlesLayer);
-                // add layer
-                LayersControl.ItemsSource = Layers;
             }
 
-            BaseFontSize = 18;
             FontNumeric = new Typeface(new FontFamily("Agency FB"),
                 FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
             FontText = new Typeface(new FontFamily("Myriad Pro Cond"),
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-            FontBrush = Brushes.White;
-            LinesPen = new Pen(Brushes.DarkGray, 1);
             PriceLineInitialize();
             TimeLineInitialize();
 
@@ -91,7 +86,43 @@ namespace FlexTrader.MVVM.Views
 
             switch (e.PropertyName)
             {
-                case "TickSize": TickSize = DC.TickSize; break;
+                //CursorPen
+                case "CursorBrush": CursorPen = new Pen(DC.CursorBrush, DC.CursorThickness); break;
+                case "CursorThickness":
+                    if (DC.CursorBrush != null)
+                        CursorPen = new Pen(DC.CursorBrush, DC.CursorThickness); break;
+                //LinesPen
+                case "LinesBrush": LinesPen = new Pen(DC.LinesBrush, DC.LinesThickness); break;
+                case "LinesThickness": if (DC.LinesBrush != null) 
+                        LinesPen = new Pen(DC.LinesBrush, DC.LinesThickness); break;
+
+                case "ChartBackground": ChartBackground = DC.ChartBackground; break;
+                case "FontBrush": FontBrush = DC.FontBrush; break;
+                case "BaseFontSize": 
+                    {
+                        BaseFontSize = DC.BaseFontSize;
+                        YearFontSize = Math.Round(DC.BaseFontSize * 1.4);
+
+                        var ft = new FormattedText
+                        (
+                            "0",
+                            CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            FontNumeric,
+                            YearFontSize,
+                            FontBrush,
+                            VisualTreeHelper.GetDpi(TimeLine).PixelsPerDip
+                        );
+                        TimeLineHeight = Shift + ft.Height;
+                        TimeLine.Height = TimeLineHeight;
+                    }
+                    break;
+                case "TickSize":
+                    {
+                        TickSize = DC.TickSize;
+                        CursorPriceFormat = TickSize.ToString().Replace('1', '0').Replace(',', '.');
+                    }
+                    break;
                 case "NewCandles":
                     {
                         if (DC.NewCandles != null && DC.NewCandles.Count > 0)
@@ -111,8 +142,11 @@ namespace FlexTrader.MVVM.Views
             }
         }
 
-        private double ChHeight => ChartGRD.ActualHeight;
-        private double ChWidth => ChartGRD.ActualWidth;
+        private int EventType = 0;
+        private double TimeLineHeight;
+        private Brush ChartBackground;
+        private double ChHeight;
+        private double ChWidth;
         private double Delta;
         private double Min;
         private int ChangesCounter = 0;
@@ -121,6 +155,8 @@ namespace FlexTrader.MVVM.Views
         {
             Task.Run(() => 
             {
+                ChHeight = ChartGRD.ActualHeight;
+                ChWidth = ChartGRD.ActualWidth;
                 ChangesCounter += 1;
                 var x = ChangesCounter;
                 Thread.Sleep(100);
@@ -129,20 +165,6 @@ namespace FlexTrader.MVVM.Views
             });
         }
         private bool VerticalLock = true;
-        private void VerticalReset()
-        {
-            if (VerticalLock)
-            {
-                CurrentTranslate.Y = Min + Delta * 0.5 - ChHeight * 0.5;
-                CurrentScale.Y = ChHeight / Delta;
-                Dispatcher.Invoke(() => 
-                { 
-                    Translate.Y = CurrentTranslate.Y;
-                    ScaleY.ScaleY = CurrentScale.Y; 
-                });
-            }
-            RedrawPrices();
-        }
         private void HorizontalReset()
         {
             if (StartTime.HasValue && DeltaTime.HasValue)
@@ -162,10 +184,32 @@ namespace FlexTrader.MVVM.Views
                 max += delta * 0.05;
                 Min -= delta * 0.05;
                 Delta = max - Min;
+                if (VerticalLock) 
+                {
+                    LastMin = Min;
+                    LastY = CurrentTranslate.Y;
+                    LastDelta = Delta;
+                }
+                
 
                 VerticalReset();
                 RedrawTimeLine();
             }
+        }
+        private void VerticalReset()
+        {
+            if (VerticalLock)
+            {
+                CurrentTranslate.Y = Min + Delta * 0.5 - ChHeight * 0.5;
+                LastY = CurrentTranslate.Y;
+                CurrentScale.Y = ChHeight / Delta;
+                Dispatcher.Invoke(() =>
+                {
+                    Translate.Y = CurrentTranslate.Y;
+                    ScaleY.ScaleY = CurrentScale.Y;
+                });
+            }
+            RedrawPrices();
         }
         private DateTime? StartTime;
         private TimeSpan? DeltaTime;
@@ -219,14 +263,13 @@ namespace FlexTrader.MVVM.Views
             VerticalReset();
         }
 
-        private readonly DrawingCanvas CandlesLayer;
-
-        public event Action<MouseButtonEventArgs> StartMoveChart;
+        public event Action<MouseButtonEventArgs> StartMoveCursor;
         private void MovingChart(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
             LastTranslateCector = CurrentTranslate;
-            StartMoveChart?.Invoke(e);
+            EventType = 1;
+            StartMoveCursor?.Invoke(e);
         }
         private Vector LastTranslateCector;
         private Vector CurrentTranslate;
@@ -267,9 +310,9 @@ namespace FlexTrader.MVVM.Views
                     Translate.Y = CurrentTranslate.Y;
                 });
                 _ = RedrawTimeLine();
+                RedrawPrices();
             }
         }
-
         private void MouseWheelSpinning(object sender, MouseWheelEventArgs e)
         {
             Task.Run(async () => 
@@ -304,32 +347,36 @@ namespace FlexTrader.MVVM.Views
             });
         }
 
-
         private double BaseFontSize;
         private Brush FontBrush;
-        private Typeface FontNumeric;
-        private Typeface FontText;
+        private readonly Typeface FontNumeric;
+        private readonly Typeface FontText;
         private Pen LinesPen;
+         
         //PriceLine
         private void PriceLineInitialize()
         {
-            PriceGridVisual = new DrawingVisual();
             GridLayer.AddVisual(PriceGridVisual);
 
-            PricesVisual = new DrawingVisual();
             PriceLine.AddVisual(PricesVisual);
         }
-        private DrawingVisual PricesVisual;
-        private DrawingVisual PriceGridVisual;
+        private readonly DrawingVisual PricesVisual = new DrawingVisual();
+        private readonly DrawingVisual PriceGridVisual = new DrawingVisual();
 
+        private double PricesDelta;
+        private double PricesMin;
+        private double LastY;
+        private double LastDelta;
+        private double LastMin;
         private void RedrawPrices()
         {
             if (ChHeight == 0) return;
-            var delta = (ChHeight / CurrentScale.Y);
-            var min = Min + (Delta - delta) / 2;
+            PricesDelta = (ChHeight / CurrentScale.Y);
+            PricesMin = LastMin - (LastY - CurrentTranslate.Y) + (LastDelta - PricesDelta) / 2;
+            var pixelsPerDip = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
 
             double count = Math.Floor((ChHeight / (BaseFontSize * 6)));
-            var step = (delta * TickSize) / count;
+            var step = (PricesDelta * TickSize) / count;
             double n = 1;
             int d = 0;
             while (step > 10)
@@ -350,27 +397,39 @@ namespace FlexTrader.MVVM.Views
             else if (step > 2) step = 2 * n;
             else if (step > 1) step = 1 * n;
 
-            string f = null;
-            if (d > 0)
+            var maxP = (PricesMin + PricesDelta) * TickSize;
+            var raz = 1;
+            while (maxP > 10)
             {
-                f = "0.";
-                var x = 0;
-                while (d != x)
-                {
-                    f += "0"; x += 1;
-                }
+                maxP /= 10;
+                raz *= 10;
             }
+            var sf = TickSize.ToString().Replace('1', '0').Replace(',', '.');
+            var fsf = sf;
+            if (raz > 10) 
+                for (int i = Convert.ToInt32(Math.Log10(raz)); i > 0; i--)
+                    fsf = "0" + fsf;
+            var fsfFT = new FormattedText
+                        (
+                            fsf,
+                            CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            FontNumeric,
+                            BaseFontSize,
+                            FontBrush,
+                            pixelsPerDip
+                        );
 
-            var price = Math.Round(step * Math.Ceiling((min * TickSize) / step), d);
-            var coordiate = PriceToHeight(price, delta, min);
+            var price = Math.Round(step * Math.Ceiling((PricesMin * TickSize) / step), d);
+            var coordiate = PriceToHeight(price);
             var pricesToDraw = new List<(FormattedText price, Point coor,
                 Point A, Point B, Point G, Point H)>();
-            var pixelsPerDip = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
+            
             do
             {
                 var ft = new FormattedText
                         (
-                            price.ToString(f),
+                            price.ToString(sf),
                             CultureInfo.CurrentCulture,
                             FlowDirection.LeftToRight,
                             FontNumeric,
@@ -379,15 +438,15 @@ namespace FlexTrader.MVVM.Views
                             pixelsPerDip
                         );
                 var Y = coordiate - ft.Height / 2;
-                pricesToDraw.Add((ft, new Point(6, Y), 
+                pricesToDraw.Add((ft, new Point(Shift, Y), 
                     new Point(0, coordiate), new Point(3, coordiate),
                     new Point(0, coordiate), new Point(4096, coordiate)));
                 price = Math.Round(price + step, d);
-                coordiate = PriceToHeight(price, delta, min);
+                coordiate = PriceToHeight(price);
             } 
             while (coordiate > 0);
 
-            var nWidth = pricesToDraw.Select(p => p.price.Width).Max() + 6;
+            PriceLineWidth = fsfFT.Width + Shift + 4;
             Dispatcher.Invoke(() => 
             {
                 using var pvc = PricesVisual.RenderOpen();
@@ -398,15 +457,13 @@ namespace FlexTrader.MVVM.Views
                     pvc.DrawLine(LinesPen, pr.A, pr.B);
                     pgvc.DrawLine(LinesPen, pr.G, pr.H);
                 }
-                PriceLine.Width = nWidth;
+                PriceLine.Width = PriceLineWidth;
             });
         }
-        private double PriceToHeight(double price, double delta, double min)
-        {
-            return (ChHeight * (delta * TickSize - price + min * TickSize)) / (delta * TickSize);
-        }
+        private double PriceLineWidth;
+        private double PriceToHeight(double price) =>
+            (ChHeight * (PricesDelta * TickSize - price + PricesMin * TickSize)) / (PricesDelta * TickSize);
 
-        public event Action<MouseButtonEventArgs> StartYScaling;
         private double LastScaleY;
         private void PriceLine_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -414,7 +471,8 @@ namespace FlexTrader.MVVM.Views
             if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
             LastScaleY = CurrentScale.Y;
             VerticalLock = false;
-            StartYScaling?.Invoke(e);
+            EventType = 2;
+            StartMoveCursor?.Invoke(e);
         }
         private void ScalingY(double Y)
         {
@@ -445,27 +503,24 @@ namespace FlexTrader.MVVM.Views
         }
 
         //TimeLine
+        private DateTime TimeA = DateTime.Now;
+        private DateTime TimeB = DateTime.Now;
         private void TimeLineInitialize()
         {
-            TimeGridVisual = new DrawingVisual();
             GridLayer.AddVisual(TimeGridVisual);
 
-            TimesVisual = new DrawingVisual();
             TimeLine.AddVisual(TimesVisual);
-
-            YearFontSize = Math.Round(BaseFontSize * 1.4);
-            MiniFontSize = Math.Round(BaseFontSize * 0.6);
         }
-        private DrawingVisual TimesVisual;
-        private DrawingVisual TimeGridVisual;
+        private readonly DrawingVisual TimesVisual = new DrawingVisual();
+        private readonly DrawingVisual TimeGridVisual = new DrawingVisual();
 
         private Task RedrawTimeLine()
         {
             if (ChWidth == 0) return null;
             return Task.Run(() => 
             {
-                var TimeA = StartTime.Value - ((ChWidth / CurrentScale.X + CurrentTranslate.X - 7.5) / 15) * DeltaTime.Value;
-                var TimeB = StartTime.Value - ((CurrentTranslate.X - 7.5) / 15) * DeltaTime.Value;
+                TimeA = StartTime.Value - ((ChWidth / CurrentScale.X + CurrentTranslate.X - 7.5) / 15) * DeltaTime.Value;
+                TimeB = StartTime.Value - ((CurrentTranslate.X - 7.5) / 15) * DeltaTime.Value;
 
                 double count = Math.Floor((ChWidth / (BaseFontSize * 10)));
                 var step = (TimeB - TimeA) / count;
@@ -523,7 +578,7 @@ namespace FlexTrader.MVVM.Views
                     Yn += Ystep;
                     while (Yn < TimeB.Year)
                     {
-                        AddYear(timesToDraw, Yn, pixelsPerDip, TimeA, TimeB);
+                        AddYear(timesToDraw, Yn, pixelsPerDip);
                         Yn += Ystep;
                     }
                 }
@@ -537,7 +592,7 @@ namespace FlexTrader.MVVM.Views
                         currentDT = currentDT.AddMonths(Mstep);
                         while (currentDT <= TimeB)
                         {
-                            AddMounth(timesToDraw, currentDT, pixelsPerDip, TimeA, TimeB);
+                            AddMounth(timesToDraw, currentDT, pixelsPerDip);
                             currentDT = currentDT.AddMonths(Mstep);
                         }
                     }
@@ -553,7 +608,7 @@ namespace FlexTrader.MVVM.Views
                             {
                                 while (currentDT <= TimeB)
                                 {
-                                    AddDay(timesToDraw, currentDT, pixelsPerDip, TimeA, TimeB);
+                                    AddDay(timesToDraw, currentDT, pixelsPerDip);
                                     ndt = currentDT.AddDays(Dstep);
                                     if (ndt.Month != currentDT.Month || ndt.Day > 28)
                                         currentDT = new DateTime(ndt.Year, ndt.Month, 1);
@@ -566,7 +621,7 @@ namespace FlexTrader.MVVM.Views
                             {
                                 while (currentDT <= TimeB)
                                 {
-                                    AddDay(timesToDraw, currentDT, pixelsPerDip, TimeA, TimeB);
+                                    AddDay(timesToDraw, currentDT, pixelsPerDip);
                                     ndt = currentDT.AddDays(Dstep);
                                     if (ndt.Month != currentDT.Month)
                                         currentDT = new DateTime(ndt.Year, ndt.Month, 1);
@@ -586,7 +641,7 @@ namespace FlexTrader.MVVM.Views
                                     currentDT = currentDT.AddHours(Hstep);
                                     while (currentDT <= TimeB)
                                     {
-                                        AddHourMinute(timesToDraw, currentDT, pixelsPerDip, TimeA, TimeB);
+                                        AddHourMinute(timesToDraw, currentDT, pixelsPerDip);
                                         currentDT = currentDT.AddHours(Hstep);
                                     }
                                 }
@@ -595,7 +650,7 @@ namespace FlexTrader.MVVM.Views
                                     var currentDT = new DateTime(TimeA.Year, TimeA.Month, TimeA.Day, 0, 0, 0);
                                     while (currentDT <= TimeB)
                                     {
-                                        AddHourMinute(timesToDraw, currentDT, pixelsPerDip, TimeA, TimeB);
+                                        AddHourMinute(timesToDraw, currentDT, pixelsPerDip);
                                         currentDT = currentDT.AddHours(Hstep);
                                     }
                                 }
@@ -605,7 +660,7 @@ namespace FlexTrader.MVVM.Views
                                 var currentDT = new DateTime(TimeA.Year, TimeA.Month, TimeA.Day, 0, 0, 0);
                                 while (currentDT <= TimeB)
                                 {
-                                    AddHourMinute(timesToDraw, currentDT, pixelsPerDip, TimeA, TimeB);
+                                    AddHourMinute(timesToDraw, currentDT, pixelsPerDip);
                                     currentDT = currentDT.AddMinutes(Mnstep);
                                 }
                             }
@@ -615,18 +670,16 @@ namespace FlexTrader.MVVM.Views
 
                 if (timesToDraw.Count > 0)
                 {
-                    var nHeight = timesToDraw.Select(p => p.Text.Height).Max() + 6;
                     Dispatcher.Invoke(() =>
                     {
                         using var tvc = TimesVisual.RenderOpen();
                         using var tgvc = TimeGridVisual.RenderOpen();
-                        foreach (var t in timesToDraw)
+                        foreach (var (Text, Tpoint, A, B, G, H) in timesToDraw)
                         {
-                            tvc.DrawText(t.Text, t.Tpoint);
-                            tvc.DrawLine(LinesPen, t.A, t.B);
-                            tgvc.DrawLine(LinesPen, t.G, t.H);
+                            tvc.DrawText(Text, Tpoint);
+                            tvc.DrawLine(LinesPen, A, B);
+                            tgvc.DrawLine(LinesPen, G, H);
                         }
-                        TimeLine.Height = nHeight;
                     });
                 }
                 else
@@ -640,7 +693,7 @@ namespace FlexTrader.MVVM.Views
             });
         }
         private double YearFontSize;
-        private void AddYear(dynamic container, int Y, double pixelsPerDip, DateTime A, DateTime B)
+        private void AddYear(dynamic container, int Y, double pixelsPerDip)
         {
             var ft = new FormattedText
                         (
@@ -652,15 +705,15 @@ namespace FlexTrader.MVVM.Views
                             FontBrush,
                             pixelsPerDip
                         );
-            var width = TimeToWidth(new DateTime(Y, 1, 1), A, B);
+            var width = TimeToWidth(new DateTime(Y, 1, 1));
             if (width < 0 || width > ChWidth) return;
-            container.Add((ft, new Point(width - ft.Width / 2, 6),
-                new Point(width, 0), new Point(width, 6),
+            container.Add((ft, new Point(width - ft.Width / 2, Shift),
+                new Point(width, 0), new Point(width, Shift),
                 new Point(width, 0), new Point(width, 4096)));
         }
-        private void AddMounth(dynamic container, DateTime dt, double pixelsPerDip, DateTime A, DateTime B)
+        private void AddMounth(dynamic container, DateTime dt, double pixelsPerDip)
         {
-            if (dt.Month == 1) AddYear(container, dt.Year, pixelsPerDip, A, B);
+            if (dt.Month == 1) AddYear(container, dt.Year, pixelsPerDip);
             else
             {
                 var ft = new FormattedText
@@ -673,16 +726,16 @@ namespace FlexTrader.MVVM.Views
                             FontBrush,
                             pixelsPerDip
                         );
-                var width = TimeToWidth(dt, A, B);
+                var width = TimeToWidth(dt);
                 if (width < 0 || width > ChWidth) return;
-                container.Add((ft, new Point(width - ft.Width / 2, 6),
-                    new Point(width, 0), new Point(width, 6),
+                container.Add((ft, new Point(width - ft.Width / 2, Shift),
+                    new Point(width, 0), new Point(width, Shift),
                     new Point(width, 0), new Point(width, 4096)));
             }
         }
-        private void AddDay(dynamic container, DateTime dt, double pixelsPerDip, DateTime A, DateTime B)
+        private void AddDay(dynamic container, DateTime dt, double pixelsPerDip)
         {
-            if (dt.Day == 1) AddMounth(container, dt, pixelsPerDip, A, B);
+            if (dt.Day == 1) AddMounth(container, dt, pixelsPerDip);
             else
             {
                 var ft = new FormattedText
@@ -695,16 +748,16 @@ namespace FlexTrader.MVVM.Views
                             FontBrush,
                             pixelsPerDip
                         );
-                var width = TimeToWidth(dt, A, B);
+                var width = TimeToWidth(dt);
                 if (width < 0 || width > ChWidth) return;
-                container.Add((ft, new Point(width - ft.Width / 2, 6),
-                    new Point(width, 0), new Point(width, 6),
+                container.Add((ft, new Point(width - ft.Width / 2, Shift),
+                    new Point(width, 0), new Point(width, Shift),
                     new Point(width, 0), new Point(width, 4096)));
             }
         }
-        private void AddHourMinute(dynamic container, DateTime dt, double pixelsPerDip, DateTime A, DateTime B)
+        private void AddHourMinute(dynamic container, DateTime dt, double pixelsPerDip)
         {
-            if (dt.Hour == 0 && dt.Minute == 0) AddDay(container, dt, pixelsPerDip, A, B);
+            if (dt.Hour == 0 && dt.Minute == 0) AddDay(container, dt, pixelsPerDip);
             else
             {
                 var ft = new FormattedText
@@ -717,20 +770,18 @@ namespace FlexTrader.MVVM.Views
                             FontBrush,
                             pixelsPerDip
                         );
-                var width = TimeToWidth(dt, A, B);
+                var width = TimeToWidth(dt);
                 if (width < 0 || width > ChWidth) return;
-                container.Add((ft, new Point(width - ft.Width / 2, 6),
-                    new Point(width, 0), new Point(width, 6),
+                container.Add((ft, new Point(width - ft.Width / 2, Shift),
+                    new Point(width, 0), new Point(width, Shift),
                     new Point(width, 0), new Point(width, 4096)));
             }
         }
-        private double TimeToWidth(DateTime dt, DateTime A, DateTime B) => ChWidth * ((dt - A) / (B - A)) + 2;
-        private double MiniFontSize;
-        private DateTime WidthToTime(double width, DateTime A, DateTime B) => A + (width / ChWidth) * (B - A);
+        private double TimeToWidth(DateTime dt) => ChWidth * ((dt - TimeA) / (TimeB - TimeA)) + 2;
+        private DateTime WidthToTime(double width) => TimeA + ((width - 2) / ChWidth) * (TimeB - TimeA);
 
-        public event Action<MouseButtonEventArgs> StartXScaling;
         private double LastScaleX;
-        private double MaxCandleSize = 175;
+        private const double MaxCandleSize = 175;
         private void TimeLine_MouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
@@ -744,7 +795,8 @@ namespace FlexTrader.MVVM.Views
                 return; 
             }
             LastScaleX = CurrentScale.X;
-            StartXScaling?.Invoke(e);
+            EventType = 3;
+            StartMoveCursor?.Invoke(e);
         }
         private void ScalingX(double X)
         {
@@ -777,6 +829,162 @@ namespace FlexTrader.MVVM.Views
                 Dispatcher.Invoke(() => ScaleX.ScaleX = LastScaleX);
                 HorizontalReset();
             });
+        }
+
+        //курсор
+        private Pen CursorPen;
+        private const double Shift = 6;
+        private readonly DrawingVisual CursorVerticalVisual = new DrawingVisual();
+        private readonly DrawingVisual CursorHorizontalVisual = new DrawingVisual();
+        private readonly DrawingVisual CursorTimeVisual = new DrawingVisual();
+        private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
+        private void ShowCursor(object sender, MouseEventArgs e)
+        {
+            CursorLayer.AddVisual(CursorVerticalVisual);
+            CursorLayer.AddVisual(CursorHorizontalVisual);
+            TimeLine.AddVisual(CursorTimeVisual);
+            PriceLine.AddVisual(CursorPriceVisual);
+        }
+        private void CursorLeave(object sender, MouseEventArgs e)
+        {
+            CursorLayer.ClearVisuals();
+            TimeLine.DeleteVisual(CursorTimeVisual);
+            PriceLine.DeleteVisual(CursorPriceVisual);
+        }
+        private DateTime LastCurosrDT;
+        private string LastCurosrPrice;
+        private double LastCursorPosX;
+        private double LastCursorPosY;
+        private string CursorPriceFormat;
+        private void CursorRedraw(object sender, MouseEventArgs e)
+        {
+            var pos = e.GetPosition(this);
+            Task.Run(() =>
+            {
+                var dt = CorrectCursorPosition(ref pos);
+                var price = HeightToPrice(pos.Y).ToString(CursorPriceFormat);
+                pos.Y = PriceToHeight(Convert.ToDouble(price));
+                price = HeightToPrice(pos.Y).ToString(CursorPriceFormat);
+
+                if (LastCurosrPrice != price || LastCursorPosY != pos.X)
+                {
+                    LastCurosrPrice = price; LastCursorPosY = pos.X;
+
+                    var ft = new FormattedText
+                                (
+                                    price,
+                                    CultureInfo.CurrentCulture,
+                                    FlowDirection.LeftToRight,
+                                    FontNumeric,
+                                    BaseFontSize,
+                                    FontBrush,
+                                    VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
+                                );
+                    var Tpont = new Point(Shift + 1, pos.Y - ft.Height / 2);
+                    var startPoint = new Point(0, pos.Y);
+                    var Points = new Point[]
+                    {
+                        new Point(Shift, pos.Y + ft.Height / 2),
+                        new Point(PriceLineWidth - 2, pos.Y + ft.Height / 2),
+                        new Point(PriceLineWidth - 2, pos.Y - ft.Height / 2),
+                        new Point(Shift, pos.Y - ft.Height / 2)
+                    };
+
+                    var PointA2 = new Point(0, pos.Y);
+                    var PointB2 = new Point(ChWidth + 2, pos.Y);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        var geo = new PathGeometry(new[] { new PathFigure(startPoint,
+                            new[]
+                            {
+                                new LineSegment(Points[0], true),
+                                new LineSegment(Points[1], true),
+                                new LineSegment(Points[2], true),
+                                new LineSegment(Points[3], true)
+                            },
+                            true)
+                        });
+
+                        using var dcCH = CursorHorizontalVisual.RenderOpen();
+                        using var dcP = CursorPriceVisual.RenderOpen();
+
+                        dcCH.DrawLine(CursorPen, PointA2, PointB2);
+
+                        dcP.DrawGeometry(ChartBackground, CursorPen, geo);
+                        dcP.DrawText(ft, Tpont);
+                    });
+                }
+                if (LastCurosrDT != dt || LastCursorPosX != pos.X)
+                {
+                    LastCurosrDT = dt; LastCursorPosX = pos.X;
+
+                    var PointA1 = new Point(pos.X, 0);
+                    var PointB1 = new Point(pos.X, ChHeight);
+
+                    var ft = new FormattedText
+                            (
+                                dt.ToString("yy-MM-dd HH:mm"),
+                                CultureInfo.CurrentCulture,
+                                FlowDirection.LeftToRight,
+                                FontNumeric,
+                                BaseFontSize,
+                                FontBrush,
+                                VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
+                            );
+                    var Tpont = new Point(pos.X - ft.Width / 2, Shift + 2);
+                    var startPoint = new Point(pos.X, 0);
+                    var Points = new Point[]
+                    {
+                        new Point(pos.X + Shift, Shift),
+                        new Point(pos.X + ft.Width / 2 + 4, Shift),
+                        new Point(pos.X + ft.Width / 2 + 4, ft.Height + 3 + Shift),
+                        new Point(pos.X - ft.Width / 2 - 4, ft.Height + 3 + Shift),
+                        new Point(pos.X - ft.Width / 2 - 4, Shift),
+                        new Point(pos.X - Shift, Shift)
+                    };
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        var geo = new PathGeometry(new[] { new PathFigure(startPoint,
+                            new[]
+                            {
+                                new LineSegment(Points[0], true),
+                                new LineSegment(Points[1], true),
+                                new LineSegment(Points[2], true),
+                                new LineSegment(Points[3], true),
+                                new LineSegment(Points[4], true),
+                                new LineSegment(Points[5], true)
+                            },
+                            true)
+                        });
+
+                        using var dcCH = CursorVerticalVisual.RenderOpen();
+                        using var dcT = CursorTimeVisual.RenderOpen();
+
+                        dcCH.DrawLine(CursorPen, PointA1, PointB1);
+
+                        dcT.DrawGeometry(ChartBackground, CursorPen, geo);
+                        dcT.DrawText(ft, Tpont);
+                    });
+                }
+            });
+        }
+        private double HeightToPrice(double height) =>
+            PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight;
+        private DateTime CorrectCursorPosition(ref double X)
+        {
+            var dt = StartTime.Value -
+                Math.Round((StartTime.Value - WidthToTime(X)) / DeltaTime.Value) * DeltaTime.Value;
+            X = TimeToWidth(dt);
+            return dt;
+        }
+        private DateTime CorrectCursorPosition(ref Point pos)
+        {
+            var dt = StartTime.Value -
+                Math.Round((StartTime.Value - WidthToTime(pos.X)) / DeltaTime.Value) * DeltaTime.Value;
+            pos.X = TimeToWidth(dt);
+            return dt;
         }
     }
 }
