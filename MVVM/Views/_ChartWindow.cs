@@ -25,7 +25,6 @@ namespace FlexTrader.MVVM.Views
     public class ChartWindow : Window
     {
         public event Action<Vector> Moving;
-        public event Action EndMoving;
         private Point StartPosition;
 
         internal void StartMoveCursor(MouseButtonEventArgs e)

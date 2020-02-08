@@ -25,6 +25,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace FlexTrader.MVVM.ViewModels 
 {
@@ -36,20 +37,30 @@ namespace FlexTrader.MVVM.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        public void Inicialize()
+        private Dispatcher Dispatcher;
+        public void Inicialize(Dispatcher dispatcher)
         {
+            Dispatcher = dispatcher;
+
             ChartBackground = Brushes.Black;
             TickSize = 0.01;
             BaseFontSize = 18;
             FontBrush = Brushes.White;
             LinesThickness = 1;
             LinesBrush = Brushes.DarkGray;
-            CursorThickness = 1;
-            CursorBrush = Brushes.Cyan;
+            CursorThickness = 2;
+            CursorBrush = Brushes.White;
 
             Binance ex = new Binance();
             //ex.GeneralInfo();
             NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15);
+
+            Marks = new List<PriceMark>
+            {
+                new PriceMark(174, Brushes.White, ChartBackground, Brushes.Yellow),
+                new PriceMark(176, ChartBackground, Brushes.Azure, Brushes.Azure),
+                new PriceMark(178, Brushes.Lime, ChartBackground, Brushes.Lime)
+            };
         }
 
         public double TickSize { get; set; }
@@ -64,5 +75,27 @@ namespace FlexTrader.MVVM.ViewModels
         
         public double CursorThickness { get; set; }
         public Brush CursorBrush { get; set; }
+
+        public List<PriceMark> Marks { get; set; }
+    }
+
+    public struct PriceMark
+    {
+        public PriceMark(double Price, Brush TextBrush, Brush Fill, Brush LineBrush)
+        {
+            this.Price = Price;
+            this.TextBrush = TextBrush;
+            this.Fill = Fill;
+            this.LineBrush = LineBrush;
+
+            this.TextBrush?.Freeze();
+            this.Fill?.Freeze();
+            this.LineBrush?.Freeze();
+        }
+
+        public double Price { get; set; }
+        public Brush TextBrush { get; set; }
+        public Brush Fill { get; set; }
+        public Brush LineBrush { get; set; }
     }
 }

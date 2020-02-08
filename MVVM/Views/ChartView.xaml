@@ -43,6 +43,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid
+            Cursor="Cross"
             MouseEnter="ShowCursor"
             MouseLeave="CursorLeave"
             MouseMove="CursorRedraw"
@@ -71,7 +72,7 @@
                     </Grid.RenderTransform>
                 </Grid>
             </Grid>
-            <mvvm:DrawingCanvas x:Name="CursorLayer" />
+            <mvvm:DrawingCanvas x:Name="MarksLayer" />
         </Grid>
         <Border
             Grid.Row="1"

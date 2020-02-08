@@ -71,12 +71,13 @@ namespace FlexTrader.MVVM.Views
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
             PriceLineInitialize();
             TimeLineInitialize();
+            InitializePriceMarks();
 
             //DataContextInitialize
             {
                 var DC = DataContext as ChartViewModel;
                 DC.PropertyChanged += DContext_PropertyChanged;
-                DC.Inicialize();
+                DC.Inicialize(this.Dispatcher);
             }
         }
 
@@ -95,7 +96,12 @@ namespace FlexTrader.MVVM.Views
                 case "LinesBrush": LinesPen = new Pen(DC.LinesBrush, DC.LinesThickness); break;
                 case "LinesThickness": if (DC.LinesBrush != null) 
                         LinesPen = new Pen(DC.LinesBrush, DC.LinesThickness); break;
-
+                case "Marks":
+                    {
+                        Marks = DC.Marks;
+                        RedrawMarks();
+                    }
+                    break;
                 case "ChartBackground": ChartBackground = DC.ChartBackground; break;
                 case "FontBrush": FontBrush = DC.FontBrush; break;
                 case "BaseFontSize": 
@@ -120,7 +126,7 @@ namespace FlexTrader.MVVM.Views
                 case "TickSize":
                     {
                         TickSize = DC.TickSize;
-                        CursorPriceFormat = TickSize.ToString().Replace('1', '0').Replace(',', '.');
+                        TickPriceFormat = TickSize.ToString().Replace('1', '0').Replace(',', '.');
                     }
                     break;
                 case "NewCandles":
@@ -135,6 +141,7 @@ namespace FlexTrader.MVVM.Views
                                 if (DeltaTime.Value != ts) DeltaTime = ts;
                             }
                             AllCandles.AddRange(DC.NewCandles);
+                            AllCandles = AllCandles.OrderBy(c => c.TimeStamp).ToList();
                             DrawNewCandles(DC.NewCandles);
                         }
                     }
@@ -150,7 +157,7 @@ namespace FlexTrader.MVVM.Views
         private double Delta;
         private double Min;
         private int ChangesCounter = 0;
-        private readonly List<Candle> AllCandles = new List<Candle>();
+        private List<Candle> AllCandles = new List<Candle>();
         private void ChartGRD_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Task.Run(() => 
@@ -459,6 +466,7 @@ namespace FlexTrader.MVVM.Views
                 }
                 PriceLine.Width = PriceLineWidth;
             });
+            RedrawMarks();
         }
         private double PriceLineWidth;
         private double PriceToHeight(double price) =>
@@ -840,62 +848,83 @@ namespace FlexTrader.MVVM.Views
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
         private void ShowCursor(object sender, MouseEventArgs e)
         {
-            CursorLayer.AddVisual(CursorVerticalVisual);
-            CursorLayer.AddVisual(CursorHorizontalVisual);
+            MarksLayer.AddVisual(CursorVerticalVisual);
+            MarksLayer.AddVisual(CursorHorizontalVisual);
             TimeLine.AddVisual(CursorTimeVisual);
             PriceLine.AddVisual(CursorPriceVisual);
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            CursorLayer.ClearVisuals();
+            MarksLayer.DeleteVisual(CursorVerticalVisual);
+            MarksLayer.DeleteVisual(CursorHorizontalVisual);
             TimeLine.DeleteVisual(CursorTimeVisual);
             PriceLine.DeleteVisual(CursorPriceVisual);
         }
-        private DateTime LastCurosrDT;
-        private string LastCurosrPrice;
-        private double LastCursorPosX;
-        private double LastCursorPosY;
-        private string CursorPriceFormat;
+        private const double CursorArea = 25;
+        private string TickPriceFormat;
         private void CursorRedraw(object sender, MouseEventArgs e)
         {
             var pos = e.GetPosition(this);
             Task.Run(() =>
             {
                 var dt = CorrectCursorPosition(ref pos);
-                var price = HeightToPrice(pos.Y).ToString(CursorPriceFormat);
+                var price = HeightToPrice(pos.Y).ToString(TickPriceFormat);
                 pos.Y = PriceToHeight(Convert.ToDouble(price));
-                price = HeightToPrice(pos.Y).ToString(CursorPriceFormat);
+                price = HeightToPrice(pos.Y).ToString(TickPriceFormat);
 
-                if (LastCurosrPrice != price || LastCursorPosY != pos.X)
+                var ft = new FormattedText
+                            (
+                                price,
+                                CultureInfo.CurrentCulture,
+                                FlowDirection.LeftToRight,
+                                FontNumeric,
+                                BaseFontSize,
+                                FontBrush,
+                                VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
+                            );
+                var Tpont = new Point(Shift + 1, pos.Y - ft.Height / 2);
+                var startPoint = new Point(0, pos.Y);
+                var Points = new Point[]
                 {
-                    LastCurosrPrice = price; LastCursorPosY = pos.X;
-
-                    var ft = new FormattedText
-                                (
-                                    price,
-                                    CultureInfo.CurrentCulture,
-                                    FlowDirection.LeftToRight,
-                                    FontNumeric,
-                                    BaseFontSize,
-                                    FontBrush,
-                                    VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
-                                );
-                    var Tpont = new Point(Shift + 1, pos.Y - ft.Height / 2);
-                    var startPoint = new Point(0, pos.Y);
-                    var Points = new Point[]
-                    {
                         new Point(Shift, pos.Y + ft.Height / 2),
                         new Point(PriceLineWidth - 2, pos.Y + ft.Height / 2),
                         new Point(PriceLineWidth - 2, pos.Y - ft.Height / 2),
                         new Point(Shift, pos.Y - ft.Height / 2)
-                    };
+                };
 
-                    var PointA2 = new Point(0, pos.Y);
-                    var PointB2 = new Point(ChWidth + 2, pos.Y);
+                var ft2 = new FormattedText
+                        (
+                            dt.ToString("yy-MM-dd HH:mm"),
+                            CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            FontNumeric,
+                            BaseFontSize,
+                            FontBrush,
+                            VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
+                        );
+                var Tpont2 = new Point(pos.X - ft2.Width / 2, Shift + 2);
+                var startPoint2 = new Point(pos.X, 0);
+                var Points2 = new Point[]
+                {
+                        new Point(pos.X + Shift, Shift),
+                        new Point(pos.X + ft2.Width / 2 + 4, Shift),
+                        new Point(pos.X + ft2.Width / 2 + 4, ft2.Height + 3 + Shift),
+                        new Point(pos.X - ft2.Width / 2 - 4, ft2.Height + 3 + Shift),
+                        new Point(pos.X - ft2.Width / 2 - 4, Shift),
+                        new Point(pos.X - Shift, Shift)
+                };
 
-                    Dispatcher.Invoke(() =>
-                    {
-                        var geo = new PathGeometry(new[] { new PathFigure(startPoint,
+                var PointA2 = new Point(0, pos.Y);
+                var PointB2 = new Point(pos.X - CursorArea, pos.Y);
+                var PointC2 = new Point(pos.X + CursorArea, pos.Y);
+                var PointD2 = new Point(ChWidth + 2, pos.Y);
+
+                var PointA1 = new Point(pos.X, 0);
+                var PointB1 = new Point(pos.X, pos.Y - CursorArea);
+                var PointC1 = new Point(pos.X, pos.Y + CursorArea);
+                var PointD1 = new Point(pos.X, ChHeight);
+
+                var geo = new PathGeometry(new[] { new PathFigure(startPoint,
                             new[]
                             {
                                 new LineSegment(Points[0], true),
@@ -904,70 +933,37 @@ namespace FlexTrader.MVVM.Views
                                 new LineSegment(Points[3], true)
                             },
                             true)
-                        });
-
-                        using var dcCH = CursorHorizontalVisual.RenderOpen();
-                        using var dcP = CursorPriceVisual.RenderOpen();
-
-                        dcCH.DrawLine(CursorPen, PointA2, PointB2);
-
-                        dcP.DrawGeometry(ChartBackground, CursorPen, geo);
-                        dcP.DrawText(ft, Tpont);
-                    });
-                }
-                if (LastCurosrDT != dt || LastCursorPosX != pos.X)
-                {
-                    LastCurosrDT = dt; LastCursorPosX = pos.X;
-
-                    var PointA1 = new Point(pos.X, 0);
-                    var PointB1 = new Point(pos.X, ChHeight);
-
-                    var ft = new FormattedText
-                            (
-                                dt.ToString("yy-MM-dd HH:mm"),
-                                CultureInfo.CurrentCulture,
-                                FlowDirection.LeftToRight,
-                                FontNumeric,
-                                BaseFontSize,
-                                FontBrush,
-                                VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
-                            );
-                    var Tpont = new Point(pos.X - ft.Width / 2, Shift + 2);
-                    var startPoint = new Point(pos.X, 0);
-                    var Points = new Point[]
-                    {
-                        new Point(pos.X + Shift, Shift),
-                        new Point(pos.X + ft.Width / 2 + 4, Shift),
-                        new Point(pos.X + ft.Width / 2 + 4, ft.Height + 3 + Shift),
-                        new Point(pos.X - ft.Width / 2 - 4, ft.Height + 3 + Shift),
-                        new Point(pos.X - ft.Width / 2 - 4, Shift),
-                        new Point(pos.X - Shift, Shift)
-                    };
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        var geo = new PathGeometry(new[] { new PathFigure(startPoint,
+                        }); geo.Freeze();
+                var geo2 = new PathGeometry(new[] { new PathFigure(startPoint2,
                             new[]
                             {
-                                new LineSegment(Points[0], true),
-                                new LineSegment(Points[1], true),
-                                new LineSegment(Points[2], true),
-                                new LineSegment(Points[3], true),
-                                new LineSegment(Points[4], true),
-                                new LineSegment(Points[5], true)
+                                new LineSegment(Points2[0], true),
+                                new LineSegment(Points2[1], true),
+                                new LineSegment(Points2[2], true),
+                                new LineSegment(Points2[3], true),
+                                new LineSegment(Points2[4], true),
+                                new LineSegment(Points2[5], true)
                             },
                             true)
-                        });
+                        }); geo2.Freeze();
 
-                        using var dcCH = CursorVerticalVisual.RenderOpen();
-                        using var dcT = CursorTimeVisual.RenderOpen();
+                Dispatcher.Invoke(() =>
+                {
+                    using var dcCH = CursorHorizontalVisual.RenderOpen();
+                    using var dcP = CursorPriceVisual.RenderOpen();
+                    using var dcT = CursorTimeVisual.RenderOpen();
 
-                        dcCH.DrawLine(CursorPen, PointA1, PointB1);
+                    dcCH.DrawLine(CursorPen, PointA2, PointB2);
+                    dcCH.DrawLine(CursorPen, PointC2, PointD2);
+                    dcCH.DrawLine(CursorPen, PointA1, PointB1);
+                    dcCH.DrawLine(CursorPen, PointC1, PointD1);
 
-                        dcT.DrawGeometry(ChartBackground, CursorPen, geo);
-                        dcT.DrawText(ft, Tpont);
-                    });
-                }
+                    dcP.DrawGeometry(ChartBackground, CursorPen, geo);
+                    dcP.DrawText(ft, Tpont);
+
+                    dcT.DrawGeometry(ChartBackground, CursorPen, geo2);
+                    dcT.DrawText(ft2, Tpont2);
+                });
             });
         }
         private double HeightToPrice(double height) =>
@@ -985,6 +981,81 @@ namespace FlexTrader.MVVM.Views
                 Math.Round((StartTime.Value - WidthToTime(pos.X)) / DeltaTime.Value) * DeltaTime.Value;
             pos.X = TimeToWidth(dt);
             return dt;
+        }
+
+        //PriceMarks
+        private readonly DrawingVisual PriceMarksVisual = new DrawingVisual();
+        private readonly DrawingVisual ChartMarksVisual = new DrawingVisual();
+        private void InitializePriceMarks()
+        {
+            MarksLayer.AddVisual(ChartMarksVisual);
+            PriceLine.AddVisual(PriceMarksVisual);
+        }
+        private List<PriceMark> Marks;
+        private Task RedrawMarks()
+        {
+            return Task.Run(() => 
+            {
+                if (Marks != null)
+                {
+                    var pricesMax = (PricesMin + PricesDelta) * TickSize;
+                    var marksData = new List<(Point A, Point B, FormattedText ft, Brush Fill, Point T, Pen pen, PathGeometry geo)>();
+                    foreach (var mark in Marks)
+                    {
+                        if (mark.Price > PricesMin * TickSize && mark.Price < pricesMax)
+                        {
+                            var height = PriceToHeight(mark.Price);
+
+                            var ft = new FormattedText
+                                            (
+                                                mark.Price.ToString(TickPriceFormat),
+                                                CultureInfo.CurrentCulture,
+                                                FlowDirection.LeftToRight,
+                                                FontNumeric,
+                                                BaseFontSize,
+                                                mark.TextBrush,
+                                                VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip
+                                            );
+
+                            var pen = new Pen(mark.LineBrush, 2); pen.Freeze();
+                            var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
+                                    new[]
+                                    {
+                                        new LineSegment(new Point(Shift, height + ft.Height / 2), true),
+                                        new LineSegment(new Point(PriceLineWidth - 2, height + ft.Height / 2), true),
+                                        new LineSegment(new Point(PriceLineWidth - 2, height - ft.Height / 2), true),
+                                        new LineSegment(new Point(Shift, height - ft.Height / 2), true)
+                                    },
+                                    true)
+                                }); geo.Freeze();
+
+                            marksData.Add((
+                                    new Point(0, height),
+                                    new Point(ChWidth + 2, height),
+                                    ft,
+                                    mark.Fill,
+                                    new Point(Shift + 1, height - ft.Height / 2), 
+                                    pen,
+                                    geo
+                                    ));
+                        }
+                    }
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        using var dcCH = ChartMarksVisual.RenderOpen();
+                        using var dcP = PriceMarksVisual.RenderOpen();
+
+                        foreach (var data in marksData)
+                        {
+                            dcCH.DrawLine(data.pen, data.A, data.B);
+
+                            dcP.DrawGeometry(data.Fill, data.pen, data.geo);
+                            dcP.DrawText(data.ft, data.T);
+                        }
+                    });
+                }
+            });
         }
     }
 }
