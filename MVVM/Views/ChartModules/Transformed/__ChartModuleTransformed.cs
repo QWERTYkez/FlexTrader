@@ -16,29 +16,30 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Windows;
-using System.Windows.Input;
+using System.Threading.Tasks;
+using System.Windows.Threading;
 
-namespace FlexTrader.MVVM.Views
+namespace FlexTrader.MVVM.Views.ChartModules.Transformed
 {
-    public class ChartWindow : Window
+    public abstract class ChartModuleTransformed : IChartModule
     {
-        public event Action<Vector, int> Moving;
-        private Point StartPosition;
-
-        internal void StartMoveCursor(MouseButtonEventArgs e, int t)
+        private protected ITransformedChart Chart;
+        private protected Dispatcher Dispatcher;
+        public ChartModuleTransformed() { }
+        public ChartModuleTransformed(ITransformedChart chart) => BaseConstruct(chart);
+        private protected void BaseConstruct(ITransformedChart chart)
         {
-            EventType = t;
-            StartPosition = e.GetPosition(this);
-            this.MouseLeftButtonUp += (obj, e) => this.MouseMove -= MovingAct;
-            this.MouseMove += MovingAct;
+            Chart = chart;
+            Dispatcher = Chart.Dispatcher;
+            Construct();
         }
-        private int EventType;
-        private void MovingAct(object sender, MouseEventArgs e)
+        private protected abstract void Construct();
+        public abstract Task Redraw();
+        public void Restruct()
         {
-            if (e.LeftButton == MouseButtonState.Released) this.MouseMove -= MovingAct;
-            Moving.Invoke(e.GetPosition(this) - StartPosition, EventType);
+            Chart = null;
+            Destroy();
         }
+        private protected abstract void Destroy();
     }
 }

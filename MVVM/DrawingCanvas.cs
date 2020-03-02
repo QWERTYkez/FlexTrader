@@ -22,7 +22,7 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM
 {
-    class DrawingCanvas : Canvas
+    public class DrawingCanvas : Canvas
     {
         public List<Visual> Visuals = new List<Visual>();
         protected override int VisualChildrenCount => Visuals.Count;
