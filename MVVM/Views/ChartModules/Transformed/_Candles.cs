@@ -34,6 +34,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         public List<Candle> AllCandles = new List<Candle>();
         public TimeSpan? DeltaTime { get; private set; }
         public DateTime? StartTime { get; private set; }
+
         public Vector CurrentTranslate;
         public Vector CurrentScale;
         public event Action<MouseButtonEventArgs, int> StartMoveCursor;
@@ -49,9 +50,9 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         private readonly Grid ChartGRD;
         private readonly DrawingCanvas TimeLine;
         private readonly DrawingCanvas PriceLine;
-        public CandlesModule(ITransformedChart chart, DrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
-            TimeLineModule TimeLineModule, List<ChartModuleNormal> NormalModules, TranslateTransform Translate, 
-            ScaleTransform ScaleX, ScaleTransform ScaleY, ChartWindow mainView, Grid ChartGRD, DrawingCanvas TimeLine, 
+        public CandlesModule(IChart chart, DrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
+            TimeLineModule TimeLineModule, List<ChartModuleNormal> NormalModules, TranslateTransform Translate,
+            ScaleTransform ScaleX, ScaleTransform ScaleY, ChartWindow mainView, Grid ChartGRD, DrawingCanvas TimeLine,
             DrawingCanvas PriceLine, Vector CurrentScale)
         {
             this.CandlesLayer = CandlesLayer;
@@ -72,11 +73,6 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
 
         private double Delta;
         private double Min;
-
-        private Brush UpBrush = Brushes.Lime;
-        private Brush DownBrush = Brushes.Red;
-        private Pen UpPen = new Pen(Brushes.Lime, 4);
-        private Pen DownPen = new Pen(Brushes.Red, 4);
 
         private readonly object parallelkey = new object();
         public void AddCandles(List<Candle> NewCandles)
@@ -375,7 +371,58 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         }
         #endregion
 
-        public override Task Redraw() { return null; }
+        public override Task Redraw() 
+        { 
+            return Task.Run(() => 
+            {
+                DeltaTime = (AllCandles[1].TimeStamp - AllCandles[0].TimeStamp);
+
+                //DrawCandles
+                {
+                    StartTime = AllCandles.Last().TimeStamp;
+
+                    var DrawTeplates = new List<(Pen ShadowPen, Point PointA,
+                        Point PointB, Brush BodyBrush, Rect Rect)>();
+                    Parallel.ForEach(AllCandles, c =>
+                    {
+                        var open = c.OpenD / Chart.TickSize;
+                        var close = c.CloseD / Chart.TickSize;
+                        var low = c.LowD / Chart.TickSize;
+                        var high = c.HighD / Chart.TickSize;
+                        var x = 7.5 + (StartTime.Value - c.TimeStamp) * 15 / DeltaTime.Value;
+                        var x1 = x + 6;
+                        var x2 = x - 6;
+
+                        var PointA = new Point(x, low);
+                        var PointB = new Point(x, high);
+                        var Rect = new Rect(new Point(x1, open), new Point(x2, close));
+
+                        lock (parallelkey)
+                        {
+                            if (c.UP) DrawTeplates.Add((UpPen, PointA, PointB, UpBrush, Rect));
+                            else DrawTeplates.Add((DownPen, PointA, PointB, DownBrush, Rect));
+                        }
+                    });
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        CandlesLayer.ClearVisuals();
+
+                        var dvisual = new DrawingVisual();
+                        CandlesLayer.AddVisual(dvisual);
+
+                        using var dc = dvisual.RenderOpen();
+                        foreach (var dt in DrawTeplates)
+                        {
+                            dc.DrawLine(dt.ShadowPen, dt.PointA, dt.PointB);
+                            dc.DrawRectangle(dt.BodyBrush, null, dt.Rect);
+                        }
+                    });
+
+                    VerticalReset();
+                }
+            }); 
+        }
         private protected override void Construct() 
         {
             StartMoveCursor += mainView.StartMoveCursor;
@@ -392,5 +439,34 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
             PriceLine.PreviewMouseDown -= PriceLine_MouseDown;
             mainView.Moving -= MainView_Moving;
         }
+        private protected override void SetsDefinition()
+        {
+            SetsName = "Настройки свечей";
+
+            Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
+            {
+                new Setting(SetType.Brush, "Тело", () => this.UpBrush, b => { UpBrush = b as Brush; Redraw(); }),
+                new Setting(SetType.Brush, "Цвет фитиля", () => this.UpPen.Brush, b => { this.UpPen.Brush = b as Brush; Redraw(); })
+            });
+
+            Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
+            {
+                new Setting(SetType.Brush, "Тело", () => this.DownBrush, b => { DownBrush = b as Brush; Redraw(); }),
+                new Setting(SetType.Brush, "Цвет фитиля", () => this.DownPen.Brush, b => { this.DownPen.Brush = b as Brush; Redraw(); })
+            });
+
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, b =>
+            {
+                this.DownPen.Thickness = (b as double?).Value;
+                this.UpPen.Thickness = (b as double?).Value;
+                Redraw();
+            }, 
+            (3, 8)));
+        }
+        
+        private Brush UpBrush = Brushes.Lime;
+        private Brush DownBrush = Brushes.Red;
+        private readonly Pen UpPen = new Pen(Brushes.Lime, 4);
+        private readonly Pen DownPen = new Pen(Brushes.Red, 4);
     }
 }

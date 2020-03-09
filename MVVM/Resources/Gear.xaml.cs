@@ -1,4 +1,4 @@
-﻿<!--
+﻿/* 
     Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
 
     This file is part of FlexTrader
@@ -14,24 +14,20 @@
 
     You should have received a copy of the GNU General Public License
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
-!-->
+*/
 
-<local:ChartWindow
-    x:Class="FlexTrader.MVVM.Views.MainView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:FlexTrader.MVVM.Views"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="clr-namespace:FlexTrader.MVVM.ViewModels"
-    Title="MainView"
-    MinWidth="500"
-    MinHeight="500"
-    mc:Ignorable="d">
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
-    <Grid x:Name="BaseGRD">
-        <ContentPresenter Content="{Binding Chart}" />
-    </Grid>
-</local:ChartWindow>
+using System.Windows.Controls;
+
+namespace FlexTrader.MVVM.Resources
+{
+    /// <summary>
+    /// Логика взаимодействия для Gear.xaml
+    /// </summary>
+    public partial class Gear : UserControl
+    {
+        public Gear()
+        {
+            InitializeComponent();
+        }
+    }
+}

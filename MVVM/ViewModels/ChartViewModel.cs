@@ -34,7 +34,7 @@ namespace FlexTrader.MVVM.ViewModels
 
         public void Inicialize()
         {
-            ChartBackground = Brushes.Black;
+            ChartBackground = new SolidColorBrush(Color.FromRgb(30,30,30));
             TickSize = 0.01;
             BaseFontSize = 18;
             FontBrush = Brushes.White;

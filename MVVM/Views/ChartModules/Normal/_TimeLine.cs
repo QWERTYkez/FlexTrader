@@ -32,7 +32,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
 
         private readonly DrawingCanvas GridLayer;
         private readonly DrawingCanvas TimeLine;
-        public TimeLineModule(INormalChart chart, DrawingCanvas GridLayer, DrawingCanvas TimeLine)
+        public TimeLineModule(IChart chart, DrawingCanvas GridLayer, DrawingCanvas TimeLine)
         {
             this.GridLayer = GridLayer;
             this.TimeLine = TimeLine;
@@ -86,6 +86,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                 TimeB = Chart.StartTime.Value - ((Chart.CurrentTranslate.X - 7.5) / 15) * Chart.DeltaTime.Value;
 
                 double count = Math.Floor((Chart.ChWidth / (Chart.BaseFontSize * 10)));
+                if (count == 0) return;
                 var step = (Chart.TimeB - Chart.TimeA) / count;
                 int Ystep = 0; int Mstep = 0; int Dstep = 0; int Hstep = 0; int Mnstep = 0;
 
@@ -338,6 +339,11 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                     new Point(width, 0), new Point(width, Chart.PriceShift),
                     new Point(width, 0), new Point(width, 4096)));
             }
+        }
+
+        private protected override void SetsDefinition()
+        {
+            ///////////////////
         }
     }
 }

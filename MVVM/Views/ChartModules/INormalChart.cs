@@ -23,7 +23,7 @@ using System.Windows.Threading;
 
 namespace FlexTrader.MVVM.Views.ChartModules
 {
-    public interface INormalChart
+    public interface IChart
     {
         Dispatcher Dispatcher { get; }
         DrawingCanvas BackChart { get; }

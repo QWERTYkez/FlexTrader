@@ -16,14 +16,23 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using FlexTrader.MVVM.Views.ChartModules;
 using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace FlexTrader.MVVM.Views
 {
-    public class ChartWindow : Window
+    public abstract class ChartWindow : Window
     {
+        public ChartWindow()
+        {
+            this.Closing += (s, e) => SettingsWindow?.Close();
+        }
+
+        #region Обработка таскания мышью
         public event Action<Vector, int> Moving;
         private Point StartPosition;
 
@@ -40,5 +49,21 @@ namespace FlexTrader.MVVM.Views
             if (e.LeftButton == MouseButtonState.Released) this.MouseMove -= MovingAct;
             Moving.Invoke(e.GetPosition(this) - StartPosition, EventType);
         }
+        #endregion
+
+        #region Блок окна настроек
+        public abstract Grid BaseGrid { get; }
+
+        private SettingsWindow SettingsWindow;
+        public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
+                                 List<(string SetsName, List<Setting> Sets)> sn,
+                                 List<(string SetsName, List<Setting> Sets)> st)
+        {
+            SettingsWindow?.Close();
+            SettingsWindow = new SettingsWindow(sb, sn, st);
+            SettingsWindow.Show();
+        }
+
+        #endregion
     }
 }

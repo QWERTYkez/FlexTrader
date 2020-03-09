@@ -32,7 +32,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
 
         private readonly DrawingCanvas MarksLayer;
         private readonly DrawingCanvas PriceLine;
-        public PriceMarksModule(INormalChart chart, DrawingCanvas MarksLayer, DrawingCanvas PriceLine)
+        public PriceMarksModule(IChart chart, DrawingCanvas MarksLayer, DrawingCanvas PriceLine)
         {
             this.MarksLayer = MarksLayer;
             this.PriceLine = PriceLine;
@@ -121,6 +121,11 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                     });
                 }
             });
+        }
+
+        private protected override void SetsDefinition()
+        {
+            //////////////////
         }
     }
 

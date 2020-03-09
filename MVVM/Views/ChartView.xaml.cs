@@ -33,12 +33,10 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views
 {
-    public partial class ChartView : UserControl, ITransformedChart, INormalChart
+    public partial class ChartView : UserControl, IChart
     {
-        DrawingCanvas INormalChart.BackChart => this.BackChart;
-        DrawingCanvas INormalChart.FrontChart => this.FrontChart;
-        Vector INormalChart.CurrentTranslate => CurrentTranslate;
-        Vector INormalChart.CurrentScale => CurrentScale;
+        DrawingCanvas IChart.BackChart => this.BackChart;
+        DrawingCanvas IChart.FrontChart => this.FrontChart;
 
         private readonly PriceMarksModule PriceMarksModule;
         private readonly CursorModule CursorModule;
@@ -53,6 +51,8 @@ namespace FlexTrader.MVVM.Views
         public ChartView(ChartWindow mainView)
         {
             InitializeComponent();
+
+            this.ShowSettings += mainView.ShowSettings;
 
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PriceLine);
             TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
@@ -138,6 +138,7 @@ namespace FlexTrader.MVVM.Views
             });
         }
 
+        private int ChangesCounter = 0;
         private void ChartGRD_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Task.Run(() =>
@@ -160,8 +161,8 @@ namespace FlexTrader.MVVM.Views
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
 
-        private Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
-        private Vector CurrentScale { get => CandlesModule.CurrentScale; }
+        public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
+        public Vector CurrentScale { get => CandlesModule.CurrentScale; }
         public DateTime? StartTime { get => CandlesModule.StartTime; }
         public TimeSpan? DeltaTime { get => CandlesModule.DeltaTime; }
         public double PricesDelta { get => PriceLineModule.PricesDelta; }
@@ -177,7 +178,6 @@ namespace FlexTrader.MVVM.Views
         public Typeface FontText { get; } = new Typeface(new FontFamily("Myriad Pro Cond"),
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
-        private int ChangesCounter = 0;
         public double HeightToPrice(double height) =>
             PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight;
         public double PriceToHeight(double price) =>
@@ -200,5 +200,28 @@ namespace FlexTrader.MVVM.Views
             ChWidth * ((dt - TimeA) / (TimeB - TimeA));
         public DateTime WidthToTime(double width) =>
             TimeA + ((width - 2) / ChWidth) * (TimeB - TimeA);
+
+        private event Action<List<(string SetsName, List<Setting> Sets)>, 
+                             List<(string SetsName, List<Setting> Sets)>, 
+                             List<(string SetsName, List<Setting> Sets)>> ShowSettings;
+        private void ShowBaseSettings(object sender, RoutedEventArgs e)
+        {
+            var basesets = new List<(string SetsName, List<Setting> Sets)>();
+            var normalsets = new List<(string SetsName, List<Setting> Sets)>();
+            var transsets = new List<(string SetsName, List<Setting> Sets)>();
+
+            basesets.Add(CandlesModule.GetSets());
+            basesets.Add(PriceLineModule.GetSets());
+            basesets.Add(TimeLineModule.GetSets());
+            basesets.Add(CursorModule.GetSets());
+
+            foreach (var mn in ModulesNormal)
+                normalsets.Add(mn.GetSets());
+
+            foreach (var mt in ModulesTransformed)
+                normalsets.Add(mt.GetSets());
+
+            ShowSettings.Invoke(basesets, normalsets, transsets);
+        }
     }
 }

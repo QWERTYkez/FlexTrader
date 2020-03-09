@@ -17,6 +17,7 @@
 */
 
 using System.Windows;
+using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Views
 {
@@ -25,9 +26,13 @@ namespace FlexTrader.MVVM.Views
         public MainView()
         {
             InitializeComponent();
+
             ((ViewModels.MainViewModel)DataContext).Initialize(this);
         }
 
-        
+        /// <summary>
+        /// Базовый контейнер
+        /// </summary>
+        public override Grid BaseGrid => this.BaseGRD;
     }
 }

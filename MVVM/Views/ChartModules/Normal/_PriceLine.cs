@@ -38,7 +38,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
         private readonly ColumnDefinition PriceLineCD;
         private readonly DrawingCanvas GridLayer;
         private readonly DrawingCanvas PriceLine;
-        public PriceLineModule(INormalChart chart, ColumnDefinition PriceLineCD, DrawingCanvas GridLayer, DrawingCanvas PriceLine)
+        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, DrawingCanvas GridLayer, DrawingCanvas PriceLine)
         {
             this.PriceLineCD = PriceLineCD;
             this.GridLayer = GridLayer;
@@ -178,6 +178,11 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                     PriceLineCD.Width = new GridLength(PriceLineWidth);
                 });
             });
+        }
+
+        private protected override void SetsDefinition()
+        {
+            //////////////////
         }
     }
 }

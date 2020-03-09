@@ -32,7 +32,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
         private readonly DrawingCanvas TimeLine;
         private readonly DrawingCanvas PriceLine;
         private readonly Grid ChartGRD;
-        public CursorModule(INormalChart chart, Grid ChartGRD, DrawingCanvas CursorLayer, DrawingCanvas TimeLine, DrawingCanvas PriceLine)
+        public CursorModule(IChart chart, Grid ChartGRD, DrawingCanvas CursorLayer, DrawingCanvas TimeLine, DrawingCanvas PriceLine)
         {
             this.CursorLayer = CursorLayer;
             this.TimeLine = TimeLine;
@@ -205,6 +205,11 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                     dcT.DrawText(ft2, Tpont2);
                 });
             });
+        }
+
+        private protected override void SetsDefinition()
+        {
+            //////////////
         }
     }
 }

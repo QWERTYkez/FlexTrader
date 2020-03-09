@@ -16,6 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FlexTrader.MVVM.Views.ChartModules
@@ -24,5 +25,6 @@ namespace FlexTrader.MVVM.Views.ChartModules
     {
         public Task Redraw();
         public void Restruct();
+        public (string SetsName, List<Setting> Sets) GetSets();
     }
 }
