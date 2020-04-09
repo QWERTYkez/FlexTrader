@@ -17,6 +17,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,7 +27,7 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views.ChartModules.Normal
 {
-    class CursorModule : ChartModuleNormal
+    class CursorModule : ChartModule
     {
         private readonly DrawingCanvas CursorLayer;
         private readonly DrawingCanvas TimeLine;
@@ -40,54 +41,32 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
             this.ChartGRD = ChartGRD;
 
             FontBrush = Brushes.White;
-            CursorPen = new Pen(Brushes.White, 2);
+            MarksPen = new Pen(Brushes.White, 2); MarksPen.Freeze();
 
             BaseConstruct(chart);
         }
 
-        private Pen cursorPen;
-        public Pen CursorPen 
-        {
-            get => cursorPen;
-            set 
-            {
-                value?.Freeze();
-                cursorPen = value;
-            } 
-        }
-        private Brush fontBrush;
-        private Brush FontBrush
-        {
-            get => fontBrush;
-            set
-            {
-                value?.Freeze();
-                fontBrush = value;
-            }
-        }
-        private const double CursorArea = 25;
-
-        private readonly DrawingVisual CursorVerticalVisual = new DrawingVisual();
-        private readonly DrawingVisual CursorHorizontalVisual = new DrawingVisual();
+        private readonly DrawingVisual CursorVisual = new DrawingVisual();
         private readonly DrawingVisual CursorTimeVisual = new DrawingVisual();
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
+        private readonly TranslateTransform CursorTransform = new TranslateTransform();
         private protected override void Construct()
         {
             ChartGRD.MouseEnter += ShowCursor;
             ChartGRD.MouseLeave += CursorLeave;
             ChartGRD.MouseMove += CursorRedraw;
+            SetCursor();
+            CursorLayer.RenderTransform = CursorTransform;
         }
         private void ShowCursor(object sender, MouseEventArgs e)
         {
-            CursorLayer.AddVisual(CursorVerticalVisual);
-            CursorLayer.AddVisual(CursorHorizontalVisual);
+            CursorLayer.AddVisual(CursorVisual);
             TimeLine.AddVisual(CursorTimeVisual);
             PriceLine.AddVisual(CursorPriceVisual);
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            CursorLayer.DeleteVisual(CursorVerticalVisual);
-            CursorLayer.DeleteVisual(CursorHorizontalVisual);
+            CursorLayer.DeleteVisual(CursorVisual);
             TimeLine.DeleteVisual(CursorTimeVisual);
             PriceLine.DeleteVisual(CursorPriceVisual);
         }
@@ -105,7 +84,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
         private Point Pos;
         public override Task Redraw()
         {
-            return Task.Run(() => 
+            return Task.Run(() =>
             {
                 var dt = Chart.CorrectTimePosition(ref Pos);
                 var price = Chart.HeightToPrice(Pos.Y).ToString(Chart.TickPriceFormat);
@@ -154,16 +133,6 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                         new Point(Pos.X - Chart.PriceShift, Chart.PriceShift)
                 };
 
-                var PointA2 = new Point(0, Pos.Y);
-                var PointB2 = new Point(Pos.X - CursorArea, Pos.Y);
-                var PointC2 = new Point(Pos.X + CursorArea, Pos.Y);
-                var PointD2 = new Point(Chart.ChWidth + 2, Pos.Y);
-
-                var PointA1 = new Point(Pos.X, 0);
-                var PointB1 = new Point(Pos.X, Pos.Y - CursorArea);
-                var PointC1 = new Point(Pos.X, Pos.Y + CursorArea);
-                var PointD1 = new Point(Pos.X, Chart.ChHeight);
-
                 var geo = new PathGeometry(new[] { new PathFigure(startPoint,
                             new[]
                             {
@@ -189,27 +158,105 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
 
                 Dispatcher.Invoke(() =>
                 {
-                    using var dcCH = CursorHorizontalVisual.RenderOpen();
                     using var dcP = CursorPriceVisual.RenderOpen();
                     using var dcT = CursorTimeVisual.RenderOpen();
 
-                    dcCH.DrawLine(CursorPen, PointA2, PointB2);
-                    dcCH.DrawLine(CursorPen, PointC2, PointD2);
-                    dcCH.DrawLine(CursorPen, PointA1, PointB1);
-                    dcCH.DrawLine(CursorPen, PointC1, PointD1);
+                    CursorTransform.X = Pos.X;
+                    CursorTransform.Y = Pos.Y;
 
-                    dcP.DrawGeometry(Chart.ChartBackground, CursorPen, geo);
+                    dcP.DrawGeometry(Chart.ChartBackground, MarksPen, geo);
                     dcP.DrawText(ft, Tpont);
 
-                    dcT.DrawGeometry(Chart.ChartBackground, CursorPen, geo2);
+                    dcT.DrawGeometry(Chart.ChartBackground, MarksPen, geo2);
                     dcT.DrawText(ft2, Tpont2);
                 });
             });
         }
 
+        private Brush FontBrush;
+        private Pen MarksPen;
+        private double CursorArea = 25;
+        private double CursorDash = 5;
+        private double CursorIndent = 2;
+        private double CursorThikness = 2;
+        public Task SetCursor()
+        {
+            return Task.Run(() =>
+            {
+                var rt = new RotateTransform(90); rt.Freeze();
+                var pn = new Pen(MarksPen.Brush, CursorThikness); pn.Freeze();
+
+                var Points = new List<Point>();
+
+                if (CursorIndent == 0)
+                {
+                    var A = new Point(CursorArea, 0);
+                    var B = new Point(4096, 0);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        using var dcCH = CursorVisual.RenderOpen();
+
+                        dcCH.DrawLine(pn, A, B);
+                        dcCH.PushTransform(rt);
+                        dcCH.DrawLine(pn, A, B);
+                        dcCH.PushTransform(rt);
+                        dcCH.DrawLine(pn, A, B);
+                        dcCH.PushTransform(rt);
+                        dcCH.DrawLine(pn, A, B);
+                    });
+
+                    return;
+                }
+
+                double s = CursorArea;
+                while(s < 4096)
+                {
+                    Points.Add(new Point(s, 0)); s += CursorDash;
+                    Points.Add(new Point(s, 0)); s += CursorIndent;
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    using var dcCH = CursorVisual.RenderOpen();
+
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                    dcCH.PushTransform(rt);
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                    dcCH.PushTransform(rt);
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                    dcCH.PushTransform(rt);
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                });
+            });
+        }
+
+        private Action<object> SetCursorArea;
+        private Action<object> SetCursorDash;
+        private Action<object> SetCursorIndent;
+        private Action<object> SetCursorThikness;
+        private Action<object> SetCursorColor;
+
         private protected override void SetsDefinition()
         {
-            //////////////
+            SetCursorArea = b => { CursorArea = (b as double?).Value; SetCursor(); };
+            SetCursorDash = b => { CursorDash = (b as double?).Value; SetCursor(); };
+            SetCursorIndent = b => { CursorIndent = (b as double?).Value; SetCursor(); };
+            SetCursorThikness = b => { CursorThikness = (b as double?).Value; SetCursor(); };
+            SetCursorColor = b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, 2); MarksPen.Freeze(); }); SetCursor(); };
+
+            SetsName = "Настройки курсора";
+
+            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус", CursorArea, SetCursorArea, 20d, 50d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Штрих", CursorDash, SetCursorDash, 1d, 10d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Отступ", CursorIndent, SetCursorIndent, 0d, 10d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина", CursorThikness, SetCursorThikness, 1d, 5d));
+            Sets.Add(new Setting(SetType.Brush, "Цвет курсора", MarksPen.Brush, SetCursorColor));
+            Sets.Add(new Setting(SetType.Brush, "Цвет текста", MarksPen.Brush, b => { FontBrush = b as Brush; }));
         }
     }
 }

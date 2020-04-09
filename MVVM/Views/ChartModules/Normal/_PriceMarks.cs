@@ -26,7 +26,7 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views.ChartModules.Normal
 {
-    public class PriceMarksModule : ChartModuleNormal
+    public class PriceMarksModule : ChartModule
     {
         public readonly ObservableCollection<PriceMark> Marks = new ObservableCollection<PriceMark>();
 

@@ -34,11 +34,14 @@ namespace FlexTrader.MVVM.Resources
     {
         private readonly ColorPickerDataContext DC;
         public event Action<SolidColorBrush> BrushChanged;
-        public ColorPicker(SolidColorBrush br, Action<object> set)
+        public ColorPicker(SolidColorBrush br, Action<object> set = null)
         {
             InitializeComponent();
 
-            BrushChanged += b => Task.Run(() => set.Invoke(b));
+            this.Width = Width;
+            this.Height = Height;
+
+            if (set != null) BrushChanged += b => set.Invoke(b);
 
             DataContext = DC = new ColorPickerDataContext();
             DC.PropertyChanged += DC_PropertyChanged;
@@ -575,7 +578,7 @@ namespace FlexTrader.MVVM.Resources
             e.Handled = true;
             DC.LastBrush = DC.NewBrush;
             Picker.IsOpen = false;
-            BrushChanged.Invoke(DC.NewBrush);
+            Task.Run(() => BrushChanged.Invoke(DC.NewBrush));
         }
         private void Cancel(object sender, RoutedEventArgs e)
         {

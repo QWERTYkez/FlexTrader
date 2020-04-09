@@ -16,15 +16,27 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace FlexTrader.MVVM.Resources
 {
-    public interface IChartModule
+    public partial class DoubleSlider : UserControl
     {
-        public Task Redraw();
-        public void Restruct();
-        public (string SetsName, List<Setting> Sets) GetSets();
+        public event Action<double> ValueChanged;
+        public DoubleSlider(double val, double min, double max, Action<object> set)
+        {
+            InitializeComponent();
+
+            if (set != null) ValueChanged += v => set.Invoke(v);
+
+            slider.Minimum = min;
+            slider.Maximum = max;
+            slider.Value = val;
+
+            slider.ValueChanged += (s, e) => Task.Run(() => ValueChanged.Invoke(e.NewValue));
+        }
     }
 }

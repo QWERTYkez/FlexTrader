@@ -36,7 +36,7 @@
         <TabControl>
             <TabItem Header="Style">
                 <ScrollViewer>
-                    <StackPanel x:Name="BaseStack" />
+                    <StackPanel x:Name="BaseSP" />
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Colors" />

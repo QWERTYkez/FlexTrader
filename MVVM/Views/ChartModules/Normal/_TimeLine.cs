@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views.ChartModules.Normal
 {
-    public class TimeLineModule : ChartModuleNormal
+    public class TimeLineModule : ChartModule
     {
         public DateTime TimeA = DateTime.Now;
         public DateTime TimeB = DateTime.Now;

@@ -26,7 +26,7 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views.ChartModules.Normal
 {
-    public class PriceLineModule : ChartModuleNormal
+    public class PriceLineModule : ChartModule
     {
         public double PricesDelta { get; private set; }
         public double PricesMin { get; private set; }

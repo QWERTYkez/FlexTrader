@@ -18,24 +18,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views.ChartModules
 {
     public struct Setting
     {
-        public Setting(SetType Type,
-                       string Name = null,
-                       Func<object> Get = null,
-                       Action<object> Set = null,
-                       object Secondary = null)
+        public Setting(SetType Type, string Name = null, object Obj = null,
+                       Action<object> Set = null, object Param1 = null, object Param2 = null)
         { 
             this.Name = Name;
             this.Type = Type;
-            this.Get = Get;
+            this.Obj = Obj;
             this.Set = Set;
-            this.Secondary = Secondary;
+            this.Param1 = Param1;
+            this.Param2 = Param2;
         }
 
         public static void SetsLevel(List<Setting> Sets, string Name, Setting[] args)
@@ -47,9 +43,10 @@ namespace FlexTrader.MVVM.Views.ChartModules
 
         public readonly string Name;
         public readonly SetType Type;
-        public readonly Func<object> Get;
+        public readonly object Obj;
         public readonly Action<object> Set;
-        public readonly object Secondary;
+        public readonly object Param1;
+        public readonly object Param2;
     }
 
     public enum SetType

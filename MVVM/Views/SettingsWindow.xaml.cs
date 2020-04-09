@@ -16,7 +16,9 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using FlexTrader.MVVM.Resources;
 using FlexTrader.MVVM.Views.ChartModules;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,39 +36,66 @@ namespace FlexTrader.MVVM.Views
 
             foreach (var bs in sb)
             {
-                var sp = AddLevel(BaseStack, bs.SetsName);
+                var sp = AddLevel(BaseSP, bs.SetsName);
                 foreach (var s in bs.Sets)
                 {
                     switch (s.Type)
                     {
                         case SetType.GoDown: sp = AddLevel(sp, s.Name); break;
-                        case SetType.GoUp: sp = sp.Parent as StackPanel; break;
+                        case SetType.GoUp: sp = (sp.Parent as Expander).Parent as StackPanel; break;
                         case SetType.Brush:
-                            {
-                                sp.Children.Add(new Label { Content = s.Name });
-                            }
+                            AddSetting(sp, s, () => new ColorPicker(s.Obj as SolidColorBrush, s.Set));
                             break;
                         case SetType.DoubleSlider:
-                            {
-                                sp.Children.Add(new Label { Content = s.Name });
-                            }
-                            break;
+                            AddSetting(sp, s, () => new DoubleSlider((double)s.Obj, 
+                                (double)s.Param1, (double)s.Param2, s.Set)); break;
                     }
                 }
             }
-
-            var xxx = new Resources.ColorPicker(sb[0].Sets[1].Get.Invoke() as SolidColorBrush, sb[0].Sets[1].Set);
-            Other.Content = xxx;
-            xxx.Width = 50; xxx.Height = 50;
         }
 
-        private StackPanel AddLevel(StackPanel SP, string Header)
+        private StackPanel AddLevel(StackPanel sp, string header)
         {
-            var nsp = new StackPanel { Margin = new Thickness(20,0,0,0) };
+            if (header == null || header == "") header = "---";
 
-            SP.Children.Add(new Label { Content = Header });
-            SP.Children.Add(nsp);
+            var nsp = new StackPanel { Margin = new Thickness(20, 5, 0, 5) };
+            var exp = new Expander 
+            { 
+                Header = header, 
+                Content = nsp, 
+                IsExpanded = true, 
+                FontSize = 12, 
+                VerticalAlignment = VerticalAlignment.Center,
+                FontWeight = FontWeights.Bold 
+            };
+            sp.Children.Add(exp);
             return nsp;
+        }
+        private void AddSetting(StackPanel sp, Setting s, Func<UIElement> GetEl = null)
+        {
+            var grd = new Grid { Margin = new Thickness(20, 2, 50, 2) };
+            grd.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            grd.ColumnDefinitions.Add(new ColumnDefinition());
+
+            var lb = new Label 
+            { 
+                Content = s.Name, 
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontWeight = FontWeights.Bold 
+            };
+            grd.Children.Add(lb);
+
+            if (GetEl != null)
+            {
+                dynamic el = GetEl.Invoke();
+                el.HorizontalAlignment = HorizontalAlignment.Right;
+                el.Width = 200;
+                el.Margin = new Thickness(0, 0, 15, 0);
+                Grid.SetColumn(el, 1);
+                grd.Children.Add(el);
+            }
+            sp.Children.Add(grd);
         }
     }
 }

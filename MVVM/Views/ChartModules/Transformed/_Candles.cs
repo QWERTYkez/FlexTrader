@@ -29,7 +29,7 @@ using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views.ChartModules.Transformed
 {
-    public class CandlesModule : ChartModuleTransformed
+    public class CandlesModule : ChartModule
     {
         public List<Candle> AllCandles = new List<Candle>();
         public TimeSpan? DeltaTime { get; private set; }
@@ -42,7 +42,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         private readonly DrawingCanvas CandlesLayer;
         private readonly PriceLineModule PriceLineModule;
         private readonly TimeLineModule TimeLineModule;
-        private readonly List<ChartModuleNormal> NormalModules;
+        private readonly List<ChartModule> NormalModules;
         private readonly TranslateTransform Translate;
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
@@ -51,7 +51,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         private readonly DrawingCanvas TimeLine;
         private readonly DrawingCanvas PriceLine;
         public CandlesModule(IChart chart, DrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
-            TimeLineModule TimeLineModule, List<ChartModuleNormal> NormalModules, TranslateTransform Translate,
+            TimeLineModule TimeLineModule, List<ChartModule> NormalModules, TranslateTransform Translate,
             ScaleTransform ScaleX, ScaleTransform ScaleY, ChartWindow mainView, Grid ChartGRD, DrawingCanvas TimeLine,
             DrawingCanvas PriceLine, Vector CurrentScale)
         {
@@ -439,34 +439,49 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
             PriceLine.PreviewMouseDown -= PriceLine_MouseDown;
             mainView.Moving -= MainView_Moving;
         }
-        private protected override void SetsDefinition()
-        {
-            SetsName = "Настройки свечей";
 
-            Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
-            {
-                new Setting(SetType.Brush, "Тело", () => this.UpBrush, b => { UpBrush = b as Brush; Redraw(); }),
-                new Setting(SetType.Brush, "Цвет фитиля", () => this.UpPen.Brush, b => { this.UpPen.Brush = b as Brush; Redraw(); })
-            });
-
-            Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
-            {
-                new Setting(SetType.Brush, "Тело", () => this.DownBrush, b => { DownBrush = b as Brush; Redraw(); }),
-                new Setting(SetType.Brush, "Цвет фитиля", () => this.DownPen.Brush, b => { this.DownPen.Brush = b as Brush; Redraw(); })
-            });
-
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, b =>
-            {
-                this.DownPen.Thickness = (b as double?).Value;
-                this.UpPen.Thickness = (b as double?).Value;
-                Redraw();
-            }, 
-            (3, 8)));
-        }
-        
         private Brush UpBrush = Brushes.Lime;
         private Brush DownBrush = Brushes.Red;
         private readonly Pen UpPen = new Pen(Brushes.Lime, 4);
         private readonly Pen DownPen = new Pen(Brushes.Red, 4);
+
+        private Action<object> SetUpBrush;
+        private Action<object> SetDownBrush;
+        private Action<object> SetUpPenBrush;
+        private Action<object> SetDownPenBrush;
+        private Action<object> SetThicknesses;
+
+        private protected override void SetsDefinition()
+        {
+            SetUpBrush = b => { UpBrush = b as Brush; Redraw(); };
+            SetUpPenBrush = b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); };
+            SetDownBrush = b => { DownBrush = b as Brush; Redraw(); };
+            SetDownPenBrush = b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); };
+            SetThicknesses = b =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    this.DownPen.Thickness = (b as double?).Value;
+                    this.UpPen.Thickness = (b as double?).Value;
+                });
+                Redraw();
+            };
+
+            SetsName = "Настройки свечей";
+
+            Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
+            {
+                new Setting(SetType.Brush, "Цвет тела", this.UpBrush, SetUpBrush),
+                new Setting(SetType.Brush, "Цвет фитиля", this.UpPen.Brush, SetUpPenBrush)
+            });
+
+            Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
+            {
+                new Setting(SetType.Brush, "Цвет тела", this.DownBrush, SetDownBrush),
+                new Setting(SetType.Brush, "Цвет фитиля", this.DownPen.Brush, SetDownPenBrush)
+            });
+
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", this.DownPen.Thickness, SetThicknesses, 2d, 6d));
+        }
     }
 }

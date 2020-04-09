@@ -44,8 +44,8 @@ namespace FlexTrader.MVVM.Views
         private readonly PriceLineModule PriceLineModule;
         private readonly CandlesModule CandlesModule;
 
-        private readonly List<ChartModuleNormal> ModulesNormal = new List<ChartModuleNormal>();
-        private readonly List<ChartModuleTransformed> ModulesTransformed = new List<ChartModuleTransformed>();
+        private readonly List<ChartModule> ModulesNormal = new List<ChartModule>();
+        private readonly List<ChartModule> ModulesTransformed = new List<ChartModule>();
 
         public ChartView() { } //конструктор для intellisense
         public ChartView(ChartWindow mainView)

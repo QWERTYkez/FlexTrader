@@ -16,19 +16,18 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
-namespace FlexTrader.MVVM.Views.ChartModules.Transformed
+namespace FlexTrader.MVVM.Views.ChartModules
 {
-    public abstract class ChartModuleTransformed : IChartModule
+    public abstract class ChartModule
     {
         private protected IChart Chart;
         private protected Dispatcher Dispatcher;
-        public ChartModuleTransformed() { }
-        public ChartModuleTransformed(IChart chart) => BaseConstruct(chart);
+        public ChartModule() { }
+        public ChartModule(IChart chart) => BaseConstruct(chart);
         private protected void BaseConstruct(IChart chart)
         {
             Chart = chart;
@@ -48,5 +47,6 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
         private protected List<Setting> Sets { get; } = new List<Setting>();
         private protected string SetsName { get; set; }
+
     }
 }
