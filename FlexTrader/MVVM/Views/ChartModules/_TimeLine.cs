@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules.Normal
+namespace FlexTrader.MVVM.Views.ChartModules
 {
     public class TimeLineModule : ChartModule
     {
@@ -37,42 +37,22 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
             this.GridLayer = GridLayer;
             this.TimeLine = TimeLine;
 
-            LinesPen = new Pen(Brushes.DarkGray, 1);
-            FontBrush = Brushes.White;
-
             BaseConstruct(chart);
         }
-        private Brush fontBrush;
-        private Brush FontBrush
-        {
-            get => fontBrush;
-            set
-            {
-                value?.Freeze();
-                fontBrush = value;
-            }
-        }
-        private Pen linesPen;
-        private Pen LinesPen
-        {
-            get => linesPen;
-            set
-            {
-                value?.Freeze();
-                linesPen = value;
-            }
-        }
+        private Pen LinesPen => Chart.LinesPen;
         private double YearFontSize => Math.Round(Chart.BaseFontSize * 1.4);
 
         private readonly DrawingVisual TimesVisual = new DrawingVisual();
         private readonly DrawingVisual TimeGridVisual = new DrawingVisual();
         private protected override void Construct()
         {
+            Chart.FontBrushChanged += () => Redraw();
             GridLayer.AddVisual(TimeGridVisual);
             TimeLine.AddVisual(TimesVisual);
         }
         private protected override void Destroy()
         {
+            Chart.FontBrushChanged -= () => Redraw();
             GridLayer.DeleteVisual(TimeGridVisual);
             TimeLine.DeleteVisual(TimesVisual);
         }
@@ -265,7 +245,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                             FlowDirection.LeftToRight,
                             Chart.FontNumeric,
                             YearFontSize,
-                            FontBrush,
+                            Chart.FontBrush,
                             pixelsPerDip
                         );
             var width = Chart.TimeToWidth(new DateTime(Y, 1, 1));
@@ -286,7 +266,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                             FlowDirection.LeftToRight,
                             Chart.FontText,
                             Chart.BaseFontSize,
-                            FontBrush,
+                            Chart.FontBrush,
                             pixelsPerDip
                         );
                 var width = Chart.TimeToWidth(dt);
@@ -308,7 +288,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                             FlowDirection.LeftToRight,
                             Chart.FontNumeric,
                             Chart.BaseFontSize,
-                            FontBrush,
+                            Chart.FontBrush,
                             pixelsPerDip
                         );
                 var width = Chart.TimeToWidth(dt);
@@ -330,7 +310,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                             FlowDirection.LeftToRight,
                             Chart.FontNumeric,
                             Chart.BaseFontSize,
-                            FontBrush,
+                            Chart.FontBrush,
                             pixelsPerDip
                         );
                 var width = Chart.TimeToWidth(dt);
@@ -343,7 +323,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
 
         private protected override void SetsDefinition()
         {
-            ///////////////////
+            //SetsName = "Настройки шкалы цены";
         }
     }
 }

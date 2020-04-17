@@ -23,13 +23,34 @@ namespace FlexTrader.MVVM.Views.ChartModules
 {
     public struct Setting
     {
-        public Setting(SetType Type, string Name = null, object Obj = null,
-                       Action<object> Set = null, object Param1 = null, object Param2 = null)
+        public Setting(SetType Type)
         { 
+            this.Name = null;
+            this.Type = Type;
+            this.Obj = null;
+            this.Set = null;
+            this.ResetObj = null;
+            this.Param1 = null;
+            this.Param2 = null;
+        }
+        public Setting(SetType Type, string Name)
+        {
+            this.Name = Name;
+            this.Type = Type;
+            this.Obj = null;
+            this.Set = null;
+            this.ResetObj = null;
+            this.Param1 = null;
+            this.Param2 = null;
+        }
+        public Setting(SetType Type, string Name, object Obj,
+                       Action<object> Set, object ResetObj = null,  object Param1 = null, object Param2 = null)
+        {
             this.Name = Name;
             this.Type = Type;
             this.Obj = Obj;
             this.Set = Set;
+            this.ResetObj = ResetObj;
             this.Param1 = Param1;
             this.Param2 = Param2;
         }
@@ -45,6 +66,7 @@ namespace FlexTrader.MVVM.Views.ChartModules
         public readonly SetType Type;
         public readonly object Obj;
         public readonly Action<object> Set;
+        public readonly object ResetObj;
         public readonly object Param1;
         public readonly object Param2;
     }

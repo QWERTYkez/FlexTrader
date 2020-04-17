@@ -36,19 +36,22 @@ namespace FlexTrader.MVVM.Views
 
             foreach (var bs in sb)
             {
-                var sp = AddLevel(BaseSP, bs.SetsName);
-                foreach (var s in bs.Sets)
+                if (bs.SetsName != null)
                 {
-                    switch (s.Type)
+                    var sp = AddLevel(BaseSP, bs.SetsName);
+                    foreach (var s in bs.Sets)
                     {
-                        case SetType.GoDown: sp = AddLevel(sp, s.Name); break;
-                        case SetType.GoUp: sp = (sp.Parent as Expander).Parent as StackPanel; break;
-                        case SetType.Brush:
-                            AddSetting(sp, s, () => new ColorPicker(s.Obj as SolidColorBrush, s.Set));
-                            break;
-                        case SetType.DoubleSlider:
-                            AddSetting(sp, s, () => new DoubleSlider((double)s.Obj, 
-                                (double)s.Param1, (double)s.Param2, s.Set)); break;
+                        switch (s.Type)
+                        {
+                            case SetType.GoDown: sp = AddLevel(sp, s.Name); break;
+                            case SetType.GoUp: sp = (sp.Parent as Expander).Parent as StackPanel; break;
+                            case SetType.Brush:
+                                AddSetting(sp, s, (obj) => new ColorPicker(obj as SolidColorBrush, s.Set));
+                                break;
+                            case SetType.DoubleSlider:
+                                AddSetting(sp, s, (obj) => new DoubleSlider((double)obj,
+                                    (double)s.Param1, (double)s.Param2, s.Set)); break;
+                        }
                     }
                 }
             }
@@ -71,11 +74,12 @@ namespace FlexTrader.MVVM.Views
             sp.Children.Add(exp);
             return nsp;
         }
-        private void AddSetting(StackPanel sp, Setting s, Func<UIElement> GetEl = null)
+        private void AddSetting(StackPanel sp, Setting s, Func<object, dynamic> GetEl = null)
         {
             var grd = new Grid { Margin = new Thickness(20, 2, 50, 2) };
             grd.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
             grd.ColumnDefinitions.Add(new ColumnDefinition());
+            grd.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
 
             var lb = new Label 
             { 
@@ -88,13 +92,45 @@ namespace FlexTrader.MVVM.Views
 
             if (GetEl != null)
             {
-                dynamic el = GetEl.Invoke();
+                dynamic el = GetEl.Invoke(s.Obj);
+                grd.Tag = el;
                 el.HorizontalAlignment = HorizontalAlignment.Right;
                 el.Width = 200;
-                el.Margin = new Thickness(0, 0, 15, 0);
                 Grid.SetColumn(el, 1);
                 grd.Children.Add(el);
+
+                if (s.ResetObj != null)
+                {
+                    var btn = new Button
+                    {
+                        Content = new Reset { Foreground = Brushes.Black },
+                        Width = 30,
+                        Height = 30,
+                        Background = Brushes.Transparent,
+                        BorderThickness = new Thickness(0)
+                    };
+                    btn.Margin = new Thickness(5, 0, 15, 0);
+                    btn.Click += (st, e) =>
+                    {
+                        s.Set.Invoke(s.ResetObj);
+                        grd.Children.Remove(grd.Tag as UIElement);
+
+                        dynamic el = GetEl.Invoke(s.ResetObj);
+                        grd.Tag = el;
+                        el.HorizontalAlignment = HorizontalAlignment.Right;
+                        el.Width = 200;
+                        Grid.SetColumn(el, 1);
+                        grd.Children.Add(el);
+                    };
+                    Grid.SetColumn(btn, 2);
+                    grd.Children.Add(btn);
+                }
+                else
+                {
+                    el.Margin = new Thickness(0, 0, 50, 0);
+                }
             }
+
             sp.Children.Add(grd);
         }
     }

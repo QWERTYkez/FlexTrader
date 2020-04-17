@@ -24,7 +24,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules.Normal
+namespace FlexTrader.MVVM.Views.ChartModules
 {
     public class PriceLineModule : ChartModule
     {
@@ -44,41 +44,21 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
             this.GridLayer = GridLayer;
             this.PriceLine = PriceLine;
 
-            LinesPen = new Pen(Brushes.DarkGray, 1);
-            FontBrush = Brushes.White;
-
             BaseConstruct(chart);
         }
-        private Brush fontBrush;
-        private Brush FontBrush
-        {
-            get => fontBrush;
-            set
-            {
-                value?.Freeze();
-                fontBrush = value;
-            }
-        }
-        private Pen linesPen;
-        private Pen LinesPen
-        {
-            get => linesPen;
-            set
-            {
-                value?.Freeze();
-                linesPen = value;
-            }
-        }
+        private Pen LinesPen => Chart.LinesPen;
 
         private readonly DrawingVisual PricesVisual = new DrawingVisual();
         private readonly DrawingVisual PriceGridVisual = new DrawingVisual();
         private protected override void Construct()
         {
+            Chart.FontBrushChanged += () => Redraw();
             GridLayer.AddVisual(PriceGridVisual);
             PriceLine.AddVisual(PricesVisual);
         }
         private protected override void Destroy()
         {
+            Chart.FontBrushChanged -= () => Redraw();
             GridLayer.DeleteVisual(PriceGridVisual);
             PriceLine.DeleteVisual(PricesVisual);
         }
@@ -133,7 +113,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                                 FlowDirection.LeftToRight,
                                 Chart.FontNumeric,
                                 Chart.BaseFontSize,
-                                FontBrush,
+                                Chart.FontBrush,
                                 pixelsPerDip
                             );
 
@@ -151,7 +131,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
                                 FlowDirection.LeftToRight,
                                 Chart.FontNumeric,
                                 Chart.BaseFontSize,
-                                FontBrush,
+                                Chart.FontBrush,
                                 pixelsPerDip
                             );
                     var Y = coordiate - ft.Height / 2;
@@ -182,7 +162,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
 
         private protected override void SetsDefinition()
         {
-            //////////////////
+            //SetsName = "Настройки шкалы времени";
         }
     }
 }

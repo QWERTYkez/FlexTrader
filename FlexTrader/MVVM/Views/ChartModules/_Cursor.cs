@@ -25,7 +25,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules.Normal
+namespace FlexTrader.MVVM.Views.ChartModules
 {
     class CursorModule : ChartModule
     {
@@ -235,28 +235,22 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
             });
         }
 
-        private Action<object> SetCursorArea;
-        private Action<object> SetCursorDash;
-        private Action<object> SetCursorIndent;
-        private Action<object> SetCursorThikness;
-        private Action<object> SetCursorColor;
-
         private protected override void SetsDefinition()
         {
-            SetCursorArea = b => { CursorArea = (b as double?).Value; SetCursor(); };
-            SetCursorDash = b => { CursorDash = (b as double?).Value; SetCursor(); };
-            SetCursorIndent = b => { CursorIndent = (b as double?).Value; SetCursor(); };
-            SetCursorThikness = b => { CursorThikness = (b as double?).Value; SetCursor(); };
-            SetCursorColor = b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, 2); MarksPen.Freeze(); }); SetCursor(); };
+            var SetCursorArea = new Action<object>(b => { CursorArea = (b as double?).Value; SetCursor(); });
+            var SetCursorDash = new Action<object>(b => { CursorDash = (b as double?).Value; SetCursor(); });
+            var SetCursorIndent = new Action<object>(b => { CursorIndent = (b as double?).Value; SetCursor(); });
+            var SetCursorThikness = new Action<object>(b => { CursorThikness = (b as double?).Value; SetCursor(); });
+            var SetCursorColor = new Action<object>(b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, CursorThikness); MarksPen.Freeze(); }); SetCursor(); });
 
             SetsName = "Настройки курсора";
 
-            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус", CursorArea, SetCursorArea, 20d, 50d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Штрих", CursorDash, SetCursorDash, 1d, 10d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Отступ", CursorIndent, SetCursorIndent, 0d, 10d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина", CursorThikness, SetCursorThikness, 1d, 5d));
-            Sets.Add(new Setting(SetType.Brush, "Цвет курсора", MarksPen.Brush, SetCursorColor));
-            Sets.Add(new Setting(SetType.Brush, "Цвет текста", MarksPen.Brush, b => { FontBrush = b as Brush; }));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус", CursorArea, SetCursorArea, 25d, 20d, 50d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Штрих", CursorDash, SetCursorDash, 5d, 1d, 10d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Отступ", CursorIndent, SetCursorIndent, 2d, 0d, 10d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина", CursorThikness, SetCursorThikness, 2d, 1d, 5d));
+            Sets.Add(new Setting(SetType.Brush, "Цвет курсора", MarksPen.Brush, SetCursorColor, Brushes.White));
+            Sets.Add(new Setting(SetType.Brush, "Цвет текста", FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
         }
     }
 }

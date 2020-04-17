@@ -107,7 +107,7 @@
                 Click="ShowBaseSettings"
                 Foreground="{x:Null}">
                 <Button.Content>
-                    <res:Gear />
+                    <res:Gear Foreground="{Binding FontBrush}" />
                 </Button.Content>
             </Button>
             <Button
@@ -116,7 +116,7 @@
                 BorderBrush="{x:Null}"
                 Foreground="{x:Null}">
                 <Button.Content>
-                    <res:Gear />
+                    <res:Gear Foreground="{Binding FontBrush}" />
                 </Button.Content>
             </Button>
         </Grid>

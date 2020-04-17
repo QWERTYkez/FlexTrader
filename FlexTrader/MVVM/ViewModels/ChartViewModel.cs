@@ -45,11 +45,11 @@ namespace FlexTrader.MVVM.ViewModels
             //ex.GeneralInfo();
             NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15);
 
-            Marks = new List<Views.ChartModules.Normal.PriceMark>
+            Marks = new List<Views.ChartModules.PriceMark>
             {
-                new Views.ChartModules.Normal.PriceMark(174, Brushes.White, ChartBackground, Brushes.Yellow),
-                new Views.ChartModules.Normal.PriceMark(176, ChartBackground, Brushes.Azure, Brushes.Azure),
-                new Views.ChartModules.Normal.PriceMark(178, Brushes.Lime, ChartBackground, Brushes.Lime)
+                new Views.ChartModules.PriceMark(174, Brushes.White, ChartBackground, Brushes.Yellow),
+                new Views.ChartModules.PriceMark(176, ChartBackground, Brushes.Azure, Brushes.Azure),
+                new Views.ChartModules.PriceMark(178, Brushes.Lime, ChartBackground, Brushes.Lime)
             };
         }
 
@@ -66,6 +66,6 @@ namespace FlexTrader.MVVM.ViewModels
         public double CursorThickness { get; set; }
         public Brush CursorBrush { get; set; }
 
-        public List<Views.ChartModules.Normal.PriceMark> Marks { get; set; }
+        public List<Views.ChartModules.PriceMark> Marks { get; set; }
     }
 }

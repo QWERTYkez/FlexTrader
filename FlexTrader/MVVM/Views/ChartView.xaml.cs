@@ -18,8 +18,8 @@
 
 using FlexTrader.MVVM.ViewModels;
 using FlexTrader.MVVM.Views.ChartModules;
-using FlexTrader.MVVM.Views.ChartModules.Normal;
-using FlexTrader.MVVM.Views.ChartModules.Transformed;
+using FlexTrader.MVVM.Views.ChartModules;
+using FlexTrader.MVVM.Views.ChartModules;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -68,6 +68,8 @@ namespace FlexTrader.MVVM.Views
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged += DC_PropertyChanged;
             DC.Inicialize();
+
+            SetsDefinition();
         }
         public void Destroy()
         {
@@ -98,30 +100,8 @@ namespace FlexTrader.MVVM.Views
                                 this.PriceMarksModule.Marks.Add(m);
                         }
                         break;
-                    case "ChartBackground": ChartBackground = DC.ChartBackground; break;
-                    case "BaseFontSize":
-                        {
-                            BaseFontSize = DC.BaseFontSize;
-
-                            var ft = new FormattedText
-                            (
-                                "0",
-                                CultureInfo.CurrentCulture,
-                                FlowDirection.LeftToRight,
-                                FontNumeric,
-                                Math.Round(DC.BaseFontSize * 1.4),
-                                null,
-                                VisualTreeHelper.GetDpi(TimeLine).PixelsPerDip
-                            );
-                            Dispatcher.Invoke(() =>
-                            {
-                                TimeLineRD.Height = new GridLength(PriceShift + ft.Height);
-                                TimeLine.Height = PriceShift + ft.Height;
-                            });
-                            
-                            
-                        }
-                        break;
+                    case "BaseFontSize": BaseFontSize = DC.BaseFontSize; break;
+                    case "FontBrush": FontBrush = DC.FontBrush; break;
                     case "TickSize":
                         {
                             TickSize = DC.TickSize;
@@ -155,12 +135,11 @@ namespace FlexTrader.MVVM.Views
         private void MouseWheelSpinning(object sender, MouseWheelEventArgs e) => CandlesModule.WhellScalling(e);
 
         public double TickSize { get; private set; } = 0.00000001;
-        public double BaseFontSize { get; private set; }
-        public Brush ChartBackground { get; private set; }
         public double ChHeight { get; private set; }
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
 
+        public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }
         public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
         public Vector CurrentScale { get => CandlesModule.CurrentScale; }
         public DateTime? StartTime { get => CandlesModule.StartTime; }
@@ -210,9 +189,8 @@ namespace FlexTrader.MVVM.Views
             var normalsets = new List<(string SetsName, List<Setting> Sets)>();
             var transsets = new List<(string SetsName, List<Setting> Sets)>();
 
+            basesets.Add(("Настройки поля", SpaceSets));
             basesets.Add(CandlesModule.GetSets());
-            basesets.Add(PriceLineModule.GetSets());
-            basesets.Add(TimeLineModule.GetSets());
             basesets.Add(CursorModule.GetSets());
 
             foreach (var mn in ModulesNormal)
@@ -222,6 +200,83 @@ namespace FlexTrader.MVVM.Views
                 normalsets.Add(mt.GetSets());
 
             ShowSettings.Invoke(basesets, normalsets, transsets);
+        }
+
+        private readonly List<Setting> SpaceSets = new List<Setting>();
+        public Pen LinesPen { get; private set; } = new Pen(Brushes.DarkGray, 1);
+        private double basefontsize;
+        public double BaseFontSize
+        {
+            get => basefontsize;
+            private set
+            {
+                var ft = new FormattedText
+                            (
+                                "0",
+                                CultureInfo.CurrentCulture,
+                                FlowDirection.LeftToRight,
+                                FontNumeric,
+                                Math.Round(value * 1.4),
+                                null,
+                                VisualTreeHelper.GetDpi(TimeLine).PixelsPerDip
+                            );
+                Dispatcher.Invoke(() =>
+                {
+                    TimeLineRD.Height = new GridLength(PriceShift + ft.Height);
+                    TimeLine.Height = PriceShift + ft.Height;
+                });
+
+                basefontsize = value;
+            }
+        }
+        public Brush FontBrush { get; private set; }
+        public event Action FontBrushChanged;
+
+        private void SetsDefinition()
+        {
+            var SetGridThicknesses = new Action<object>(b =>
+            {
+                Dispatcher.Invoke(() => { LinesPen.Thickness = (b as double?).Value / 10; });
+                PriceLineModule.Redraw(); TimeLineModule.Redraw();
+            });
+            var SetGridBrush = new Action<object>(b =>
+            {
+                Dispatcher.Invoke(() => { LinesPen.Brush = b as Brush; });
+                PriceLineModule.Redraw(); TimeLineModule.Redraw();
+            });
+            var SetChartBackground = new Action<object>(b => 
+            { 
+                Dispatcher.Invoke(() => 
+                { 
+                    var br = b as Brush; br.Freeze();
+                    (DataContext as ChartViewModel).ChartBackground = br;
+                }); 
+            });
+            var SetFontBrush = new Action<object>(b => 
+            {
+                Dispatcher.Invoke(() => 
+                {
+                    var br = b as Brush; br.Freeze();
+                    (DataContext as ChartViewModel).FontBrush = br;
+                });
+                FontBrushChanged.Invoke(); 
+            });
+            var SetBaseFontSize = new Action<object>(b => 
+            { 
+                BaseFontSize = (b as double?).Value; 
+            });
+
+            SpaceSets.Add(new Setting(SetType.Brush, "Фон", ChartBackground, SetChartBackground, new SolidColorBrush(Color.FromRgb(30, 30, 30))));
+            Setting.SetsLevel(SpaceSets, "Сетка", new Setting[] 
+            {
+                new Setting(SetType.Brush, "Цвет", LinesPen.Brush, SetGridBrush, Brushes.DarkGray),
+                new Setting(SetType.DoubleSlider, "Толщина", LinesPen.Thickness * 10, SetGridThicknesses, 10d, 1d, 20d)
+            });
+            Setting.SetsLevel(SpaceSets, "Текст", new Setting[]
+            {
+                new Setting(SetType.Brush, "Цвет", FontBrush, SetFontBrush, Brushes.White),
+                new Setting(SetType.DoubleSlider, "Размер", BaseFontSize, SetBaseFontSize, 18d, 10d, 40d)
+            });
         }
     }
 }

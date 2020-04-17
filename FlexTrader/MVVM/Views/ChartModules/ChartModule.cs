@@ -47,6 +47,5 @@ namespace FlexTrader.MVVM.Views.ChartModules
         public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
         private protected List<Setting> Sets { get; } = new List<Setting>();
         private protected string SetsName { get; set; }
-
     }
 }

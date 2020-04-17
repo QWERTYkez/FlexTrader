@@ -17,7 +17,7 @@
 */
 
 using FlexTrader.Exchanges;
-using FlexTrader.MVVM.Views.ChartModules.Normal;
+using FlexTrader.MVVM.Views.ChartModules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules.Transformed
+namespace FlexTrader.MVVM.Views.ChartModules
 {
     public class CandlesModule : ChartModule
     {
@@ -445,19 +445,13 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
         private readonly Pen UpPen = new Pen(Brushes.Lime, 4);
         private readonly Pen DownPen = new Pen(Brushes.Red, 4);
 
-        private Action<object> SetUpBrush;
-        private Action<object> SetDownBrush;
-        private Action<object> SetUpPenBrush;
-        private Action<object> SetDownPenBrush;
-        private Action<object> SetThicknesses;
-
         private protected override void SetsDefinition()
         {
-            SetUpBrush = b => { UpBrush = b as Brush; Redraw(); };
-            SetUpPenBrush = b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); };
-            SetDownBrush = b => { DownBrush = b as Brush; Redraw(); };
-            SetDownPenBrush = b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); };
-            SetThicknesses = b =>
+            var SetUpBrush = new Action<object>(b => { UpBrush = b as Brush; Redraw(); });
+            var SetUpPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); });
+            var SetDownBrush = new Action<object>(b => { DownBrush = b as Brush; Redraw(); });
+            var SetDownPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); });
+            var SetThicknesses = new Action<object>(b =>
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -465,23 +459,23 @@ namespace FlexTrader.MVVM.Views.ChartModules.Transformed
                     this.UpPen.Thickness = (b as double?).Value;
                 });
                 Redraw();
-            };
+            });
 
             SetsName = "Настройки свечей";
 
             Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
             {
-                new Setting(SetType.Brush, "Цвет тела", this.UpBrush, SetUpBrush),
-                new Setting(SetType.Brush, "Цвет фитиля", this.UpPen.Brush, SetUpPenBrush)
+                new Setting(SetType.Brush, "Цвет тела", this.UpBrush, SetUpBrush, Brushes.Lime),
+                new Setting(SetType.Brush, "Цвет фитиля", this.UpPen.Brush, SetUpPenBrush, Brushes.Lime)
             });
 
             Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
             {
-                new Setting(SetType.Brush, "Цвет тела", this.DownBrush, SetDownBrush),
-                new Setting(SetType.Brush, "Цвет фитиля", this.DownPen.Brush, SetDownPenBrush)
+                new Setting(SetType.Brush, "Цвет тела", this.DownBrush, SetDownBrush, Brushes.Red),
+                new Setting(SetType.Brush, "Цвет фитиля", this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
             });
 
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", this.DownPen.Thickness, SetThicknesses, 2d, 6d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", this.DownPen.Thickness, SetThicknesses, 4d, 2d, 6d));
         }
     }
 }

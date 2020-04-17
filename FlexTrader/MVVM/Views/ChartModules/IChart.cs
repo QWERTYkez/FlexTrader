@@ -52,5 +52,8 @@ namespace FlexTrader.MVVM.Views.ChartModules
         double BaseFontSize { get; }
         double PricesMin { get; }
         double PricesDelta { get; }
+        Pen LinesPen { get; }
+        Brush FontBrush { get; }
+        event Action FontBrushChanged;
     }
 }

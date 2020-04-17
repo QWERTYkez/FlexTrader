@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules.Normal
+namespace FlexTrader.MVVM.Views.ChartModules
 {
     public class PriceMarksModule : ChartModule
     {
@@ -129,7 +129,7 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
         }
     }
 
-    public struct PriceMark
+    public class PriceMark
     {
         private Brush textBrush;
         private Brush fill;
@@ -137,10 +137,6 @@ namespace FlexTrader.MVVM.Views.ChartModules.Normal
 
         public PriceMark(double Price, Brush TextBrush, Brush Fill, Brush LineBrush = null)
         {
-            textBrush = null;
-            fill = null;
-            lineBrush = null;
-
             this.Price = Price;
             this.TextBrush = TextBrush;
             this.Fill = Fill;
