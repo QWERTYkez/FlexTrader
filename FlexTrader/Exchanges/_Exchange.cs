@@ -16,13 +16,11 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using ChartModules.StandardModules;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FlexTrader.Exchanges
 {
@@ -90,7 +88,7 @@ namespace FlexTrader.Exchanges
         M1
     }
 
-    public struct Candle
+    public struct Candle: ICandle
     {
         public Candle(decimal TimeStamp, decimal Open, decimal High, decimal Low, decimal Close, decimal Volume)
         {

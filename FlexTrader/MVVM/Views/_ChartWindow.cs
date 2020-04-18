@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using FlexTrader.MVVM.Views.ChartModules;
+using ChartModules;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -25,7 +25,7 @@ using System.Windows.Input;
 
 namespace FlexTrader.MVVM.Views
 {
-    public abstract class ChartWindow : Window
+    public abstract class ChartWindow : Window, IChartWindow
     {
         public ChartWindow()
         {
@@ -36,7 +36,7 @@ namespace FlexTrader.MVVM.Views
         public event Action<Vector, int> Moving;
         private Point StartPosition;
 
-        internal void StartMoveCursor(MouseButtonEventArgs e, int t)
+        public void StartMoveCursor(MouseButtonEventArgs e, int t)
         {
             EventType = t;
             StartPosition = e.GetPosition(this);

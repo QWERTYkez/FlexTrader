@@ -17,7 +17,7 @@
 */
 
 using FlexTrader.MVVM.Resources;
-using FlexTrader.MVVM.Views.ChartModules;
+using ChartModules;
 using System;
 using System.Collections.Generic;
 using System.Windows;

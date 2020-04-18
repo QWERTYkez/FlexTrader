@@ -25,15 +25,15 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules.StandardModules
 {
-    class CursorModule : ChartModule
+    public class CursorModule : ChartModule
     {
-        private readonly DrawingCanvas CursorLayer;
-        private readonly DrawingCanvas TimeLine;
-        private readonly DrawingCanvas PriceLine;
+        private readonly IDrawingCanvas CursorLayer;
+        private readonly IDrawingCanvas TimeLine;
+        private readonly IDrawingCanvas PriceLine;
         private readonly Grid ChartGRD;
-        public CursorModule(IChart chart, Grid ChartGRD, DrawingCanvas CursorLayer, DrawingCanvas TimeLine, DrawingCanvas PriceLine)
+        public CursorModule(IChart chart, Grid ChartGRD, IDrawingCanvas CursorLayer, IDrawingCanvas TimeLine, IDrawingCanvas PriceLine)
         {
             this.CursorLayer = CursorLayer;
             this.TimeLine = TimeLine;

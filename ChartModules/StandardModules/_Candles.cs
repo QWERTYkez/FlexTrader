@@ -16,8 +16,6 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using FlexTrader.Exchanges;
-using FlexTrader.MVVM.Views.ChartModules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,11 +25,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules.StandardModules
 {
     public class CandlesModule : ChartModule
     {
-        public List<Candle> AllCandles = new List<Candle>();
+        public List<ICandle> AllCandles = new List<ICandle>();
         public TimeSpan? DeltaTime { get; private set; }
         public DateTime? StartTime { get; private set; }
 
@@ -39,21 +37,21 @@ namespace FlexTrader.MVVM.Views.ChartModules
         public Vector CurrentScale;
         public event Action<MouseButtonEventArgs, int> StartMoveCursor;
 
-        private readonly DrawingCanvas CandlesLayer;
+        private readonly IDrawingCanvas CandlesLayer;
         private readonly PriceLineModule PriceLineModule;
         private readonly TimeLineModule TimeLineModule;
         private readonly List<ChartModule> NormalModules;
         private readonly TranslateTransform Translate;
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
-        private readonly ChartWindow mainView;
+        private readonly IChartWindow mainView;
         private readonly Grid ChartGRD;
-        private readonly DrawingCanvas TimeLine;
-        private readonly DrawingCanvas PriceLine;
-        public CandlesModule(IChart chart, DrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
+        private readonly IDrawingCanvas TimeLine;
+        private readonly IDrawingCanvas PriceLine;
+        public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
             TimeLineModule TimeLineModule, List<ChartModule> NormalModules, TranslateTransform Translate,
-            ScaleTransform ScaleX, ScaleTransform ScaleY, ChartWindow mainView, Grid ChartGRD, DrawingCanvas TimeLine,
-            DrawingCanvas PriceLine, Vector CurrentScale)
+            ScaleTransform ScaleX, ScaleTransform ScaleY, IChartWindow mainView, Grid ChartGRD, IDrawingCanvas TimeLine,
+            IDrawingCanvas PriceLine, Vector CurrentScale)
         {
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
@@ -75,7 +73,7 @@ namespace FlexTrader.MVVM.Views.ChartModules
         private double Min;
 
         private readonly object parallelkey = new object();
-        public void AddCandles(List<Candle> NewCandles)
+        public void AddCandles(List<ICandle> NewCandles)
         {
             if (!DeltaTime.HasValue)
                 DeltaTime = (NewCandles[1].TimeStamp - NewCandles[0].TimeStamp);
@@ -477,5 +475,21 @@ namespace FlexTrader.MVVM.Views.ChartModules
 
             Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", this.DownPen.Thickness, SetThicknesses, 4d, 2d, 6d));
         }
+    }
+
+    public interface ICandle
+    {
+        public bool UP { get; }
+        public DateTime TimeStamp { get; }
+        public decimal Open { get; }
+        public double OpenD { get; }
+        public decimal High { get; }
+        public double HighD { get; }
+        public decimal Low { get; }
+        public double LowD { get; }
+        public decimal Close { get; }
+        public double CloseD { get; }
+        public decimal Volume { get; }
+        public double VolumeD { get; }
     }
 }

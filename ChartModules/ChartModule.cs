@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules
 {
     public abstract class ChartModule
     {

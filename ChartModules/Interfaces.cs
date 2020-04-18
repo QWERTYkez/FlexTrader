@@ -17,17 +17,18 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules
 {
     public interface IChart
     {
         Dispatcher Dispatcher { get; }
-        DrawingCanvas BackChart { get; }
-        DrawingCanvas FrontChart { get; }
         double TickSize { get; }
         double PriceToHeight(double price);
         double HeightToPrice(double height);
@@ -55,5 +56,31 @@ namespace FlexTrader.MVVM.Views.ChartModules
         Pen LinesPen { get; }
         Brush FontBrush { get; }
         event Action FontBrushChanged;
+    }
+
+    public interface IDrawingCanvas
+    {
+        public List<Visual> Visuals { get; }
+        public void AddVisual(Visual visual);
+        public void DeleteVisual(Visual visual);
+        public void AddVisualsRange(List<Visual> visuals);
+        public void ClearVisuals();
+
+        public int Index { get; }
+
+        public double Width { get; set; }
+        public double Height { get; set; }
+        Transform RenderTransform { get; set; }
+        public event MouseButtonEventHandler PreviewMouseDown;
+    }
+
+    public interface IChartWindow
+    {
+        public event Action<Vector, int> Moving;
+        public void StartMoveCursor(MouseButtonEventArgs e, int t);
+        public abstract Grid BaseGrid { get; }
+        public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
+                                 List<(string SetsName, List<Setting> Sets)> sn,
+                                 List<(string SetsName, List<Setting> Sets)> st);
     }
 }

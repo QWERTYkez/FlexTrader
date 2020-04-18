@@ -17,9 +17,7 @@
 */
 
 using FlexTrader.MVVM.ViewModels;
-using FlexTrader.MVVM.Views.ChartModules;
-using FlexTrader.MVVM.Views.ChartModules;
-using FlexTrader.MVVM.Views.ChartModules;
+using ChartModules;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,14 +28,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ChartModules.StandardModules;
 
 namespace FlexTrader.MVVM.Views
 {
     public partial class ChartView : UserControl, IChart
     {
-        DrawingCanvas IChart.BackChart => this.BackChart;
-        DrawingCanvas IChart.FrontChart => this.FrontChart;
-
         private readonly PriceMarksModule PriceMarksModule;
         private readonly CursorModule CursorModule;
         private readonly TimeLineModule TimeLineModule;

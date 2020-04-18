@@ -24,15 +24,15 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules.StandardModules
 {
     public class PriceMarksModule : ChartModule
     {
         public readonly ObservableCollection<PriceMark> Marks = new ObservableCollection<PriceMark>();
 
-        private readonly DrawingCanvas MarksLayer;
-        private readonly DrawingCanvas PriceLine;
-        public PriceMarksModule(IChart chart, DrawingCanvas MarksLayer, DrawingCanvas PriceLine)
+        private readonly IDrawingCanvas MarksLayer;
+        private readonly IDrawingCanvas PriceLine;
+        public PriceMarksModule(IChart chart, IDrawingCanvas MarksLayer, IDrawingCanvas PriceLine)
         {
             this.MarksLayer = MarksLayer;
             this.PriceLine = PriceLine;

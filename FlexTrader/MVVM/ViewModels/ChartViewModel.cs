@@ -16,9 +16,11 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using ChartModules.StandardModules;
 using FlexTrader.Exchanges;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
 
@@ -43,18 +45,19 @@ namespace FlexTrader.MVVM.ViewModels
 
             Binance ex = new Binance();
             //ex.GeneralInfo();
-            NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15);
 
-            Marks = new List<Views.ChartModules.PriceMark>
+            NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15).Select(c => c as ICandle).ToList();
+
+            Marks = new List<PriceMark>
             {
-                new Views.ChartModules.PriceMark(174, Brushes.White, ChartBackground, Brushes.Yellow),
-                new Views.ChartModules.PriceMark(176, ChartBackground, Brushes.Azure, Brushes.Azure),
-                new Views.ChartModules.PriceMark(178, Brushes.Lime, ChartBackground, Brushes.Lime)
+                new PriceMark(174, Brushes.White, ChartBackground, Brushes.Yellow),
+                new PriceMark(176, ChartBackground, Brushes.Azure, Brushes.Azure),
+                new PriceMark(178, Brushes.Lime, ChartBackground, Brushes.Lime)
             };
         }
 
         public double TickSize { get; set; }
-        public List<Candle> NewCandles { get; set; }
+        public List<ICandle> NewCandles { get; set; }
 
         public Brush ChartBackground { get; set; }
         public double BaseFontSize { get; set; }
@@ -66,6 +69,6 @@ namespace FlexTrader.MVVM.ViewModels
         public double CursorThickness { get; set; }
         public Brush CursorBrush { get; set; }
 
-        public List<Views.ChartModules.PriceMark> Marks { get; set; }
+        public List<PriceMark> Marks { get; set; }
     }
 }

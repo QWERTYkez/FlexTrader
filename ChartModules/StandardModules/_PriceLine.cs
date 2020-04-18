@@ -24,7 +24,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules.StandardModules
 {
     public class PriceLineModule : ChartModule
     {
@@ -36,9 +36,9 @@ namespace FlexTrader.MVVM.Views.ChartModules
         public double LastMin;
 
         private readonly ColumnDefinition PriceLineCD;
-        private readonly DrawingCanvas GridLayer;
-        private readonly DrawingCanvas PriceLine;
-        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, DrawingCanvas GridLayer, DrawingCanvas PriceLine)
+        private readonly IDrawingCanvas GridLayer;
+        private readonly IDrawingCanvas PriceLine;
+        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, IDrawingCanvas GridLayer, IDrawingCanvas PriceLine)
         {
             this.PriceLineCD = PriceLineCD;
             this.GridLayer = GridLayer;

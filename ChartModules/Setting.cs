@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules
 {
     public struct Setting
     {

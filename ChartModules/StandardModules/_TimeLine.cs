@@ -23,16 +23,16 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views.ChartModules
+namespace ChartModules.StandardModules
 {
     public class TimeLineModule : ChartModule
     {
         public DateTime TimeA = DateTime.Now;
         public DateTime TimeB = DateTime.Now;
 
-        private readonly DrawingCanvas GridLayer;
-        private readonly DrawingCanvas TimeLine;
-        public TimeLineModule(IChart chart, DrawingCanvas GridLayer, DrawingCanvas TimeLine)
+        private readonly IDrawingCanvas GridLayer;
+        private readonly IDrawingCanvas TimeLine;
+        public TimeLineModule(IChart chart, IDrawingCanvas GridLayer, IDrawingCanvas TimeLine)
         {
             this.GridLayer = GridLayer;
             this.TimeLine = TimeLine;
