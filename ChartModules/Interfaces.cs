@@ -76,8 +76,7 @@ namespace ChartModules
 
     public interface IChartWindow
     {
-        public event Action<Vector, int> Moving;
-        public void StartMoveCursor(MouseButtonEventArgs e, int t);
+        public void MoveCursor(MouseButtonEventArgs e, Action<Vector> a);
         public abstract Grid BaseGrid { get; }
         public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,
