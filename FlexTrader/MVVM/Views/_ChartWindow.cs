@@ -34,10 +34,11 @@ namespace FlexTrader.MVVM.Views
 
         #region Обработка таскания мышью
         private Point StartPosition;
-        private Action<Vector> Moving;
-        public void MoveCursor(MouseButtonEventArgs e, Action<Vector> a)
+        private Action<Vector> ActA;
+        private Action ActB;
+        public void MoveCursor(MouseButtonEventArgs e, Action<Vector> ActA, Action ActB = null)
         {
-            StartPosition = e.GetPosition(this); Moving = a;
+            StartPosition = e.GetPosition(this); this.ActA = ActA; this.ActB = ActB;
 
             this.MouseLeftButtonUp += (obj, e) => EndMoving();
             this.MouseMove += MovingAct;
@@ -45,12 +46,14 @@ namespace FlexTrader.MVVM.Views
         private void MovingAct(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Released) EndMoving();
-            Moving.Invoke(e.GetPosition(this) - StartPosition);
+            ActA.Invoke(e.GetPosition(this) - StartPosition);
         }
         private void EndMoving()
         {
             this.MouseMove -= MovingAct;
-            Moving = null;
+            ActA = null;
+            ActB.Invoke();
+            ActB = null;
         }
         #endregion
 

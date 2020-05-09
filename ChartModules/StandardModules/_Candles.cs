@@ -189,11 +189,10 @@ namespace ChartModules.StandardModules
             VerticalLock = false;
             mainView.MoveCursor(e, (Vector vec) =>
             {
-                var Y = vec.Y;
                 Task.Run(() =>
                 {
-                    var X = Y / 50;
-                    if (Y < 0)
+                    var X = vec.Y / 50;
+                    if (vec.Y < 0)
                     {
                         var Z = Chart.ChHeight / (CurrentScale.Y * Chart.TickSize) - 5 * Chart.ChHeight;
                         if (Z > 0)
@@ -205,7 +204,7 @@ namespace ChartModules.StandardModules
                         }
                         return;
                     }
-                    else if (Y > 0)
+                    else if (vec.Y > 0)
                     {
                         CurrentScale.Y = LastScaleY / (1 + X);
                         Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
@@ -238,18 +237,17 @@ namespace ChartModules.StandardModules
             LastScaleX = CurrentScale.X;
             mainView.MoveCursor(e, (Vector vec) =>
             {
-                var X = vec.X;
                 Task.Run(() =>
                 {
-                    var Y = -X / 50;
-                    if (X > 0)
+                    var Y = -vec.X / 50;
+                    if (vec.X > 0)
                     {
                         CurrentScale.X = LastScaleX / (1 - Y);
                         Dispatcher.Invoke(() => ScaleX.ScaleX = CurrentScale.X);
                         HorizontalReset();
                         return;
                     }
-                    else if (X < 0)
+                    else if (vec.X < 0)
                     {
                         var nScale = LastScaleX * (1 + Y);
                         var TimeA = StartTime.Value - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime.Value;
