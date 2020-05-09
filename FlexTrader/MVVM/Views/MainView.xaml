@@ -31,7 +31,5 @@
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
-    <Grid x:Name="BaseGRD">
-        <ContentPresenter Content="{Binding Chart}" />
-    </Grid>
+    <ContentPresenter Content="{Binding Chart}" />
 </local:ChartWindow>

@@ -52,14 +52,12 @@ namespace FlexTrader.MVVM.Views
         {
             this.MouseMove -= MovingAct;
             ActA = null;
-            ActB.Invoke();
+            ActB?.Invoke();
             ActB = null;
         }
         #endregion
 
         #region Блок окна настроек
-        public abstract Grid BaseGrid { get; }
-
         private SettingsWindow SettingsWindow;
         public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,

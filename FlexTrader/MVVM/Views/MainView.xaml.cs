@@ -29,10 +29,5 @@ namespace FlexTrader.MVVM.Views
 
             ((ViewModels.MainViewModel)DataContext).Initialize(this);
         }
-
-        /// <summary>
-        /// Базовый контейнер
-        /// </summary>
-        public override Grid BaseGrid => this.BaseGRD;
     }
 }
