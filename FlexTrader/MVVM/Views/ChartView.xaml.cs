@@ -48,7 +48,10 @@ namespace FlexTrader.MVVM.Views
         {
             InitializeComponent();
 
+            mainView.SetInstrument += SetInsrument;
             this.ShowSettings += mainView.ShowSettings;
+            
+            ChartGRD.PreviewMouseDown += (s, e) => { e.Handled = true; Instrument?.Invoke(e); };
 
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PriceLine);
             TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
@@ -56,7 +59,7 @@ namespace FlexTrader.MVVM.Views
             CursorModule = new CursorModule(this, ChartGRD, CursorLayer, TimeLine, PriceLine);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule, 
-                ModulesNormal, Translate, ScaleX, ScaleY, mainView, ChartGRD, TimeLine, PriceLine,
+                ModulesNormal, Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
 
             ModulesNormal.Add(PriceMarksModule);
@@ -66,6 +69,8 @@ namespace FlexTrader.MVVM.Views
             DC.Inicialize();
 
             SetsDefinition();
+
+            SetInsrument(mainView.CurrentInstrument);
         }
         public void Destroy()
         {
@@ -91,9 +96,9 @@ namespace FlexTrader.MVVM.Views
                 {
                     case "Marks":
                         {
-                            this.PriceMarksModule.Marks.Clear();
+                            this.PriceMarksModule.LevelMarks.Clear();
                             foreach (var m in DC.Marks)
-                                this.PriceMarksModule.Marks.Add(m);
+                                this.PriceMarksModule.LevelMarks.Add(m);
                         }
                         break;
                     case "BaseFontSize": BaseFontSize = DC.BaseFontSize; break;
@@ -111,6 +116,22 @@ namespace FlexTrader.MVVM.Views
                         }
                         break;
                 }
+            });
+        }
+
+        private Action<MouseButtonEventArgs> Instrument;
+        private void SetInsrument(string Insrt)
+        {
+            Task.Run(() => 
+            {
+                switch (Insrt)
+                {
+                    case "PaintingLeves": Instrument = null; return;
+                    case "PaintingTrends": Instrument = null; return;
+                    default: Instrument = CandlesModule.MovingChart; return;
+                }
+
+                
             });
         }
 

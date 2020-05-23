@@ -16,18 +16,36 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Windows.Controls;
+using ChartModules.StandardModules;
+using System;
+using System.Threading.Tasks;
 
-namespace FlexTrader.MVVM.Resources
+namespace ChartModules.PaintingModules
 {
-    /// <summary>
-    /// Логика взаимодействия для Gear.xaml
-    /// </summary>
-    public partial class Gear : UserControl
+    public class LevelsModule : ChartModule
     {
-        public Gear()
+        public LevelsModule(PriceMarksModule PMM)
         {
-            InitializeComponent();
+        }
+
+        public override Task Redraw()
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override void Construct()
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override void Destroy()
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override void SetsDefinition()
+        {
+            throw new NotImplementedException();
         }
     }
 }

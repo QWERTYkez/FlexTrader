@@ -49,7 +49,7 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas PriceLine;
         public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
             TimeLineModule TimeLineModule, List<ChartModule> NormalModules, TranslateTransform Translate,
-            ScaleTransform ScaleX, ScaleTransform ScaleY, IChartWindow mainView, Grid ChartGRD, IDrawingCanvas TimeLine,
+            ScaleTransform ScaleX, ScaleTransform ScaleY, IChartWindow mainView, IDrawingCanvas TimeLine,
             IDrawingCanvas PriceLine, Vector CurrentScale)
         {
             this.CandlesLayer = CandlesLayer;
@@ -60,7 +60,6 @@ namespace ChartModules.StandardModules
             this.ScaleX = ScaleX;
             this.ScaleY = ScaleY;
             this.mainView = mainView;
-            this.ChartGRD = ChartGRD;
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
             this.CurrentScale = CurrentScale;
@@ -271,9 +270,8 @@ namespace ChartModules.StandardModules
         #endregion
         #region перемещение графика 
         private Vector LastTranslateVector;
-        public void MovingChart(object sender, MouseButtonEventArgs e)
+        public void MovingChart(MouseButtonEventArgs e)
         {
-            e.Handled = true;
             LastTranslateVector = CurrentTranslate;
             mainView.MoveCursor(e, async (Vector vec) => 
             {
@@ -408,13 +406,11 @@ namespace ChartModules.StandardModules
         }
         private protected override void Construct() 
         {
-            ChartGRD.PreviewMouseDown += MovingChart;
             TimeLine.PreviewMouseDown += TimeLine_MouseDown;
             PriceLine.PreviewMouseDown += PriceLine_MouseDown;
         }
         private protected override void Destroy() 
         {
-            ChartGRD.PreviewMouseDown -= MovingChart;
             TimeLine.PreviewMouseDown -= TimeLine_MouseDown;
             PriceLine.PreviewMouseDown -= PriceLine_MouseDown;
         }

@@ -28,7 +28,7 @@ namespace ChartModules.StandardModules
 {
     public class PriceMarksModule : ChartModule
     {
-        public readonly ObservableCollection<PriceMark> Marks = new ObservableCollection<PriceMark>();
+        public readonly ObservableCollection<PriceMark> LevelMarks = new ObservableCollection<PriceMark>();
 
         private readonly IDrawingCanvas MarksLayer;
         private readonly IDrawingCanvas PriceLine;
@@ -37,7 +37,7 @@ namespace ChartModules.StandardModules
             this.MarksLayer = MarksLayer;
             this.PriceLine = PriceLine;
 
-            Marks.CollectionChanged += Marks_CollectionChanged;
+            LevelMarks.CollectionChanged += (s, e) => RedrawMarks(LevelMarks);
 
             BaseConstruct(chart);
         }
@@ -54,36 +54,40 @@ namespace ChartModules.StandardModules
             MarksLayer.DeleteVisual(ChartMarksVisual);
             PriceLine.DeleteVisual(PriceMarksVisual);
         }
-        private void Marks_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-            => Redraw();
 
-        public override Task Redraw()
+        private void GetRedrawData(
+            List<(
+                Point A, 
+                Point B, 
+                FormattedText ft, 
+                Brush Fill, 
+                Point T, 
+                Pen pen, 
+                PathGeometry geo
+                )> Data, IEnumerable<PriceMark> Marks)
         {
-            return Task.Run(() =>
+            if (Marks != null)
             {
-                if (Marks != null)
+                var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
+                foreach (var mark in Marks)
                 {
-                    var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
-                    var marksData = new List<(Point A, Point B, FormattedText ft, Brush Fill, Point T, Pen pen, PathGeometry geo)>();
-                    foreach (var mark in Marks)
+                    if (mark.Price > Chart.PricesMin * Chart.TickSize && mark.Price < pricesMax)
                     {
-                        if (mark.Price > Chart.PricesMin * Chart.TickSize && mark.Price < pricesMax)
-                        {
-                            var height = Chart.PriceToHeight(mark.Price);
+                        var height = Chart.PriceToHeight(mark.Price);
 
-                            var ft = new FormattedText
-                                            (
-                                                mark.Price.ToString(Chart.TickPriceFormat),
-                                                CultureInfo.CurrentCulture,
-                                                FlowDirection.LeftToRight,
-                                                Chart.FontNumeric,
-                                                Chart.BaseFontSize,
-                                                mark.TextBrush,
-                                                VisualTreeHelper.GetDpi(PriceMarksVisual).PixelsPerDip
-                                            );
+                        var ft = new FormattedText
+                                        (
+                                            mark.Price.ToString(Chart.TickPriceFormat),
+                                            CultureInfo.CurrentCulture,
+                                            FlowDirection.LeftToRight,
+                                            Chart.FontNumeric,
+                                            Chart.BaseFontSize,
+                                            mark.TextBrush,
+                                            VisualTreeHelper.GetDpi(PriceMarksVisual).PixelsPerDip
+                                        );
 
-                            var pen = new Pen(mark.LineBrush, 2); pen.Freeze();
-                            var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
+                        var pen = new Pen(mark.LineBrush, 2); pen.Freeze();
+                        var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
                                     new[]
                                     {
                                         new LineSegment(new Point(Chart.PriceShift, height + ft.Height / 2), true),
@@ -94,18 +98,34 @@ namespace ChartModules.StandardModules
                                     true)
                                 }); geo.Freeze();
 
-                            marksData.Add((
-                                    new Point(0, height),
-                                    new Point(Chart.ChWidth + 2, height),
-                                    ft,
-                                    mark.Fill,
-                                    new Point(Chart.PriceShift + 1, height - ft.Height / 2),
-                                    pen,
-                                    geo
-                                    ));
-                        }
+                        Data.Add((
+                                new Point(0, height),
+                                new Point(Chart.ChWidth + 2, height),
+                                ft,
+                                mark.Fill,
+                                new Point(Chart.PriceShift + 1, height - ft.Height / 2),
+                                pen,
+                                geo
+                                ));
                     }
+                }
+            }
+        }
+        public Task RedrawMarks(IEnumerable<PriceMark> Marks = null)
+        {
+            return Task.Run(() =>
+            {
+                var marksData = new List<(Point A, Point B, FormattedText ft, Brush Fill, Point T, Pen pen, PathGeometry geo)>();
 
+                if (Marks == null)
+                {
+                    GetRedrawData(marksData, LevelMarks);
+                }
+                else GetRedrawData(marksData, Marks);
+
+
+                if (marksData.Count > 0)
+                {
                     Dispatcher.Invoke(() =>
                     {
                         using var dcCH = ChartMarksVisual.RenderOpen();
@@ -122,6 +142,7 @@ namespace ChartModules.StandardModules
                 }
             });
         }
+        public override Task Redraw() => RedrawMarks();
 
         private protected override void SetsDefinition()
         {
@@ -131,45 +152,19 @@ namespace ChartModules.StandardModules
 
     public class PriceMark
     {
-        private Brush textBrush;
-        private Brush fill;
-        private Brush lineBrush;
-
         public PriceMark(double Price, Brush TextBrush, Brush Fill, Brush LineBrush = null)
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
             this.Fill = Fill;
             this.LineBrush = LineBrush;
+
+            this.TextBrush.Freeze(); this.Fill.Freeze(); this.LineBrush.Freeze();
         }
 
         public double Price { get; set; }
-        public Brush TextBrush 
-        { 
-            get => textBrush; 
-            set
-            {
-                value?.Freeze();
-                textBrush = value;
-            }
-        }
-        public Brush Fill
-        {
-            get => fill;
-            set
-            {
-                value?.Freeze();
-                fill = value;
-            }
-        }
-        public Brush LineBrush
-        {
-            get => lineBrush;
-            set
-            {
-                value?.Freeze();
-                lineBrush = value;
-            }
-        }
+        public Brush TextBrush { get; set; }
+        public Brush Fill { get; set; }
+        public Brush LineBrush { get; set; }
     }
 }

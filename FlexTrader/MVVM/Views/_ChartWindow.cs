@@ -46,7 +46,7 @@ namespace FlexTrader.MVVM.Views
         private void MovingAct(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Released) EndMoving();
-            ActA.Invoke(e.GetPosition(this) - StartPosition);
+            ActA?.Invoke(e.GetPosition(this) - StartPosition);
         }
         private void EndMoving()
         {
@@ -69,5 +69,8 @@ namespace FlexTrader.MVVM.Views
         }
 
         #endregion
+
+        public abstract event Action<string> SetInstrument;
+        public abstract string CurrentInstrument { get; }
     }
 }

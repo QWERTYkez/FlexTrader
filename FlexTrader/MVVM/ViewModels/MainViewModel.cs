@@ -17,13 +17,8 @@
 */
 
 using FlexTrader.MVVM.Views;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace FlexTrader.MVVM.ViewModels
@@ -44,6 +39,5 @@ namespace FlexTrader.MVVM.ViewModels
         }
 
         public ChartView Chart { get; set; }
-        
     }
 }

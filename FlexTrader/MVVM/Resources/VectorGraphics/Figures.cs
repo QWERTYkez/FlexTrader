@@ -16,18 +16,39 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Windows;
 using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Resources
 {
-    /// <summary>
-    /// Логика взаимодействия для Gear.xaml
-    /// </summary>
-    public partial class Reset : UserControl
+    public class CrossHair : UserControl { }
+    public class Gear : UserControl { }
+    public class Reset : UserControl { }
+
+    public class PaintingLevel : UserControl { }
+    public class PaintingTrend : UserControl { }
+
+    public class Arrow : UserControl
     {
-        public Reset()
+        public static readonly DependencyProperty ArrowDirectionProperty;
+
+        public Direction ArrowDirection
         {
-            InitializeComponent();
+            get { return (Direction)GetValue(ArrowDirectionProperty); }
+            set { SetValue(ArrowDirectionProperty, value); }
         }
+
+        static Arrow()
+        {
+            ArrowDirectionProperty = DependencyProperty.Register("ArrowDirection", typeof(Direction), typeof(Arrow), new PropertyMetadata { DefaultValue = Direction.Right });
+        }
+    }
+
+    public enum Direction
+    {
+        Right,
+        Left,
+        Up,
+        Down
     }
 }

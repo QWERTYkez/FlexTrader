@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 
 namespace FlexTrader.MVVM.Resources
 {
@@ -31,6 +32,19 @@ namespace FlexTrader.MVVM.Resources
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
             new SolidColorBrush((value as Color?).Value);
+    }
+
+    public class BrushToEffectConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double d;
+            try { d = System.Convert.ToDouble(parameter); } catch { d = 0; }
+            return new DropShadowEffect { Color = (value as SolidColorBrush).Color, ShadowDepth = 0, BlurRadius = d };
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            new SolidColorBrush((value as DropShadowEffect).Color);
     }
 
     public class BrushToHexConverter : IValueConverter

@@ -25,7 +25,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="MVVM\Resources\Buttons.xaml" />
-
+                <ResourceDictionary Source="MVVM\Resources\VectorGraphics\Figures.xaml" />
                 <ResourceDictionary Source="MVVM\Resources\Converters.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

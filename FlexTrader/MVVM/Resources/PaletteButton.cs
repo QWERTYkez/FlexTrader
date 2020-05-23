@@ -1,4 +1,4 @@
-﻿<!--
+﻿/* 
     Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
 
     This file is part of FlexTrader
@@ -14,16 +14,27 @@
 
     You should have received a copy of the GNU General Public License
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
-!-->
+*/
 
-<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:FlexTrader.MVVM.Resources">
+using System.Windows;
+using System.Windows.Controls;
 
-    <local:BrushToHexConverter x:Key="BrushToHexConverter" />
-    <local:BrushToChannelConverter x:Key="BrushToChannelConverter" />
-    <local:BrushToColorConverter x:Key="BrushToColorConverter" />
-    <local:BrushToEffectConverter x:Key="BrushToEffectConverter" />
+namespace FlexTrader.MVVM.Resources
+{
+    public class PaletteButton : Button
+    {
+        public static readonly DependencyProperty IsActiveProperty;
 
-</ResourceDictionary>
+        static PaletteButton()
+        {
+            var pm = new PropertyMetadata { DefaultValue = false };
+            IsActiveProperty = DependencyProperty.Register("IsActive", typeof(bool), typeof(PaletteButton), pm);
+        }
+
+        public bool IsActive
+        {
+            get { return (bool)GetValue(IsActiveProperty); }
+            set { SetValue(IsActiveProperty, value); }
+        }
+    }
+}
