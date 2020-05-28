@@ -47,6 +47,7 @@ namespace ChartModules.StandardModules
         }
 
         private readonly DrawingVisual CursorVisual = new DrawingVisual();
+        private readonly DrawingVisual CursorLinesVisual = new DrawingVisual();
         private readonly DrawingVisual CursorTimeVisual = new DrawingVisual();
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
         private readonly TranslateTransform CursorTransform = new TranslateTransform();
@@ -55,18 +56,20 @@ namespace ChartModules.StandardModules
             ChartGRD.MouseEnter += ShowCursor;
             ChartGRD.MouseLeave += CursorLeave;
             ChartGRD.MouseMove += CursorRedraw;
-            SetCursor();
+            SetCursorLines();
             CursorLayer.RenderTransform = CursorTransform;
         }
         private void ShowCursor(object sender, MouseEventArgs e)
         {
             CursorLayer.AddVisual(CursorVisual);
+            CursorLayer.AddVisual(CursorLinesVisual);
             TimeLine.AddVisual(CursorTimeVisual);
             PriceLine.AddVisual(CursorPriceVisual);
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
             CursorLayer.DeleteVisual(CursorVisual);
+            CursorLayer.DeleteVisual(CursorLinesVisual);
             TimeLine.DeleteVisual(CursorTimeVisual);
             PriceLine.DeleteVisual(CursorPriceVisual);
         }
@@ -179,7 +182,7 @@ namespace ChartModules.StandardModules
         private double CursorDash = 5;
         private double CursorIndent = 2;
         private double CursorThikness = 2;
-        public Task SetCursor()
+        public Task SetCursorLines()
         {
             return Task.Run(() =>
             {
@@ -195,7 +198,7 @@ namespace ChartModules.StandardModules
 
                     Dispatcher.Invoke(() =>
                     {
-                        using var dcCH = CursorVisual.RenderOpen();
+                        using var dcCH = CursorLinesVisual.RenderOpen();
 
                         dcCH.DrawLine(pn, A, B);
                         dcCH.PushTransform(rt);
@@ -205,43 +208,77 @@ namespace ChartModules.StandardModules
                         dcCH.PushTransform(rt);
                         dcCH.DrawLine(pn, A, B);
                     });
-
-                    return;
                 }
-
-                double s = CursorArea;
-                while(s < 4096)
+                else
                 {
-                    Points.Add(new Point(s, 0)); s += CursorDash;
-                    Points.Add(new Point(s, 0)); s += CursorIndent;
+                    double s = CursorArea;
+                    while (s < 4096)
+                    {
+                        Points.Add(new Point(s, 0)); s += CursorDash;
+                        Points.Add(new Point(s, 0)); s += CursorIndent;
+                    }
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        using var dcCH = CursorLinesVisual.RenderOpen();
+
+                        for (int i = 0; i < Points.Count; i += 2)
+                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                        dcCH.PushTransform(rt);
+                        for (int i = 0; i < Points.Count; i += 2)
+                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                        dcCH.PushTransform(rt);
+                        for (int i = 0; i < Points.Count; i += 2)
+                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                        dcCH.PushTransform(rt);
+                        for (int i = 0; i < Points.Count; i += 2)
+                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
+                    });
                 }
-
-                Dispatcher.Invoke(() =>
-                {
-                    using var dcCH = CursorVisual.RenderOpen();
-
-                    for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                    dcCH.PushTransform(rt);
-                    for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                    dcCH.PushTransform(rt);
-                    for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                    dcCH.PushTransform(rt);
-                    for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                });
             });
+        }
+        public Task SetCursor(CursorType type)
+        {
+            return Task.Run(() => 
+            {
+                var pn = new Pen(MarksPen.Brush, 2); pn.Freeze();
+                switch (type)
+                {
+                    default: 
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                using var dc = CursorVisual.RenderOpen();
+                                dc.DrawLine(pn, new Point(-10, 0), new Point(10, 0));
+                                dc.DrawLine(pn, new Point(0, -10), new Point(0, 10));
+                            });
+                        } 
+                        return;
+                    case CursorType.Magnet:
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                using var dc = CursorVisual.RenderOpen();
+                                dc.DrawEllipse(null, pn, new Point(0, 0), 25, 25);
+                            });
+                        }
+                        return;
+                }
+            });
+        }
+        public enum CursorType
+        {
+            Standart,
+            Magnet
         }
 
         private protected override void SetsDefinition()
         {
-            var SetCursorArea = new Action<object>(b => { CursorArea = (b as double?).Value; SetCursor(); });
-            var SetCursorDash = new Action<object>(b => { CursorDash = (b as double?).Value; SetCursor(); });
-            var SetCursorIndent = new Action<object>(b => { CursorIndent = (b as double?).Value; SetCursor(); });
-            var SetCursorThikness = new Action<object>(b => { CursorThikness = (b as double?).Value; SetCursor(); });
-            var SetCursorColor = new Action<object>(b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, CursorThikness); MarksPen.Freeze(); }); SetCursor(); });
+            var SetCursorArea = new Action<object>(b => { CursorArea = (b as double?).Value; SetCursorLines(); });
+            var SetCursorDash = new Action<object>(b => { CursorDash = (b as double?).Value; SetCursorLines(); });
+            var SetCursorIndent = new Action<object>(b => { CursorIndent = (b as double?).Value; SetCursorLines(); });
+            var SetCursorThikness = new Action<object>(b => { CursorThikness = (b as double?).Value; SetCursorLines(); });
+            var SetCursorColor = new Action<object>(b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, CursorThikness); MarksPen.Freeze(); }); SetCursorLines(); });
 
             SetsName = "Настройки курсора";
 

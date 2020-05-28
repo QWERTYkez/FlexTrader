@@ -20,7 +20,6 @@ using ChartModules;
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace FlexTrader.MVVM.Views
@@ -72,5 +71,8 @@ namespace FlexTrader.MVVM.Views
 
         public abstract event Action<string> SetInstrument;
         public abstract string CurrentInstrument { get; }
+
+        public abstract event Action<bool> SetMagnet;
+        public abstract bool CurrentMagnetState { get; }
     }
 }

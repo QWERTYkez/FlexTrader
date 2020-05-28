@@ -41,6 +41,7 @@ namespace ChartModules
         TimeSpan? DeltaTime { get; }
         Vector CurrentTranslate { get; }
         Vector CurrentScale { get; }
+        public List<Point> MagnetPoints { get; }
         Brush ChartBackground { get; }
         double PriceShift { get; }
         double ChWidth { get; }

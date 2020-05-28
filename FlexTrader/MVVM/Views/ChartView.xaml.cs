@@ -29,6 +29,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ChartModules.StandardModules;
+using System.Diagnostics;
 
 namespace FlexTrader.MVVM.Views
 {
@@ -49,6 +50,7 @@ namespace FlexTrader.MVVM.Views
             InitializeComponent();
 
             mainView.SetInstrument += SetInsrument;
+            mainView.SetMagnet += SetMagnetState;
             this.ShowSettings += mainView.ShowSettings;
             
             ChartGRD.PreviewMouseDown += (s, e) => { e.Handled = true; Instrument?.Invoke(e); };
@@ -71,6 +73,7 @@ namespace FlexTrader.MVVM.Views
             SetsDefinition();
 
             SetInsrument(mainView.CurrentInstrument);
+            SetMagnetState(mainView.CurrentMagnetState);
         }
         public void Destroy()
         {
@@ -120,18 +123,38 @@ namespace FlexTrader.MVVM.Views
         }
 
         private Action<MouseButtonEventArgs> Instrument;
+        private bool MagnetInstrument = false;
         private void SetInsrument(string Insrt)
         {
             Task.Run(() => 
             {
                 switch (Insrt)
                 {
-                    case "PaintingLeves": Instrument = null; return;
-                    case "PaintingTrends": Instrument = null; return;
-                    default: Instrument = CandlesModule.MovingChart; return;
+                    case "PaintingLeves": Instrument = null; MagnetInstrument = true; break;
+                    case "PaintingTrends": Instrument = null; MagnetInstrument = true; break;
+                    default: Instrument = CandlesModule.MovingChart; MagnetInstrument = false; break;
                 }
-
-                
+                SetMagnetState(CurrentMagnetState);
+            });
+        }
+        private bool CurrentMagnetState;
+        private void SetMagnetState(bool st)
+        {
+            Task.Run(() => 
+            {
+                CurrentMagnetState = st;
+                if (MagnetInstrument && CurrentMagnetState)
+                {
+                    CursorModule.SetCursor(CursorModule.CursorType.Magnet);
+                    CandlesModule.MagnetStatus = true;
+                    CandlesModule.UpdateMagnetData();
+                }
+                else
+                {
+                    CursorModule.SetCursor(CursorModule.CursorType.Standart);
+                    CandlesModule.MagnetStatus = false;
+                    CandlesModule.ResetMagnetData();
+                }
             });
         }
 
@@ -147,6 +170,7 @@ namespace FlexTrader.MVVM.Views
                 Thread.Sleep(100);
                 if (x != ChangesCounter) return;
                 CandlesModule.HorizontalReset();
+                if (CurrentMagnetState) CandlesModule.ResetMagnetData();
             });
         }
         private void MouseWheelSpinning(object sender, MouseWheelEventArgs e) => CandlesModule.WhellScalling(e);
@@ -156,6 +180,7 @@ namespace FlexTrader.MVVM.Views
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
 
+        public List<Point> MagnetPoints { get => CandlesModule.MagnetPoints; }
         public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }
         public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
         public Vector CurrentScale { get => CandlesModule.CurrentScale; }

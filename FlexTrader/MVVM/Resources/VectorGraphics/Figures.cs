@@ -28,6 +28,8 @@ namespace FlexTrader.MVVM.Resources
     public class PaintingLevel : UserControl { }
     public class PaintingTrend : UserControl { }
 
+    public class Magnet : UserControl { }
+
     public class Arrow : UserControl
     {
         public static readonly DependencyProperty ArrowDirectionProperty;

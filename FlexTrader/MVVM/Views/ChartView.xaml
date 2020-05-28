@@ -32,7 +32,10 @@
     <UserControl.DataContext>
         <vm:ChartViewModel />
     </UserControl.DataContext>
-    <Grid Background="{Binding ChartBackground}" PreviewMouseWheel="MouseWheelSpinning">
+    <Grid
+        Background="{Binding ChartBackground}"
+        ClipToBounds="True"
+        PreviewMouseWheel="MouseWheelSpinning">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition Width="Auto" />
@@ -45,7 +48,7 @@
         </Grid.RowDefinitions>
         <Grid
             x:Name="ChartGRD"
-            Cursor="Cross"
+            Cursor="None"
             SizeChanged="ChartGRD_SizeChanged">
             <!--  PreviewMouseDown="CandlesModule.MovingChart"  -->
             <mvvm:DrawingCanvas x:Name="GridLayer" Background="{Binding ChartBackground}" />

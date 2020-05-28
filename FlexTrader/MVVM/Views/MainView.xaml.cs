@@ -44,7 +44,8 @@ namespace FlexTrader.MVVM.Views
         private Popup Pop2;
 
         public override event Action<string> SetInstrument;
-        public override string CurrentInstrument { get => (string)(((PaletteButton)(Palette.Tag)).Tag); } 
+        
+        public override string CurrentInstrument { get => (string)(((PaletteButton)(Palette.Tag)).Tag); }
 
         private void PaletteButton_MouseEnter(object sender, MouseEventArgs e)
         {
@@ -123,6 +124,16 @@ namespace FlexTrader.MVVM.Views
                 case "PaintingTrends": lastbtn.Content = new PaintingTrend { Foreground = Brushes.White }; break;
             }
         }
+
+        public override event Action<bool> SetMagnet;
+        public override bool CurrentMagnetState => MagnetBtn.IsActive;
+
+        private void SetMagnetState(object sender, RoutedEventArgs e)
+        {
+            MagnetBtn.IsActive = !MagnetBtn.IsActive;
+            SetMagnet?.Invoke(MagnetBtn.IsActive);
+        }
+
         private void HidePalette(object sender, RoutedEventArgs e)
         {
             if (Palette.Visibility == Visibility.Visible)

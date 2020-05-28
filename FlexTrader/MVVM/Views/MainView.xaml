@@ -151,6 +151,13 @@
                             </Border>
                         </Popup>
                     </Grid>
+                    <Border
+                        Margin="0,4,0,4"
+                        BorderBrush="#FF0B294D"
+                        BorderThickness="1" />
+                    <res:PaletteButton x:Name="MagnetBtn" Click="SetMagnetState">
+                        <res:Magnet Foreground="White" />
+                    </res:PaletteButton>
                 </StackPanel>
                 <Border
                     Grid.Column="1"

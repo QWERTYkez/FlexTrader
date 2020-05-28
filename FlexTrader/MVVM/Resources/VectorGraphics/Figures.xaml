@@ -383,4 +383,75 @@
         </Setter>
     </Style>
 
+    <Style TargetType="{x:Type local:Magnet}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:Magnet}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Viewbox Stretch="Uniform">
+                            <Path
+                                Width="1000"
+                                Height="1000"
+                                Fill="{TemplateBinding Foreground}">
+                                <Path.Data>
+                                    <CombinedGeometry>
+                                        <CombinedGeometry.Geometry1>
+                                            <GeometryGroup>
+                                                <CombinedGeometry GeometryCombineMode="Xor">
+                                                    <CombinedGeometry.Geometry1>
+                                                        <RectangleGeometry Rect="400,100 600,290"/>
+                                                    </CombinedGeometry.Geometry1>
+                                                    <CombinedGeometry.Geometry2>
+                                                        <RectangleGeometry Rect="400,140 350,210"/>
+                                                    </CombinedGeometry.Geometry2>
+                                                </CombinedGeometry>
+                                                <CombinedGeometry GeometryCombineMode="Xor">
+                                                    <CombinedGeometry.Geometry1>
+                                                        <RectangleGeometry Rect="400,610 600,290"/>
+                                                    </CombinedGeometry.Geometry1>
+                                                    <CombinedGeometry.Geometry2>
+                                                        <RectangleGeometry Rect="400,650 350,210"/>
+                                                    </CombinedGeometry.Geometry2>
+                                                </CombinedGeometry>
+                                            </GeometryGroup>
+                                        </CombinedGeometry.Geometry1>
+                                        <CombinedGeometry.Geometry2>
+                                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                                <CombinedGeometry.Geometry1>
+                                                    <GeometryGroup>
+                                                        <CombinedGeometry GeometryCombineMode="Xor">
+                                                            <CombinedGeometry.Geometry1>
+                                                                <EllipseGeometry Center="400,500" RadiusX="400" RadiusY="400"/>
+                                                            </CombinedGeometry.Geometry1>
+                                                            <CombinedGeometry.Geometry2>
+                                                                <EllipseGeometry Center="400,500" RadiusX="360" RadiusY="360"/>
+                                                            </CombinedGeometry.Geometry2>
+                                                        </CombinedGeometry>
+                                                        <CombinedGeometry GeometryCombineMode="Xor">
+                                                            <CombinedGeometry.Geometry1>
+                                                                <EllipseGeometry Center="400,500" RadiusX="150" RadiusY="150"/>
+                                                            </CombinedGeometry.Geometry1>
+                                                            <CombinedGeometry.Geometry2>
+                                                                <EllipseGeometry Center="400,500" RadiusX="110" RadiusY="110"/>
+                                                            </CombinedGeometry.Geometry2>
+                                                        </CombinedGeometry>
+                                                    </GeometryGroup>
+                                                </CombinedGeometry.Geometry1>
+                                                <CombinedGeometry.Geometry2>
+                                                    <RectangleGeometry Rect="400,100 700,800"/>
+                                                </CombinedGeometry.Geometry2>
+                                            </CombinedGeometry>
+                                        </CombinedGeometry.Geometry2>
+                                    </CombinedGeometry>
+                                </Path.Data>
+                            </Path>
+                        </Viewbox>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

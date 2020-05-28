@@ -18,12 +18,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xaml;
 
 namespace ChartModules.StandardModules
 {
@@ -44,7 +47,6 @@ namespace ChartModules.StandardModules
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
         private readonly IChartWindow mainView;
-        private readonly Grid ChartGRD;
         private readonly IDrawingCanvas TimeLine;
         private readonly IDrawingCanvas PriceLine;
         public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
@@ -130,7 +132,7 @@ namespace ChartModules.StandardModules
 
         #region Перерассчет шкал
         private bool VerticalLock = true;
-        private void VerticalReset()
+        private async void VerticalReset()
         {
             if (VerticalLock)
             {
@@ -143,8 +145,8 @@ namespace ChartModules.StandardModules
                     ScaleY.ScaleY = CurrentScale.Y;
                 });
             }
-            PriceLineModule.Redraw();
-            foreach (var m in NormalModules) m.Redraw();
+            await PriceLineModule.Redraw();
+            foreach (var m in NormalModules) _ = m.Redraw();
         }
         public void HorizontalReset()
         {
@@ -159,8 +161,8 @@ namespace ChartModules.StandardModules
 
                 if (currentCandles.Count() < 1) return;
 
-                var mmm = Convert.ToDouble(currentCandles.Select(c => c.Low).Min()) / Chart.TickSize;
-                var max = Convert.ToDouble(currentCandles.Select(c => c.High).Max()) / Chart.TickSize;
+                var mmm = Convert.ToDouble(currentCandles.Select(c => c.LowD).Min()) / Chart.TickSize;
+                var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
                 var delta = max - mmm;
                 max += delta * 0.05;
                 Min = mmm - delta * 0.05;
@@ -188,32 +190,21 @@ namespace ChartModules.StandardModules
             VerticalLock = false;
             mainView.MoveCursor(e, (Vector vec) =>
             {
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     var X = vec.Y / 50;
                     if (vec.Y < 0)
                     {
                         var Z = Chart.ChHeight / (CurrentScale.Y * Chart.TickSize) - 5 * Chart.ChHeight;
-                        if (Z > 0)
-                        {
-                            CurrentScale.Y = LastScaleY * (1 - X);
-                            Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
-                            PriceLineModule.Redraw();
-                            foreach (var m in NormalModules) m.Redraw();
-                        }
-                        return;
+                        if (Z <= 0) return;
+                        CurrentScale.Y = LastScaleY * (1 - X);
                     }
-                    else if (vec.Y > 0)
-                    {
-                        CurrentScale.Y = LastScaleY / (1 + X);
-                        Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
-                        PriceLineModule.Redraw();
-                        foreach (var m in NormalModules) m.Redraw();
-                        return;
-                    }
-                    Dispatcher.Invoke(() => ScaleY.ScaleY = CurrentScale.Y);
-                    PriceLineModule.Redraw();
-                    foreach (var m in NormalModules) m.Redraw();
+                    else if (vec.Y > 0) CurrentScale.Y = LastScaleY / (1 + X);
+                    await Dispatcher.InvokeAsync(() => ScaleY.ScaleY = CurrentScale.Y);
+
+                    _ = PriceLineModule.Redraw();
+                    foreach (var m in NormalModules) _ = m.Redraw();
+                    UpdateMagnetData();
                 });
             });
         }
@@ -230,21 +221,21 @@ namespace ChartModules.StandardModules
                 ScaleX.ScaleX = 1;
                 CurrentTranslate.X = 0;
                 Translate.X = 0;
-                Task.Run(() => HorizontalReset());
+                HorizontalReset();
+
+                UpdateMagnetData();
                 return;
             }
             LastScaleX = CurrentScale.X;
             mainView.MoveCursor(e, (Vector vec) =>
             {
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     var Y = -vec.X / 50;
                     if (vec.X > 0)
                     {
                         CurrentScale.X = LastScaleX / (1 - Y);
-                        Dispatcher.Invoke(() => ScaleX.ScaleX = CurrentScale.X);
-                        HorizontalReset();
-                        return;
+                        await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
                     else if (vec.X < 0)
                     {
@@ -258,12 +249,11 @@ namespace ChartModules.StandardModules
 
                         if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime.Value) return;
                         CurrentScale.X = nScale;
-                        Dispatcher.Invoke(() => ScaleX.ScaleX = CurrentScale.X);
-                        HorizontalReset();
-                        return;
+                        await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
-                    Dispatcher.Invoke(() => ScaleX.ScaleX = LastScaleX);
                     HorizontalReset();
+
+                    UpdateMagnetData();
                 });
             });
         }
@@ -281,16 +271,14 @@ namespace ChartModules.StandardModules
                 var currentCandles = from c in AllCandles.AsParallel()
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                      select c;
-                if (currentCandles.Count() > 1) goto Move;
-                else
+
+                if (currentCandles.Count() < 0) 
                 {
                     var TSS = AllCandles.AsParallel().Select(c => c.TimeStamp);
                     var MaxT = TSS.Max(); var MinT = TSS.Min();
-                    if (TimeB < MaxT && CurrentTranslate.X < X) goto Move;
-                    if (TimeA < MinT && CurrentTranslate.X > X) goto Move;
+                    if (!(TimeB < MaxT && CurrentTranslate.X < X)) return;
+                    if (!(TimeA < MinT && CurrentTranslate.X > X)) return;
                 }
-                return;
-            Move:
                 CurrentTranslate.X = X;
                 if (VerticalLock)
                 {
@@ -298,12 +286,12 @@ namespace ChartModules.StandardModules
                     {
                         Translate.X = CurrentTranslate.X;
                     });
-                    _ = Task.Run(() => HorizontalReset());
-                }
+                    HorizontalReset();
+                } 
                 else
                 {
                     CurrentTranslate.Y = LastTranslateVector.Y + vec.Y / CurrentScale.Y;
-                    Dispatcher.Invoke(() =>
+                    await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
                         Translate.Y = CurrentTranslate.Y;
@@ -348,8 +336,62 @@ namespace ChartModules.StandardModules
                     });
                     HorizontalReset();
                 }
+
+                UpdateMagnetData();
             });
         }
+        #endregion
+
+        #region Magnet
+        public List<Point> MagnetPoints { get; private set; } = new List<Point>();
+        private int ChangesCounter = 0;
+        public bool MagnetStatus = false;
+        public void UpdateMagnetData()
+        {
+            if (!MagnetStatus) return;
+
+            ChangesCounter += 1;
+            var x = ChangesCounter;
+            Thread.Sleep(100);
+            if (x != ChangesCounter) return;
+
+            Task.Run(() => 
+            {
+                var tA = Chart.WidthToTime(0);
+                var tB = Chart.WidthToTime(Chart.ChWidth);
+                var max = Chart.HeightToPrice(0);
+                var min = Chart.HeightToPrice(Chart.ChHeight);
+
+                var cc = from c in AllCandles.AsParallel()
+                         where c.TimeStamp >= tA && c.TimeStamp <= tB
+                         select c;
+
+                MagnetPoints.Clear();
+
+                foreach (var c in cc) 
+                {
+                    var x = Chart.TimeToWidth(c.TimeStamp);
+
+                    var y = c.HighD;
+                    if (min <= y && y <= max)
+                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+
+                    y = c.LowD;
+                    if (min <= y && y <= max)
+                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+
+                    y = c.OpenD;
+                    if (min <= y && y <= max)
+                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+
+                    y = c.CloseD;
+                    if (min <= y && y <= max)
+                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+
+                }
+            });
+        }
+        public void ResetMagnetData() => MagnetPoints.Clear();
         #endregion
 
         public override Task Redraw() 
