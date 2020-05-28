@@ -22,6 +22,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using static ChartModules.StandardModules.CandlesModule;
 
 namespace ChartModules
 {
@@ -41,7 +42,7 @@ namespace ChartModules
         TimeSpan? DeltaTime { get; }
         Vector CurrentTranslate { get; }
         Vector CurrentScale { get; }
-        public List<Point> MagnetPoints { get; }
+        public List<MagnetPoint> MagnetPoints { get; }
         Brush ChartBackground { get; }
         double PriceShift { get; }
         double ChWidth { get; }

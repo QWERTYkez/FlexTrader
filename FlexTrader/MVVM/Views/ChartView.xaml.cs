@@ -58,7 +58,7 @@ namespace FlexTrader.MVVM.Views
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PriceLine);
             TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
             PriceMarksModule = new PriceMarksModule(this, MarksLayer, PriceLine);
-            CursorModule = new CursorModule(this, ChartGRD, CursorLayer, TimeLine, PriceLine);
+            CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, PriceLine);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule, 
                 ModulesNormal, Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
@@ -128,12 +128,14 @@ namespace FlexTrader.MVVM.Views
         {
             Task.Run(() => 
             {
+                CursorT t = CursorT.None;
                 switch (Insrt)
                 {
                     case "PaintingLeves": Instrument = null; MagnetInstrument = true; break;
                     case "PaintingTrends": Instrument = null; MagnetInstrument = true; break;
-                    default: Instrument = CandlesModule.MovingChart; MagnetInstrument = false; break;
+                    default: Instrument = CandlesModule.MovingChart; MagnetInstrument = false; t = CursorT.Standart; break;
                 }
+                CursorModule.SetCursor(t);
                 SetMagnetState(CurrentMagnetState);
             });
         }
@@ -145,13 +147,13 @@ namespace FlexTrader.MVVM.Views
                 CurrentMagnetState = st;
                 if (MagnetInstrument && CurrentMagnetState)
                 {
-                    CursorModule.SetCursor(CursorModule.CursorType.Magnet);
+                    CursorModule.MagnetAdd();
                     CandlesModule.MagnetStatus = true;
                     CandlesModule.UpdateMagnetData();
                 }
                 else
                 {
-                    CursorModule.SetCursor(CursorModule.CursorType.Standart);
+                    CursorModule.MagnetRemove();
                     CandlesModule.MagnetStatus = false;
                     CandlesModule.ResetMagnetData();
                 }
@@ -180,7 +182,7 @@ namespace FlexTrader.MVVM.Views
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
 
-        public List<Point> MagnetPoints { get => CandlesModule.MagnetPoints; }
+        public List<CandlesModule.MagnetPoint> MagnetPoints { get => CandlesModule.MagnetPoints; }
         public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }
         public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
         public Vector CurrentScale { get => CandlesModule.CurrentScale; }

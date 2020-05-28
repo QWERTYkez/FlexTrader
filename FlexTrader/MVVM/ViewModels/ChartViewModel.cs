@@ -50,9 +50,9 @@ namespace FlexTrader.MVVM.ViewModels
 
             Marks = new List<PriceMark>
             {
-                new PriceMark(174, Brushes.White, ChartBackground, Brushes.Yellow),
-                new PriceMark(176, ChartBackground, Brushes.Azure, Brushes.Azure),
-                new PriceMark(178, Brushes.Lime, ChartBackground, Brushes.Lime)
+                new PriceMark(174.9999, Brushes.White, ChartBackground, Brushes.Yellow),
+                new PriceMark(176.999, ChartBackground, Brushes.Azure, Brushes.Azure),
+                new PriceMark(178.99, Brushes.Lime, ChartBackground, Brushes.Lime)
             };
         }
 

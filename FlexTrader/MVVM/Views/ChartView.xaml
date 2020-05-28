@@ -74,7 +74,11 @@
             </Grid>
             <mvvm:DrawingCanvas x:Name="FrontChart" />
             <mvvm:DrawingCanvas x:Name="MarksLayer" />
-            <mvvm:DrawingCanvas x:Name="CursorLayer" />
+            <Grid>
+                <mvvm:DrawingCanvas x:Name="CursorLinesLayer" />
+                <mvvm:DrawingCanvas x:Name="CursorLayer" />
+                <mvvm:DrawingCanvas x:Name="MagnetLayer" />
+            </Grid>
         </Grid>
         <Border
             Grid.Row="1"

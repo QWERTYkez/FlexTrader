@@ -18,7 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -29,13 +31,17 @@ namespace ChartModules.StandardModules
 {
     public class CursorModule : ChartModule
     {
+        private readonly IDrawingCanvas CursorLinesLayer;
         private readonly IDrawingCanvas CursorLayer;
+        private readonly IDrawingCanvas MagnetLayer;
         private readonly IDrawingCanvas TimeLine;
         private readonly IDrawingCanvas PriceLine;
         private readonly Grid ChartGRD;
-        public CursorModule(IChart chart, Grid ChartGRD, IDrawingCanvas CursorLayer, IDrawingCanvas TimeLine, IDrawingCanvas PriceLine)
+        public CursorModule(IChart chart, Grid ChartGRD, IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer, IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine, IDrawingCanvas PriceLine)
         {
+            this.CursorLinesLayer = CursorLinesLayer;
             this.CursorLayer = CursorLayer;
+            this.MagnetLayer = MagnetLayer;
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
             this.ChartGRD = ChartGRD;
@@ -46,30 +52,37 @@ namespace ChartModules.StandardModules
             BaseConstruct(chart);
         }
 
-        private readonly DrawingVisual CursorVisual = new DrawingVisual();
         private readonly DrawingVisual CursorLinesVisual = new DrawingVisual();
+        private readonly DrawingVisual CursorVisual = new DrawingVisual();
+        private readonly DrawingVisual MagnetVisual = new DrawingVisual();
+        private readonly TranslateTransform CursorLinesTransform = new TranslateTransform();
+        private readonly TranslateTransform CursorTransform = new TranslateTransform();
+        private readonly TranslateTransform MagnetTransform = new TranslateTransform();
         private readonly DrawingVisual CursorTimeVisual = new DrawingVisual();
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
-        private readonly TranslateTransform CursorTransform = new TranslateTransform();
         private protected override void Construct()
         {
             ChartGRD.MouseEnter += ShowCursor;
             ChartGRD.MouseLeave += CursorLeave;
             ChartGRD.MouseMove += CursorRedraw;
             SetCursorLines();
+            CursorLinesLayer.RenderTransform = CursorLinesTransform;
             CursorLayer.RenderTransform = CursorTransform;
+            MagnetLayer.RenderTransform = MagnetTransform;
         }
         private void ShowCursor(object sender, MouseEventArgs e)
         {
+            CursorLinesLayer.AddVisual(CursorLinesVisual);
             CursorLayer.AddVisual(CursorVisual);
-            CursorLayer.AddVisual(CursorLinesVisual);
+            MagnetLayer.AddVisual(MagnetVisual);
             TimeLine.AddVisual(CursorTimeVisual);
             PriceLine.AddVisual(CursorPriceVisual);
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
+            CursorLinesLayer.DeleteVisual(CursorLinesVisual);
             CursorLayer.DeleteVisual(CursorVisual);
-            CursorLayer.DeleteVisual(CursorLinesVisual);
+            MagnetLayer.DeleteVisual(MagnetVisual);
             TimeLine.DeleteVisual(CursorTimeVisual);
             PriceLine.DeleteVisual(CursorPriceVisual);
         }
@@ -85,14 +98,53 @@ namespace ChartModules.StandardModules
         }
 
         private Point Pos;
+        private CandlesModule.MagnetPoint? LastMP;
         public override Task Redraw()
         {
             return Task.Run(() =>
             {
-                var dt = Chart.CorrectTimePosition(ref Pos);
-                var price = Chart.HeightToPrice(Pos.Y).ToString(Chart.TickPriceFormat);
-                Pos.Y = Chart.PriceToHeight(Convert.ToDouble(price));
-                price = Chart.HeightToPrice(Pos.Y).ToString(Chart.TickPriceFormat);
+                var npos = Pos; DateTime dt = DateTime.Now; string price = "";
+
+                Action act = () =>
+                {
+                    LastMP = null;
+                    dt = Chart.CorrectTimePosition(ref npos);
+                    price = Chart.HeightToPrice(npos.Y).ToString(Chart.TickPriceFormat);
+                    npos.Y = Chart.PriceToHeight(Convert.ToDouble(price));
+                    price = Chart.HeightToPrice(npos.Y).ToString(Chart.TickPriceFormat);
+                };
+
+                if (MagnetState)
+                {
+                    if (Chart.MagnetPoints.Count > 0)
+                    {
+                        var mp = from c in Chart.MagnetPoints
+                                 let r = Math.Pow(c.X - Pos.X, 2) + Math.Pow(c.Y - Pos.Y, 2)
+                                 let R = Math.Pow(MagnetRadius, 2)
+                                 where r < R orderby r select c;
+                        if (mp.Count() > 0)
+                        {
+                            var p = mp.First();
+                            if (LastMP != null)
+                                if (LastMP == p)
+                                {
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        MagnetTransform.X = Pos.X;
+                                        MagnetTransform.Y = Pos.Y;
+                                    });
+                                    return;
+                                }
+                            LastMP = p;
+                            npos.X = p.X; npos.Y = p.Y;
+                            dt = Chart.CorrectTimePosition(ref npos);
+                            price = p.Price.ToString(Chart.TickPriceFormat);
+                        }
+                        else act.Invoke();
+                    }
+                    else act.Invoke();
+                }
+                else act.Invoke();
 
                 var ft = new FormattedText
                             (
@@ -104,14 +156,14 @@ namespace ChartModules.StandardModules
                                 FontBrush,
                                 VisualTreeHelper.GetDpi(CursorPriceVisual).PixelsPerDip
                             );
-                var Tpont = new Point(Chart.PriceShift + 1, Pos.Y - ft.Height / 2);
-                var startPoint = new Point(0, Pos.Y);
+                var Tpont = new Point(Chart.PriceShift + 1, npos.Y - ft.Height / 2);
+                var startPoint = new Point(0, npos.Y);
                 var Points = new Point[]
                 {
-                        new Point(Chart.PriceShift, Pos.Y + ft.Height / 2),
-                        new Point(Chart.PriceLineWidth - 2, Pos.Y + ft.Height / 2),
-                        new Point(Chart.PriceLineWidth - 2, Pos.Y - ft.Height / 2),
-                        new Point(Chart.PriceShift, Pos.Y - ft.Height / 2)
+                        new Point(Chart.PriceShift, npos.Y + ft.Height / 2),
+                        new Point(Chart.PriceLineWidth - 2, npos.Y + ft.Height / 2),
+                        new Point(Chart.PriceLineWidth - 2, npos.Y - ft.Height / 2),
+                        new Point(Chart.PriceShift, npos.Y - ft.Height / 2)
                 };
 
                 var ft2 = new FormattedText
@@ -124,16 +176,16 @@ namespace ChartModules.StandardModules
                             FontBrush,
                             VisualTreeHelper.GetDpi(CursorPriceVisual).PixelsPerDip
                         );
-                var Tpont2 = new Point(Pos.X - ft2.Width / 2, Chart.PriceShift + 2);
-                var startPoint2 = new Point(Pos.X, 0);
+                var Tpont2 = new Point(npos.X - ft2.Width / 2, Chart.PriceShift + 2);
+                var startPoint2 = new Point(npos.X, 0);
                 var Points2 = new Point[]
                 {
-                        new Point(Pos.X + Chart.PriceShift, Chart.PriceShift),
-                        new Point(Pos.X + ft2.Width / 2 + 4, Chart.PriceShift),
-                        new Point(Pos.X + ft2.Width / 2 + 4, ft2.Height + 3 + Chart.PriceShift),
-                        new Point(Pos.X - ft2.Width / 2 - 4, ft2.Height + 3 + Chart.PriceShift),
-                        new Point(Pos.X - ft2.Width / 2 - 4, Chart.PriceShift),
-                        new Point(Pos.X - Chart.PriceShift, Chart.PriceShift)
+                        new Point(npos.X + Chart.PriceShift, Chart.PriceShift),
+                        new Point(npos.X + ft2.Width / 2 + 4, Chart.PriceShift),
+                        new Point(npos.X + ft2.Width / 2 + 4, ft2.Height + 3 + Chart.PriceShift),
+                        new Point(npos.X - ft2.Width / 2 - 4, ft2.Height + 3 + Chart.PriceShift),
+                        new Point(npos.X - ft2.Width / 2 - 4, Chart.PriceShift),
+                        new Point(npos.X - Chart.PriceShift, Chart.PriceShift)
                 };
 
                 var geo = new PathGeometry(new[] { new PathFigure(startPoint,
@@ -164,8 +216,12 @@ namespace ChartModules.StandardModules
                     using var dcP = CursorPriceVisual.RenderOpen();
                     using var dcT = CursorTimeVisual.RenderOpen();
 
-                    CursorTransform.X = Pos.X;
-                    CursorTransform.Y = Pos.Y;
+                    MagnetTransform.X = Pos.X;
+                    MagnetTransform.Y = Pos.Y;
+                    CursorLinesTransform.X = npos.X;
+                    CursorLinesTransform.Y = npos.Y;
+                    CursorTransform.X = npos.X;
+                    CursorTransform.Y = npos.Y;
 
                     dcP.DrawGeometry(Chart.ChartBackground, MarksPen, geo);
                     dcP.DrawText(ft, Tpont);
@@ -237,39 +293,52 @@ namespace ChartModules.StandardModules
                 }
             });
         }
-        public Task SetCursor(CursorType type)
+
+        public void SetCursor(CursorT t)
         {
-            return Task.Run(() => 
+            switch (t)
             {
-                var pn = new Pen(MarksPen.Brush, 2); pn.Freeze();
-                switch (type)
-                {
-                    default: 
+                case CursorT.Standart:
+                    {
+                        Dispatcher.Invoke(() =>
                         {
-                            Dispatcher.Invoke(() =>
-                            {
-                                using var dc = CursorVisual.RenderOpen();
-                                dc.DrawLine(pn, new Point(-10, 0), new Point(10, 0));
-                                dc.DrawLine(pn, new Point(0, -10), new Point(0, 10));
-                            });
-                        } 
-                        return;
-                    case CursorType.Magnet:
+                            using var dc = CursorVisual.RenderOpen();
+                            var pn = new Pen(MarksPen.Brush, CursorThikness);
+                            dc.DrawLine(pn, new Point(-10, 0), new Point(10, 0));
+                            dc.DrawLine(pn, new Point(0, -10), new Point(0, 10));
+                        });
+                    }
+                    return;
+                case CursorT.None:
+                    {
+                        Dispatcher.Invoke(() =>
                         {
-                            Dispatcher.Invoke(() =>
-                            {
-                                using var dc = CursorVisual.RenderOpen();
-                                dc.DrawEllipse(null, pn, new Point(0, 0), 25, 25);
-                            });
-                        }
-                        return;
-                }
+                            using var dc = CursorVisual.RenderOpen();
+                        });
+                    }
+                    return;
+            }
+            
+        }
+
+        private double MagnetRadius = 25;
+        private bool MagnetState = false;
+        public void MagnetAdd()
+        {
+            MagnetState = true;
+            Dispatcher.InvokeAsync(() =>
+            {
+                using var dc = MagnetVisual.RenderOpen();
+                dc.DrawEllipse(null, new Pen(MarksPen.Brush, 2), new Point(0, 0), MagnetRadius, MagnetRadius);
             });
         }
-        public enum CursorType
+        public void MagnetRemove()
         {
-            Standart,
-            Magnet
+            MagnetState = false;
+            Dispatcher.InvokeAsync(() =>
+            {
+                using var _ = MagnetVisual.RenderOpen();
+            });
         }
 
         private protected override void SetsDefinition()
@@ -289,5 +358,11 @@ namespace ChartModules.StandardModules
             Sets.Add(new Setting(SetType.Brush, "Цвет курсора", MarksPen.Brush, SetCursorColor, Brushes.White));
             Sets.Add(new Setting(SetType.Brush, "Цвет текста", FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
         }
+    }
+
+    public enum CursorT
+    {
+        Standart,
+        None
     }
 }

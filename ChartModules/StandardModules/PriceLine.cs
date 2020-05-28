@@ -101,8 +101,7 @@ namespace ChartModules.StandardModules
                     maxP /= 10;
                     raz *= 10;
                 }
-                var sf = Chart.TickSize.ToString().Replace('1', '0').Replace(',', '.');
-                var fsf = sf;
+                var fsf = Chart.TickPriceFormat;
                 if (raz > 10)
                     for (int i = Convert.ToInt32(Math.Log10(raz)); i > 0; i--)
                         fsf = "0" + fsf;
@@ -126,7 +125,7 @@ namespace ChartModules.StandardModules
                 {
                     var ft = new FormattedText
                             (
-                                price.ToString(sf),
+                                price.ToString(Chart.TickPriceFormat),
                                 CultureInfo.CurrentCulture,
                                 FlowDirection.LeftToRight,
                                 Chart.FontNumeric,

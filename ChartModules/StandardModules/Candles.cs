@@ -18,15 +18,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Xaml;
 
 namespace ChartModules.StandardModules
 {
@@ -343,7 +340,7 @@ namespace ChartModules.StandardModules
         #endregion
 
         #region Magnet
-        public List<Point> MagnetPoints { get; private set; } = new List<Point>();
+        public List<MagnetPoint> MagnetPoints { get; private set; } = new List<MagnetPoint>();
         private int ChangesCounter = 0;
         public bool MagnetStatus = false;
         public void UpdateMagnetData()
@@ -368,30 +365,48 @@ namespace ChartModules.StandardModules
 
                 MagnetPoints.Clear();
 
+                double x; double y; decimal yp;
+
                 foreach (var c in cc) 
                 {
-                    var x = Chart.TimeToWidth(c.TimeStamp);
+                    x = Chart.TimeToWidth(c.TimeStamp);
 
-                    var y = c.HighD;
+                    y = c.HighD; yp = c.High;
                     if (min <= y && y <= max)
-                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+                        MagnetPoints.Add(new MagnetPoint(x, Chart.PriceToHeight(y), yp));
 
-                    y = c.LowD;
+                    y = c.LowD; yp = c.Low;
                     if (min <= y && y <= max)
-                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+                        MagnetPoints.Add(new MagnetPoint(x, Chart.PriceToHeight(y), yp));
 
-                    y = c.OpenD;
+                    y = c.OpenD; yp = c.Open;
                     if (min <= y && y <= max)
-                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
+                        MagnetPoints.Add(new MagnetPoint(x, Chart.PriceToHeight(y), yp));
 
-                    y = c.CloseD;
+                    y = c.CloseD; yp = c.Close;
                     if (min <= y && y <= max)
-                        MagnetPoints.Add(new Point(x, Chart.PriceToHeight(y)));
-
+                        MagnetPoints.Add(new MagnetPoint(x, Chart.PriceToHeight(y), yp));
                 }
             });
         }
         public void ResetMagnetData() => MagnetPoints.Clear();
+        public struct MagnetPoint
+        {
+            public MagnetPoint(double X, double Y, decimal Price)
+            {
+                this.X = X; this.Y = Y;
+                this.Price = Price;
+            }
+
+            public double X;
+            public double Y;
+            public decimal Price;
+
+            public bool Equals(MagnetPoint other) => Equals(other, this);
+            public override int GetHashCode() => $"{X}||{Y}||{Price}".GetHashCode();
+            public static bool operator ==(MagnetPoint c1, MagnetPoint c2) => c1.Equals(c2);
+            public static bool operator !=(MagnetPoint c1, MagnetPoint c2) => !c1.Equals(c2);
+        }
         #endregion
 
         public override Task Redraw() 
