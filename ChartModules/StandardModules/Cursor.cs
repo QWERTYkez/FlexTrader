@@ -298,6 +298,17 @@ namespace ChartModules.StandardModules
         {
             switch (t)
             {
+                case CursorT.Paint:
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            using var dc = CursorVisual.RenderOpen();
+                            var pn = new Pen(MarksPen.Brush, CursorThikness);
+                            dc.DrawLine(pn, new Point(-10, -10), new Point(10, 10));
+                            dc.DrawLine(pn, new Point(10, -10), new Point(-10, 10));
+                        });
+                    }
+                    return;
                 case CursorT.Standart:
                     {
                         Dispatcher.Invoke(() =>
@@ -362,6 +373,7 @@ namespace ChartModules.StandardModules
 
     public enum CursorT
     {
+        Paint,
         Standart,
         None
     }

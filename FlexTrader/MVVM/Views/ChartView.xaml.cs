@@ -64,6 +64,8 @@ namespace FlexTrader.MVVM.Views
                 ModulesNormal, Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
 
+            CandlesModule.WhellScalled += () => CursorModule.Redraw();
+
             ModulesNormal.Add(PriceMarksModule);
 
             var DC = DataContext as ChartViewModel;
@@ -131,8 +133,8 @@ namespace FlexTrader.MVVM.Views
                 CursorT t = CursorT.None;
                 switch (Insrt)
                 {
-                    case "PaintingLeves": Instrument = null; MagnetInstrument = true; break;
-                    case "PaintingTrends": Instrument = null; MagnetInstrument = true; break;
+                    case "PaintingLeves": Instrument = null; MagnetInstrument = true; t = CursorT.Paint; break;
+                    case "PaintingTrends": Instrument = null; MagnetInstrument = true; t = CursorT.Paint; break;
                     default: Instrument = CandlesModule.MovingChart; MagnetInstrument = false; t = CursorT.Standart; break;
                 }
                 CursorModule.SetCursor(t);

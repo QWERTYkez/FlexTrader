@@ -201,7 +201,7 @@ namespace ChartModules.StandardModules
 
                     _ = PriceLineModule.Redraw();
                     foreach (var m in NormalModules) _ = m.Redraw();
-                    UpdateMagnetData();
+                    UpdateMagnetData().RunSynchronously();
                 });
             });
         }
@@ -220,7 +220,7 @@ namespace ChartModules.StandardModules
                 Translate.X = 0;
                 HorizontalReset();
 
-                UpdateMagnetData();
+                UpdateMagnetData().RunSynchronously();
                 return;
             }
             LastScaleX = CurrentScale.X;
@@ -250,7 +250,7 @@ namespace ChartModules.StandardModules
                     }
                     HorizontalReset();
 
-                    UpdateMagnetData();
+                    UpdateMagnetData().RunSynchronously();
                 });
             });
         }
@@ -301,6 +301,7 @@ namespace ChartModules.StandardModules
         }
         #endregion
         #region Скалирование колесом 
+        public event Action WhellScalled;
         public Task WhellScalling(MouseWheelEventArgs e)
         {
             e.Handled = true;
@@ -334,7 +335,8 @@ namespace ChartModules.StandardModules
                     HorizontalReset();
                 }
 
-                UpdateMagnetData();
+                await UpdateMagnetData();
+                WhellScalled?.Invoke();
             });
         }
         #endregion
@@ -343,16 +345,16 @@ namespace ChartModules.StandardModules
         public List<MagnetPoint> MagnetPoints { get; private set; } = new List<MagnetPoint>();
         private int ChangesCounter = 0;
         public bool MagnetStatus = false;
-        public void UpdateMagnetData()
+        public Task UpdateMagnetData()
         {
-            if (!MagnetStatus) return;
+            if (!MagnetStatus) return Task.Run(() => { });
 
             ChangesCounter += 1;
             var x = ChangesCounter;
             Thread.Sleep(100);
-            if (x != ChangesCounter) return;
+            if (x != ChangesCounter) return Task.Run(() => { });
 
-            Task.Run(() => 
+            return Task.Run(() => 
             {
                 var tA = Chart.WidthToTime(0);
                 var tB = Chart.WidthToTime(Chart.ChWidth);
