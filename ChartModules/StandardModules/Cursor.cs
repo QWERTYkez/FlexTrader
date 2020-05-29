@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -243,27 +242,13 @@ namespace ChartModules.StandardModules
             return Task.Run(() =>
             {
                 var rt = new RotateTransform(90); rt.Freeze();
-                var pn = new Pen(MarksPen.Brush, CursorThikness); pn.Freeze();
 
                 var Points = new List<Point>();
 
                 if (CursorIndent == 0)
                 {
-                    var A = new Point(CursorArea, 0);
-                    var B = new Point(4096, 0);
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        using var dcCH = CursorLinesVisual.RenderOpen();
-
-                        dcCH.DrawLine(pn, A, B);
-                        dcCH.PushTransform(rt);
-                        dcCH.DrawLine(pn, A, B);
-                        dcCH.PushTransform(rt);
-                        dcCH.DrawLine(pn, A, B);
-                        dcCH.PushTransform(rt);
-                        dcCH.DrawLine(pn, A, B);
-                    });
+                    Points.Add(new Point(CursorArea, 0));
+                    Points.Add(new Point(4096, 0));
                 }
                 else
                 {
@@ -273,53 +258,59 @@ namespace ChartModules.StandardModules
                         Points.Add(new Point(s, 0)); s += CursorDash;
                         Points.Add(new Point(s, 0)); s += CursorIndent;
                     }
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        using var dcCH = CursorLinesVisual.RenderOpen();
-
-                        for (int i = 0; i < Points.Count; i += 2)
-                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                        dcCH.PushTransform(rt);
-                        for (int i = 0; i < Points.Count; i += 2)
-                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                        dcCH.PushTransform(rt);
-                        for (int i = 0; i < Points.Count; i += 2)
-                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                        dcCH.PushTransform(rt);
-                        for (int i = 0; i < Points.Count; i += 2)
-                            dcCH.DrawLine(pn, Points[i], Points[i + 1]);
-                    });
                 }
+                Dispatcher.Invoke(() =>
+                {
+                    using var dcCH = CursorLinesVisual.RenderOpen();
+
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                    dcCH.PushTransform(rt);
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                    dcCH.PushTransform(rt);
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                    dcCH.PushTransform(rt);
+                    for (int i = 0; i < Points.Count; i += 2)
+                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                });
+                SetCursor(CurrentCursor);
             });
         }
 
+        private CursorT CurrentCursor = CursorT.None;
         public void SetCursor(CursorT t)
         {
+            CurrentCursor = t;
             switch (t)
             {
                 case CursorT.Paint:
                     {
                         Dispatcher.Invoke(() =>
                         {
+                            var rt = new RotateTransform(45);
                             using var dc = CursorVisual.RenderOpen();
-                            var pn = new Pen(MarksPen.Brush, CursorThikness);
-                            dc.DrawLine(pn, new Point(-10, -10), new Point(10, 10));
-                            dc.DrawLine(pn, new Point(10, -10), new Point(-10, 10));
+                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                            dc.PushTransform(rt);
+                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                            dc.PushTransform(rt);
+                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                            dc.PushTransform(rt);
+                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
                         });
                     }
-                    return;
+                    break;
                 case CursorT.Standart:
                     {
                         Dispatcher.Invoke(() =>
                         {
                             using var dc = CursorVisual.RenderOpen();
-                            var pn = new Pen(MarksPen.Brush, CursorThikness);
-                            dc.DrawLine(pn, new Point(-10, 0), new Point(10, 0));
-                            dc.DrawLine(pn, new Point(0, -10), new Point(0, 10));
+                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                            dc.DrawLine(MarksPen, new Point(0, -15), new Point(0, 15));
                         });
                     }
-                    return;
+                    break;
                 case CursorT.None:
                     {
                         Dispatcher.Invoke(() =>
@@ -327,9 +318,9 @@ namespace ChartModules.StandardModules
                             using var dc = CursorVisual.RenderOpen();
                         });
                     }
-                    return;
+                    break;
             }
-            
+            if (MagnetState) MagnetAdd();
         }
 
         private double MagnetRadius = 25;
@@ -346,15 +337,13 @@ namespace ChartModules.StandardModules
         public void MagnetRemove()
         {
             MagnetState = false;
-            Dispatcher.InvokeAsync(() =>
-            {
-                using var _ = MagnetVisual.RenderOpen();
-            });
+            Dispatcher.InvokeAsync(() => MagnetVisual.RenderOpen().Close());
         }
 
         private protected override void SetsDefinition()
         {
             var SetCursorArea = new Action<object>(b => { CursorArea = (b as double?).Value; SetCursorLines(); });
+            var SetMagnetRadius = new Action<object>(b => { MagnetRadius = (b as double?).Value; if (MagnetState) MagnetAdd(); });
             var SetCursorDash = new Action<object>(b => { CursorDash = (b as double?).Value; SetCursorLines(); });
             var SetCursorIndent = new Action<object>(b => { CursorIndent = (b as double?).Value; SetCursorLines(); });
             var SetCursorThikness = new Action<object>(b => { CursorThikness = (b as double?).Value; SetCursorLines(); });
@@ -362,7 +351,8 @@ namespace ChartModules.StandardModules
 
             SetsName = "Настройки курсора";
 
-            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус", CursorArea, SetCursorArea, 25d, 20d, 50d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус отступа", CursorArea, SetCursorArea, 25d, 20d, 50d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус магнита", MagnetRadius, SetMagnetRadius, 25d, 20d, 50d));
             Sets.Add(new Setting(SetType.DoubleSlider, "Штрих", CursorDash, SetCursorDash, 5d, 1d, 10d));
             Sets.Add(new Setting(SetType.DoubleSlider, "Отступ", CursorIndent, SetCursorIndent, 2d, 0d, 10d));
             Sets.Add(new Setting(SetType.DoubleSlider, "Толщина", CursorThikness, SetCursorThikness, 2d, 1d, 5d));

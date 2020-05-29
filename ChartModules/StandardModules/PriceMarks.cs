@@ -16,9 +16,9 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,66 +28,79 @@ namespace ChartModules.StandardModules
 {
     public class PriceMarksModule : ChartModule
     {
-        public readonly ObservableCollection<PriceMark> LevelMarks = new ObservableCollection<PriceMark>();
+        private readonly List<MarksLayer> MarksLayers = new List<MarksLayer>();
+        public MarksLayer Levels { get; }
 
-        private readonly IDrawingCanvas MarksLayer;
-        private readonly IDrawingCanvas PriceLine;
-        public PriceMarksModule(IChart chart, IDrawingCanvas MarksLayer, IDrawingCanvas PriceLine)
+        public PriceMarksModule(IChart chart, IDrawingCanvas MarksCanvas, IDrawingCanvas PriceLine)
         {
-            this.MarksLayer = MarksLayer;
+            this.MarksCanvas = MarksCanvas;
             this.PriceLine = PriceLine;
 
-            LevelMarks.CollectionChanged += (s, e) => RedrawMarks(LevelMarks);
+            #region Слои отметок
+            {
+                Levels = new MarksLayer(MarksCanvas, PriceLine, RedrawMarks); MarksLayers.Add(Levels);
+            }
+            #endregion
 
             BaseConstruct(chart);
         }
 
-        private readonly DrawingVisual PriceMarksVisual = new DrawingVisual();
-        private readonly DrawingVisual ChartMarksVisual = new DrawingVisual();
-        private protected override void Construct()
-        {
-            MarksLayer.AddVisual(ChartMarksVisual);
-            PriceLine.AddVisual(PriceMarksVisual);
-        }
+        private protected override void Construct() { }
+        private readonly IDrawingCanvas MarksCanvas;
+        private readonly IDrawingCanvas PriceLine;
         private protected override void Destroy()
         {
-            MarksLayer.DeleteVisual(ChartMarksVisual);
-            PriceLine.DeleteVisual(PriceMarksVisual);
+            MarksCanvas.ClearVisuals();
+            PriceLine.ClearVisuals();
         }
 
-        private void GetRedrawData(
-            List<(
-                Point A, 
-                Point B, 
-                FormattedText ft, 
-                Brush Fill, 
-                Point T, 
-                Pen pen, 
-                PathGeometry geo
-                )> Data, IEnumerable<PriceMark> Marks)
+        private bool СlearedSpace = true;
+        private void RedrawMarks(MarksLayer Layer)
         {
-            if (Marks != null)
-            {
-                var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
-                foreach (var mark in Marks)
+            var marksData = new List<RedrawData>();
+
+            {   // get redraw data
+                if (Layer.Marks != null)
                 {
-                    if (mark.Price > Chart.PricesMin * Chart.TickSize && mark.Price < pricesMax)
+                    var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
+                    var width = Chart.ChWidth + 2;
+                    foreach (var mark in Layer.Marks)
                     {
-                        var height = Chart.PriceToHeight(mark.Price);
+                        if (mark.Price > Chart.PricesMin * Chart.TickSize && mark.Price < pricesMax)
+                        {
+                            var height = Chart.PriceToHeight(mark.Price);
 
-                        var ft = new FormattedText
-                                        (
-                                            mark.Price.ToString(Chart.TickPriceFormat),
-                                            CultureInfo.CurrentCulture,
-                                            FlowDirection.LeftToRight,
-                                            Chart.FontNumeric,
-                                            Chart.BaseFontSize,
-                                            mark.TextBrush,
-                                            VisualTreeHelper.GetDpi(PriceMarksVisual).PixelsPerDip
-                                        );
+                            var ft = new FormattedText
+                                            (
+                                                mark.Price.ToString(Chart.TickPriceFormat),
+                                                CultureInfo.CurrentCulture,
+                                                FlowDirection.LeftToRight,
+                                                Chart.FontNumeric,
+                                                Chart.BaseFontSize,
+                                                mark.TextBrush,
+                                                VisualTreeHelper.GetDpi(Layer.PriceVisual).PixelsPerDip
+                                            );
 
-                        var pen = new Pen(mark.LineBrush, 2); pen.Freeze();
-                        var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
+                            var linpen = new Pen(mark.LineBrush, mark.LineThikness); linpen.Freeze();
+                            var geopen = new Pen(mark.LineBrush, 2); geopen.Freeze();
+
+                            var linps = new List<Point>();
+                            if (mark.LineIndent == 0)
+                            {
+                                linps.Add(new Point(0, height));
+                                linps.Add(new Point(width, height));
+                            }
+                            else
+                            {
+                                double s = 0;
+                                while (s < width)
+                                {
+                                    linps.Add(new Point(s, height)); s += mark.LineDash;
+                                    linps.Add(new Point(s, height)); s += mark.LineIndent;
+                                }
+                            }
+
+                            var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
                                     new[]
                                     {
                                         new LineSegment(new Point(Chart.PriceShift, height + ft.Height / 2), true),
@@ -98,51 +111,68 @@ namespace ChartModules.StandardModules
                                     true)
                                 }); geo.Freeze();
 
-                        Data.Add((
+                            marksData.Add(new RedrawData(
                                 new Point(0, height),
                                 new Point(Chart.ChWidth + 2, height),
-                                ft,
-                                mark.Fill,
+                                ft, mark.MarkFill,
                                 new Point(Chart.PriceShift + 1, height - ft.Height / 2),
-                                pen,
-                                geo
-                                ));
+                                linpen, linps, geopen, geo));
+                        }
                     }
                 }
+            } // get redraw data
+
+            if (marksData.Count > 0)
+            {
+                СlearedSpace = false;
+                Dispatcher.Invoke(() =>
+                {
+                    using var dcCH = Layer.ChartVisual.RenderOpen();
+                    using var dcP = Layer.PriceVisual.RenderOpen();
+
+                    foreach (var rd in marksData)
+                    {
+                        for (int i = 0; i < rd.linPoints.Count; i += 2)
+                            dcCH.DrawLine(rd.linpen, rd.linPoints[i], rd.linPoints[i + 1]);
+
+                        dcP.DrawGeometry(rd.Fill, rd.geopen, rd.geo);
+                        dcP.DrawText(rd.ft, rd.T);
+                    }
+                });
+            }
+            else if (!СlearedSpace)
+            {
+                СlearedSpace = true;
+                Dispatcher.Invoke(() =>
+                {
+                    Layer.ChartVisual.RenderOpen().Close();
+                    Layer.PriceVisual.RenderOpen().Close();
+                });
             }
         }
-        public Task RedrawMarks(IEnumerable<PriceMark> Marks = null)
+        public override Task Redraw() => Task.Run(() => { foreach (var ml in MarksLayers) RedrawMarks(ml); });
+
+        private struct RedrawData
         {
-            return Task.Run(() =>
+            public RedrawData(Point A, Point B, FormattedText ft, Brush Fill, Point T, Pen linpen, List<Point> linPoints, Pen geopen, PathGeometry geo)
             {
-                var marksData = new List<(Point A, Point B, FormattedText ft, Brush Fill, Point T, Pen pen, PathGeometry geo)>();
+                this.ft = ft;
+                this.Fill = Fill;
+                this.T = T;
+                this.linpen = linpen;
+                this.linPoints = linPoints;
+                this.geopen = geopen;
+                this.geo = geo;
+            }
 
-                if (Marks == null)
-                {
-                    GetRedrawData(marksData, LevelMarks);
-                }
-                else GetRedrawData(marksData, Marks);
-
-
-                if (marksData.Count > 0)
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        using var dcCH = ChartMarksVisual.RenderOpen();
-                        using var dcP = PriceMarksVisual.RenderOpen();
-
-                        foreach (var (A, B, ft, Fill, T, pen, geo) in marksData)
-                        {
-                            dcCH.DrawLine(pen, A, B);
-
-                            dcP.DrawGeometry(Fill, pen, geo);
-                            dcP.DrawText(ft, T);
-                        }
-                    });
-                }
-            });
+            public FormattedText ft { get; }
+            public Brush Fill { get; }
+            public Point T { get; }
+            public Pen linpen { get; }
+            public List<Point> linPoints { get; }
+            public Pen geopen { get; }
+            public PathGeometry geo { get; }
         }
-        public override Task Redraw() => RedrawMarks();
 
         private protected override void SetsDefinition()
         {
@@ -150,21 +180,49 @@ namespace ChartModules.StandardModules
         }
     }
 
-    public class PriceMark
+    public struct MarksLayer
     {
-        public PriceMark(double Price, Brush TextBrush, Brush Fill, Brush LineBrush = null)
+        public MarksLayer(IDrawingCanvas MarksLayer, IDrawingCanvas PriceLine, Action<MarksLayer> act)
+        {
+            ChartVisual = new DrawingVisual(); MarksLayer.AddVisual(ChartVisual);
+            PriceVisual = new DrawingVisual(); PriceLine.AddVisual(PriceVisual);
+
+            var lm = new ObservableCollection<PriceMark>();
+            Marks = lm;
+
+            var x = this;
+            lm.CollectionChanged += (s, e) => act(x);
+        }
+
+        public void AddMark(PriceMark pm) => Marks.Add(pm);
+        public void AddMark(double Price, Brush TextBrush, Brush Fill, Brush LineBrush = null) =>
+            Marks.Add(new PriceMark(Price, TextBrush, Fill, LineBrush));
+
+        public DrawingVisual ChartVisual { get; }
+        public DrawingVisual PriceVisual { get; }
+        public ObservableCollection<PriceMark> Marks { get; }
+    }
+    public struct PriceMark
+    {
+        public PriceMark(double Price, Brush TextBrush, Brush MarkFill, Brush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
-            this.Fill = Fill;
+            this.MarkFill = MarkFill;
             this.LineBrush = LineBrush;
+            this.LineDash = LineDash;
+            this.LineIndent = LineIndent;
+            this.LineThikness = LineThikness;
 
-            this.TextBrush.Freeze(); this.Fill.Freeze(); this.LineBrush.Freeze();
+            this.TextBrush.Freeze(); this.MarkFill.Freeze(); this.LineBrush.Freeze();
         }
 
         public double Price { get; set; }
         public Brush TextBrush { get; set; }
-        public Brush Fill { get; set; }
+        public Brush MarkFill { get; set; }
         public Brush LineBrush { get; set; }
+        public double LineDash { get; set; }
+        public double LineIndent { get; set; }
+        public double LineThikness { get; set; }
     }
 }

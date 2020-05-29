@@ -16,8 +16,9 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using FlexTrader.MVVM.ViewModels;
 using ChartModules;
+using ChartModules.StandardModules;
+using FlexTrader.MVVM.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -28,8 +29,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using ChartModules.StandardModules;
-using System.Diagnostics;
 
 namespace FlexTrader.MVVM.Views
 {
@@ -101,9 +100,8 @@ namespace FlexTrader.MVVM.Views
                 {
                     case "Marks":
                         {
-                            this.PriceMarksModule.LevelMarks.Clear();
                             foreach (var m in DC.Marks)
-                                this.PriceMarksModule.LevelMarks.Add(m);
+                                this.PriceMarksModule.Levels.AddMark(m);
                         }
                         break;
                     case "BaseFontSize": BaseFontSize = DC.BaseFontSize; break;
@@ -133,9 +131,17 @@ namespace FlexTrader.MVVM.Views
                 CursorT t = CursorT.None;
                 switch (Insrt)
                 {
-                    case "PaintingLeves": Instrument = null; MagnetInstrument = true; t = CursorT.Paint; break;
-                    case "PaintingTrends": Instrument = null; MagnetInstrument = true; t = CursorT.Paint; break;
-                    default: Instrument = CandlesModule.MovingChart; MagnetInstrument = false; t = CursorT.Standart; break;
+                    case "PaintingLeves": 
+                        Instrument = null; 
+                        MagnetInstrument = true; t = CursorT.Paint; break;
+
+                    case "PaintingTrends": 
+                        Instrument = null; 
+                        MagnetInstrument = true; t = CursorT.Paint; break;
+
+                    default: 
+                        Instrument = CandlesModule.MovingChart; 
+                        MagnetInstrument = false; t = CursorT.Standart; break;
                 }
                 CursorModule.SetCursor(t);
                 SetMagnetState(CurrentMagnetState);
