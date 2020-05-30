@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -150,7 +151,13 @@ namespace ChartModules.StandardModules
                 });
             }
         }
-        public override Task Redraw() => Task.Run(() => { foreach (var ml in MarksLayers) RedrawMarks(ml); });
+        public override Task Redraw()
+        {
+            var tasks = new List<Task>();
+            foreach (var ml in MarksLayers) tasks.Add(Task.Run(() => RedrawMarks(ml)));
+            return Task.WhenAll(tasks);
+            
+        }
 
         private struct RedrawData
         {

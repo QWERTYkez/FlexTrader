@@ -38,11 +38,13 @@ namespace ChartModules.StandardModules
         private readonly ColumnDefinition PriceLineCD;
         private readonly IDrawingCanvas GridLayer;
         private readonly IDrawingCanvas PriceLine;
-        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, IDrawingCanvas GridLayer, IDrawingCanvas PriceLine)
+        private readonly PriceMarksModule PriceMarksModule;
+        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, IDrawingCanvas GridLayer, IDrawingCanvas PriceLine, PriceMarksModule PriceMarksModule)
         {
             this.PriceLineCD = PriceLineCD;
             this.GridLayer = GridLayer;
             this.PriceLine = PriceLine;
+            this.PriceMarksModule = PriceMarksModule;
 
             BaseConstruct(chart);
         }
@@ -156,6 +158,7 @@ namespace ChartModules.StandardModules
                     PriceLine.Width = PriceLineWidth;
                     PriceLineCD.Width = new GridLength(PriceLineWidth);
                 });
+                PriceMarksModule.Redraw();
             });
         }
 

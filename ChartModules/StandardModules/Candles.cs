@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -45,11 +46,11 @@ namespace ChartModules.StandardModules
         private readonly ScaleTransform ScaleY;
         private readonly IChartWindow mainView;
         private readonly IDrawingCanvas TimeLine;
-        private readonly IDrawingCanvas PriceLine;
+        private readonly Grid PriceLine;
         public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
             TimeLineModule TimeLineModule, List<ChartModule> NormalModules, TranslateTransform Translate,
             ScaleTransform ScaleX, ScaleTransform ScaleY, IChartWindow mainView, IDrawingCanvas TimeLine,
-            IDrawingCanvas PriceLine, Vector CurrentScale)
+            Grid PriceLine, Vector CurrentScale)
         {
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
@@ -149,6 +150,7 @@ namespace ChartModules.StandardModules
         {
             if (StartTime.HasValue && DeltaTime.HasValue)
             {
+                TimeLineModule.Redraw();
                 var TimeA = StartTime.Value - Math.Ceiling(((Chart.ChWidth / CurrentScale.X + CurrentTranslate.X) / 15)) * DeltaTime.Value;
                 var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
 
@@ -162,8 +164,11 @@ namespace ChartModules.StandardModules
                 var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
                 var delta = max - mmm;
                 max += delta * 0.05;
-                Min = mmm - delta * 0.05;
-                Delta = max - Min;
+                var nMin = mmm - delta * 0.05;
+                var nDelta = max - Min;
+                if (Min == nMin && Delta == nDelta) return;
+                Min = nMin;
+                Delta = nDelta;
 
                 if (VerticalLock)
                 {
@@ -173,7 +178,6 @@ namespace ChartModules.StandardModules
                 }
 
                 VerticalReset();
-                TimeLineModule.Redraw();
             }
         }
         #endregion

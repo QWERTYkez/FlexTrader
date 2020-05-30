@@ -73,7 +73,7 @@
                 </Grid>
             </Grid>
             <mvvm:DrawingCanvas x:Name="FrontChart" />
-            <mvvm:DrawingCanvas x:Name="MarksLayer" />
+            <mvvm:DrawingCanvas x:Name="MarksLinesLayer" />
             <Grid>
                 <mvvm:DrawingCanvas x:Name="CursorLinesLayer" />
                 <mvvm:DrawingCanvas x:Name="CursorLayer" />
@@ -90,11 +90,14 @@
             Grid.Column="1"
             BorderBrush="Gray"
             BorderThickness="1" />
-        <mvvm:DrawingCanvas
+        <Grid
             x:Name="PriceLine"
             Grid.Column="2"
             Background="{Binding ChartBackground}"
-            ClipToBounds="True" />
+            ClipToBounds="True">
+            <mvvm:DrawingCanvas x:Name="PricesLayer" />
+            <mvvm:DrawingCanvas x:Name="MarksLayer" />
+        </Grid>
         <!--  PreviewMouseDown="CandlesModule.PriceLine_MouseDown"  -->
         <mvvm:DrawingCanvas
             x:Name="TimeLine"

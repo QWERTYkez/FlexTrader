@@ -54,18 +54,18 @@ namespace FlexTrader.MVVM.Views
             
             ChartGRD.PreviewMouseDown += (s, e) => { e.Handled = true; Instrument?.Invoke(e); };
 
-            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PriceLine);
+            PriceMarksModule = new PriceMarksModule(this, MarksLinesLayer, MarksLayer);
+            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
             TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
-            PriceMarksModule = new PriceMarksModule(this, MarksLayer, PriceLine);
-            CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, PriceLine);
+            CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, PricesLayer);
 
-            CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule, 
+            CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
                 ModulesNormal, Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
 
             CandlesModule.WhellScalled += () => CursorModule.Redraw();
 
-            ModulesNormal.Add(PriceMarksModule);
+            //ModulesNormal.Add(PriceMarksModule);
 
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged += DC_PropertyChanged;
@@ -256,7 +256,7 @@ namespace FlexTrader.MVVM.Views
 
         private readonly List<Setting> SpaceSets = new List<Setting>();
         public Pen LinesPen { get; private set; } = new Pen(Brushes.DarkGray, 1);
-        private double basefontsize;
+        private double basefontsize = 1000;
         public double BaseFontSize
         {
             get => basefontsize;
