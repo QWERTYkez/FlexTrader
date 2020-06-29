@@ -74,5 +74,7 @@ namespace FlexTrader.MVVM.Views
 
         public abstract event Action<bool> SetMagnet;
         public abstract bool CurrentMagnetState { get; }
+
+        public abstract void ResetPB();
     }
 }

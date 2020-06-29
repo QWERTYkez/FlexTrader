@@ -105,7 +105,7 @@
                         <res:CrossHair Foreground="White" />
                     </res:PaletteButton>
                     <Grid MouseEnter="PaletteButton_MouseEnter" MouseLeave="PaletteButton_MouseLeave">
-                        <res:PaletteButton Click="PBC" Tag="PaintingLeves">
+                        <res:PaletteButton Click="PBC" Tag="PaintingLevels">
                             <res:PaintingLevel Foreground="White" />
                         </res:PaletteButton>
                         <Popup Style="{StaticResource pop1style}">
@@ -130,7 +130,7 @@
                                     <res:PaletteButton
                                         Grid.Row="0"
                                         Click="PBCmenu"
-                                        Tag="PaintingLeves">
+                                        Tag="PaintingLevels">
                                         <res:PaintingLevel Foreground="White" />
                                     </res:PaletteButton>
                                     <res:PaletteButton

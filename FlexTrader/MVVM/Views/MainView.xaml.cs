@@ -112,6 +112,14 @@ namespace FlexTrader.MVVM.Views
             Palette.Tag = btn;
             SetInstrument?.Invoke((string)btn.Tag);
         }
+        public override void ResetPB()
+        {
+            if (Palette.Tag is PaletteButton lbtn) lbtn.IsActive = false;
+            var btn = PaletteButtonNormal;
+            btn.IsActive = true;
+            Palette.Tag = btn;
+            SetInstrument?.Invoke((string)btn.Tag);
+        }
         private void PBCmenu(object sender, RoutedEventArgs e)
         {
             var newbtn = sender as PaletteButton;
@@ -120,7 +128,7 @@ namespace FlexTrader.MVVM.Views
             lastbtn.Tag = newbtn.Tag;
             switch ((string)lastbtn.Tag)
             {
-                case "PaintingLeves": lastbtn.Content = new PaintingLevel { Foreground = Brushes.White }; break;
+                case "PaintingLevels": lastbtn.Content = new PaintingLevel { Foreground = Brushes.White }; break;
                 case "PaintingTrends": lastbtn.Content = new PaintingTrend { Foreground = Brushes.White }; break;
             }
         }

@@ -23,10 +23,10 @@ using System.Windows.Input;
 
 namespace ChartModules.PaintingModules
 {
-    public class LevelsModule : ChartModule
+    public class TrendsModule : ChartModule
     {
         private readonly Action ResetInstrument;
-        public LevelsModule(PriceMarksModule PMM, Action ResetInstrument)
+        public TrendsModule(PriceMarksModule PMM, Action ResetInstrument)
         {
             this.ResetInstrument = ResetInstrument;
         }
@@ -40,6 +40,6 @@ namespace ChartModules.PaintingModules
             throw new NotImplementedException();
         }
 
-        public void PaintingLevel(MouseButtonEventArgs e) => ResetInstrument.Invoke();
+        public void PaintingTrend(MouseButtonEventArgs e) => ResetInstrument.Invoke();
     }
 }

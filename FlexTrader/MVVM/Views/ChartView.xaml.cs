@@ -17,6 +17,7 @@
 */
 
 using ChartModules;
+using ChartModules.PaintingModules;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.ViewModels;
 using System;
@@ -40,6 +41,9 @@ namespace FlexTrader.MVVM.Views
         private readonly PriceLineModule PriceLineModule;
         private readonly CandlesModule CandlesModule;
 
+        private readonly LevelsModule LevelsModule;
+        private readonly TrendsModule TrendsModule;
+
         private readonly List<ChartModule> ModulesNormal = new List<ChartModule>();
         private readonly List<ChartModule> ModulesTransformed = new List<ChartModule>();
 
@@ -48,6 +52,7 @@ namespace FlexTrader.MVVM.Views
         {
             InitializeComponent();
 
+            ResetInstrument = () => mainView.ResetPB();
             mainView.SetInstrument += SetInsrument;
             mainView.SetMagnet += SetMagnetState;
             this.ShowSettings += mainView.ShowSettings;
@@ -55,6 +60,7 @@ namespace FlexTrader.MVVM.Views
             ChartGRD.PreviewMouseDown += (s, e) => { e.Handled = true; Instrument?.Invoke(e); };
 
             PriceMarksModule = new PriceMarksModule(this, MarksLinesLayer, MarksLayer);
+            LevelsModule = new LevelsModule(PriceMarksModule, ResetInstrument);
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
             TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
             CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, PricesLayer);
@@ -124,6 +130,7 @@ namespace FlexTrader.MVVM.Views
 
         private Action<MouseButtonEventArgs> Instrument;
         private bool MagnetInstrument = false;
+        private readonly Action ResetInstrument;
         private void SetInsrument(string Insrt)
         {
             Task.Run(() => 
@@ -131,12 +138,12 @@ namespace FlexTrader.MVVM.Views
                 CursorT t = CursorT.None;
                 switch (Insrt)
                 {
-                    case "PaintingLeves": 
-                        Instrument = null; 
+                    case "PaintingLevels": 
+                        Instrument = LevelsModule.PaintingLevel; 
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "PaintingTrends": 
-                        Instrument = null; 
+                        Instrument = TrendsModule.PaintingTrend; 
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     default: 

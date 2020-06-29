@@ -156,7 +156,6 @@ namespace ChartModules.StandardModules
             var tasks = new List<Task>();
             foreach (var ml in MarksLayers) tasks.Add(Task.Run(() => RedrawMarks(ml)));
             return Task.WhenAll(tasks);
-            
         }
 
         private struct RedrawData
