@@ -44,34 +44,49 @@ namespace FlexTrader.MVVM.Views
         private readonly LevelsModule LevelsModule;
         private readonly TrendsModule TrendsModule;
 
-        private readonly List<ChartModule> ModulesNormal = new List<ChartModule>();
-        private readonly List<ChartModule> ModulesTransformed = new List<ChartModule>();
+        private readonly HooksModule HooksModule;
 
         public ChartView() { } //конструктор для intellisense
         public ChartView(ChartWindow mainView)
         {
             InitializeComponent();
 
-            ResetInstrument = () => mainView.ResetPB();
+            ResetInstrument = mainView.ResetPB;
             mainView.SetInstrument += SetInsrument;
             mainView.SetMagnet += SetMagnetState;
             this.ShowSettings += mainView.ShowSettings;
-            
+            ChartGRD.MouseLeave += (s, e) => CursorLeave?.Invoke();
+            ChartGRD.MouseMove += (s, e) => CursorNewPosition?.Invoke(e.GetPosition(this));
+
             ChartGRD.PreviewMouseDown += (s, e) => { e.Handled = true; Instrument?.Invoke(e); };
 
             PriceMarksModule = new PriceMarksModule(this, MarksLinesLayer, MarksLayer);
-            LevelsModule = new LevelsModule(PriceMarksModule, ResetInstrument);
-            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
-            TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
-            CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, PricesLayer);
+
+            LevelsModule = new LevelsModule(this, PriceMarksModule, ResetInstrument);
+            TrendsModule = new TrendsModule(this, null, null);
+
+            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule, VerticalСhanges);
+            TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine, HorizontalСhanges);
+
+            CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, CursorMarkLayer, CursorLeave);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
-                ModulesNormal, Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
+                Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
 
-            CandlesModule.WhellScalled += () => CursorModule.Redraw();
+            HooksModule = new HooksModule(this, mainView, HooksLayer, HookPriceLayer, HookTimeLayer,
+                new List<IHooksModule>
+                {
+                    LevelsModule
+                },
+                act => { Instrument = act; },
+                new List<FrameworkElement>
+                {
+                    SubLayers,
+                    MarksLayer
+                });
 
-            //ModulesNormal.Add(PriceMarksModule);
+            CandlesModule.WhellScalled += () => CursorModule.Redraw();
 
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged += DC_PropertyChanged;
@@ -82,16 +97,16 @@ namespace FlexTrader.MVVM.Views
             SetInsrument(mainView.CurrentInstrument);
             SetMagnetState(mainView.CurrentMagnetState);
         }
+
         public void Destroy()
         {
-            this.PriceLineModule.Restruct();
-            this.TimeLineModule.Restruct();
             this.PriceMarksModule.Restruct();
             this.CursorModule.Restruct();
+            this.TimeLineModule.Restruct();
+            this.PriceLineModule.Restruct();
             this.CandlesModule.Restruct();
-
-            foreach (var m in ModulesTransformed) m.Restruct();
-            foreach (var m in ModulesNormal) m.Restruct();
+            this.LevelsModule.Restruct();
+            this.TrendsModule.Restruct();
 
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged -= DC_PropertyChanged;
@@ -116,6 +131,7 @@ namespace FlexTrader.MVVM.Views
                         {
                             TickSize = DC.TickSize;
                             TickPriceFormat = TickSize.ToString().Replace('1', '0').Replace(',', '.');
+                            digits = TickPriceFormat.ToCharArray().Length - 2;
                         }
                         break;
                     case "NewCandles":
@@ -131,25 +147,32 @@ namespace FlexTrader.MVVM.Views
         private Action<MouseButtonEventArgs> Instrument;
         private bool MagnetInstrument = false;
         private readonly Action ResetInstrument;
-        private void SetInsrument(string Insrt)
+        private void SetInsrument(string InstrumentName)
         {
             Task.Run(() => 
             {
                 CursorT t = CursorT.None;
-                switch (Insrt)
+                switch (InstrumentName)
                 {
                     case "PaintingLevels": 
                         Instrument = LevelsModule.PaintingLevel; 
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "PaintingTrends": 
-                        Instrument = TrendsModule.PaintingTrend; 
+                        Instrument = TrendsModule.PaintingTrend;
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
+                    case "Interacion":
+                        Instrument = null;
+                        MagnetInstrument = true; t = CursorT.Hook; break;
+
                     default: 
-                        Instrument = CandlesModule.MovingChart; 
+                        Instrument = CandlesModule.MovingChart;
                         MagnetInstrument = false; t = CursorT.Standart; break;
                 }
+                if(InstrumentName == "Interacion") ChartGRD.MouseMove += HooksModule.HookElement;
+                else ChartGRD.MouseMove -= HooksModule.HookElement;
+
                 CursorModule.SetCursor(t);
                 SetMagnetState(CurrentMagnetState);
             });
@@ -208,6 +231,12 @@ namespace FlexTrader.MVVM.Views
         public double PriceLineWidth { get => PriceLineModule.PriceLineWidth; }
         public DateTime TimeA { get => TimeLineModule.TimeA; }
         public DateTime TimeB { get => TimeLineModule.TimeB; }
+        public Point CurrentCursorPosition { get => CursorModule.CurrentPosition; }
+
+        public event Action VerticalСhanges;
+        public event Action HorizontalСhanges;
+        public event Action<Point> CursorNewPosition;
+        public event Action CursorLeave;
 
         public double PriceShift { get => 6; }
 
@@ -216,8 +245,9 @@ namespace FlexTrader.MVVM.Views
         public Typeface FontText { get; } = new Typeface(new FontFamily("Myriad Pro Cond"),
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
-        public double HeightToPrice(double height) =>
-            PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight;
+        private int digits = 8;
+        public double HeightToPrice(double height) => 
+            Math.Round(PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight, digits);
         public double PriceToHeight(double price) =>
             (ChHeight * (PricesDelta * TickSize - price + PricesMin * TickSize)) / (PricesDelta * TickSize);
         public DateTime CorrectTimePosition(ref double X)
@@ -251,12 +281,6 @@ namespace FlexTrader.MVVM.Views
             basesets.Add(("Настройки поля", SpaceSets));
             basesets.Add(CandlesModule.GetSets());
             basesets.Add(CursorModule.GetSets());
-
-            foreach (var mn in ModulesNormal)
-                normalsets.Add(mn.GetSets());
-
-            foreach (var mt in ModulesTransformed)
-                normalsets.Add(mt.GetSets());
 
             ShowSettings.Invoke(basesets, normalsets, transsets);
         }
@@ -308,7 +332,7 @@ namespace FlexTrader.MVVM.Views
                 Dispatcher.Invoke(() => 
                 { 
                     var br = b as Brush; br.Freeze();
-                    (DataContext as ChartViewModel).ChartBackground = br;
+                    (DataContext as ChartViewModel).ChartBackground = (SolidColorBrush)br;
                 }); 
             });
             var SetFontBrush = new Action<object>(b => 

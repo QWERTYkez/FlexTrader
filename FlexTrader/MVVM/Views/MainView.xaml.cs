@@ -24,7 +24,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views
 {
@@ -126,11 +125,8 @@ namespace FlexTrader.MVVM.Views
             var lastbtn = ((Grid)((Popup)((Border)((Grid)newbtn.Parent).Parent).Parent).Parent).Children[0] as PaletteButton;
             if(CurrentInstrument == (string)lastbtn.Tag) SetInstrument?.Invoke((string)newbtn.Tag);
             lastbtn.Tag = newbtn.Tag;
-            switch ((string)lastbtn.Tag)
-            {
-                case "PaintingLevels": lastbtn.Content = new PaintingLevel { Foreground = Brushes.White }; break;
-                case "PaintingTrends": lastbtn.Content = new PaintingTrend { Foreground = Brushes.White }; break;
-            }
+            lastbtn.Content = ((ICloneable)newbtn.Content).Clone();
+            PBC(lastbtn, null);
         }
 
         public override event Action<bool> SetMagnet;

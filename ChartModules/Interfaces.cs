@@ -57,6 +57,11 @@ namespace ChartModules
         Pen LinesPen { get; }
         Brush FontBrush { get; }
         event Action FontBrushChanged;
+        event Action VerticalСhanges;
+        event Action HorizontalСhanges;
+        event Action<Point> CursorNewPosition;
+        event Action CursorLeave;
+        Point CurrentCursorPosition { get; }
     }
 
     public interface IDrawingCanvas
@@ -77,9 +82,14 @@ namespace ChartModules
 
     public interface IChartWindow
     {
-        public void MoveCursor(MouseButtonEventArgs e, Action<Vector> ActA, Action ActB = null);
+        public void MoveCursor(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null);
         public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
+    }
+
+    public interface IHooksModule
+    {
+        List<Hook> Hooks { get; }
     }
 }

@@ -17,6 +17,7 @@
 */
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
@@ -26,16 +27,11 @@ namespace ChartModules
     {
         private protected IChart Chart;
         private protected Dispatcher Dispatcher;
-        public ChartModule() { }
-        public ChartModule(IChart chart) => BaseConstruct(chart);
-        private protected void BaseConstruct(IChart chart)
+        public ChartModule(IChart chart)
         {
             Chart = chart;
             Dispatcher = Chart.Dispatcher;
-            SetsDefinition();
-            Construct();
         }
-        private protected abstract void Construct();
         public abstract Task Redraw();
         public void Restruct()
         {
@@ -47,5 +43,6 @@ namespace ChartModules
         public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
         private protected List<Setting> Sets { get; } = new List<Setting>();
         private protected string SetsName { get; set; }
+
     }
 }

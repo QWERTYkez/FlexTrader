@@ -104,6 +104,12 @@
                     <res:PaletteButton x:Name="PaletteButtonNormal" Click="PBC">
                         <res:CrossHair Foreground="White" />
                     </res:PaletteButton>
+                    <res:PaletteButton
+                        x:Name="PaletteButtonInteracion"
+                        Click="PBC"
+                        Tag="Interacion">
+                        <res:InteractArrow Foreground="White" />
+                    </res:PaletteButton>
                     <Grid MouseEnter="PaletteButton_MouseEnter" MouseLeave="PaletteButton_MouseLeave">
                         <res:PaletteButton Click="PBC" Tag="PaintingLevels">
                             <res:PaintingLevel Foreground="White" />

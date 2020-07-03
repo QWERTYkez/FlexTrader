@@ -47,19 +47,12 @@ namespace FlexTrader.MVVM.ViewModels
             //ex.GeneralInfo();
 
             NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15).Select(c => c as ICandle).ToList();
-
-            Marks = new List<PriceMark>
-            {
-                new PriceMark(200.99, Brushes.White, ChartBackground, Brushes.Yellow, 5, 5, 2),
-                new PriceMark(199.95, ChartBackground, Brushes.Azure, Brushes.Azure, 4, 6, 3),
-                new PriceMark(198.90, Brushes.Lime, ChartBackground, Brushes.Lime, 3, 7, 4)
-            };
         }
 
         public double TickSize { get; set; }
         public List<ICandle> NewCandles { get; set; }
 
-        public Brush ChartBackground { get; set; }
+        public SolidColorBrush ChartBackground { get; set; }
         public double BaseFontSize { get; set; }
         public Brush FontBrush { get; set; }
 

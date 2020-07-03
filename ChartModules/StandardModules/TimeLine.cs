@@ -32,24 +32,21 @@ namespace ChartModules.StandardModules
 
         private readonly IDrawingCanvas GridLayer;
         private readonly IDrawingCanvas TimeLine;
-        public TimeLineModule(IChart chart, IDrawingCanvas GridLayer, IDrawingCanvas TimeLine)
+        public TimeLineModule(IChart chart, IDrawingCanvas GridLayer, IDrawingCanvas TimeLine, Action HorizontalСhanges) : base(chart)
         {
             this.GridLayer = GridLayer;
             this.TimeLine = TimeLine;
+            this.HorizontalСhanges = HorizontalСhanges;
 
-            BaseConstruct(chart);
+            Chart.FontBrushChanged += () => Redraw();
+            GridLayer.AddVisual(TimeGridVisual);
+            TimeLine.AddVisual(TimesVisual);
         }
         private Pen LinesPen => Chart.LinesPen;
         private double YearFontSize => Math.Round(Chart.BaseFontSize * 1.4);
 
         private readonly DrawingVisual TimesVisual = new DrawingVisual();
         private readonly DrawingVisual TimeGridVisual = new DrawingVisual();
-        private protected override void Construct()
-        {
-            Chart.FontBrushChanged += () => Redraw();
-            GridLayer.AddVisual(TimeGridVisual);
-            TimeLine.AddVisual(TimesVisual);
-        }
         private protected override void Destroy()
         {
             Chart.FontBrushChanged -= () => Redraw();
@@ -57,6 +54,7 @@ namespace ChartModules.StandardModules
             TimeLine.DeleteVisual(TimesVisual);
         }
 
+        public event Action HorizontalСhanges;
         public override Task Redraw()
         {
             if (Chart.ChWidth == 0) return null;
@@ -234,6 +232,7 @@ namespace ChartModules.StandardModules
                         using var tgvc = TimeGridVisual.RenderOpen();
                     });
                 }
+                HorizontalСhanges?.Invoke();
             });
         }
         private void AddYear(dynamic container, int Y, double pixelsPerDip)

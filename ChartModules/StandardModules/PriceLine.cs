@@ -39,32 +39,32 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas GridLayer;
         private readonly IDrawingCanvas PriceLine;
         private readonly PriceMarksModule PriceMarksModule;
-        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, IDrawingCanvas GridLayer, IDrawingCanvas PriceLine, PriceMarksModule PriceMarksModule)
+        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, 
+            IDrawingCanvas GridLayer, IDrawingCanvas PriceLine, 
+            PriceMarksModule PriceMarksModule, Action VerticalСhanges) : base (chart)
         {
             this.PriceLineCD = PriceLineCD;
             this.GridLayer = GridLayer;
             this.PriceLine = PriceLine;
             this.PriceMarksModule = PriceMarksModule;
+            this.VerticalСhanges = VerticalСhanges;
 
-            BaseConstruct(chart);
+            Chart.FontBrushChanged += () => Redraw();
+            GridLayer.AddVisual(PriceGridVisual);
+            PriceLine.AddVisual(PricesVisual);
         }
         private Pen LinesPen => Chart.LinesPen;
 
         private readonly DrawingVisual PricesVisual = new DrawingVisual();
         private readonly DrawingVisual PriceGridVisual = new DrawingVisual();
-        private protected override void Construct()
-        {
-            Chart.FontBrushChanged += () => Redraw();
-            GridLayer.AddVisual(PriceGridVisual);
-            PriceLine.AddVisual(PricesVisual);
-        }
         private protected override void Destroy()
         {
             Chart.FontBrushChanged -= () => Redraw();
             GridLayer.DeleteVisual(PriceGridVisual);
             PriceLine.DeleteVisual(PricesVisual);
         }
-        
+
+        public event Action VerticalСhanges;
         public override Task Redraw()
         {
             return Task.Run(() => 
@@ -159,6 +159,7 @@ namespace ChartModules.StandardModules
                     PriceLineCD.Width = new GridLength(PriceLineWidth);
                 });
                 PriceMarksModule.Redraw();
+                VerticalСhanges?.Invoke();
             });
         }
 

@@ -50,7 +50,6 @@
             x:Name="ChartGRD"
             Cursor="None"
             SizeChanged="ChartGRD_SizeChanged">
-            <!--  PreviewMouseDown="CandlesModule.MovingChart"  -->
             <mvvm:DrawingCanvas x:Name="GridLayer" Background="{Binding ChartBackground}" />
             <mvvm:DrawingCanvas x:Name="BackChart" />
             <Grid Margin="2,0,0,0" ClipToBounds="True">
@@ -72,8 +71,10 @@
                     </Grid.RenderTransform>
                 </Grid>
             </Grid>
-            <mvvm:DrawingCanvas x:Name="FrontChart" />
-            <mvvm:DrawingCanvas x:Name="MarksLinesLayer" />
+            <Grid x:Name="SubLayers">
+                <mvvm:DrawingCanvas x:Name="MarksLinesLayer" />
+            </Grid>
+            <mvvm:DrawingCanvas x:Name="HooksLayer" />
             <Grid>
                 <mvvm:DrawingCanvas x:Name="CursorLinesLayer" />
                 <mvvm:DrawingCanvas x:Name="CursorLayer" />
@@ -97,14 +98,17 @@
             ClipToBounds="True">
             <mvvm:DrawingCanvas x:Name="PricesLayer" />
             <mvvm:DrawingCanvas x:Name="MarksLayer" />
+            <mvvm:DrawingCanvas x:Name="HookPriceLayer" />
+            <mvvm:DrawingCanvas x:Name="CursorMarkLayer" />
         </Grid>
-        <!--  PreviewMouseDown="CandlesModule.PriceLine_MouseDown"  -->
-        <mvvm:DrawingCanvas
-            x:Name="TimeLine"
+        <Grid
             Grid.Row="2"
             Background="{Binding ChartBackground}"
-            ClipToBounds="True" />
-        <!--  PreviewMouseDown="CandlesModule.TimeLine_MouseDown"  -->
+            ClipToBounds="True">
+            <mvvm:DrawingCanvas x:Name="TimeLine" />
+            <mvvm:DrawingCanvas x:Name="HookTimeLayer" />
+        </Grid>
+
         <Grid Grid.Row="2" Grid.Column="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />

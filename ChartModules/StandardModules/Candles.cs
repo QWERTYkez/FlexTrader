@@ -40,7 +40,6 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas CandlesLayer;
         private readonly PriceLineModule PriceLineModule;
         private readonly TimeLineModule TimeLineModule;
-        private readonly List<ChartModule> NormalModules;
         private readonly TranslateTransform Translate;
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
@@ -48,14 +47,13 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas TimeLine;
         private readonly Grid PriceLine;
         public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
-            TimeLineModule TimeLineModule, List<ChartModule> NormalModules, TranslateTransform Translate,
-            ScaleTransform ScaleX, ScaleTransform ScaleY, IChartWindow mainView, IDrawingCanvas TimeLine,
-            Grid PriceLine, Vector CurrentScale)
+            TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
+            ScaleTransform ScaleY, IChartWindow mainView, IDrawingCanvas TimeLine,
+            Grid PriceLine, Vector CurrentScale) : base(chart)
         {
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
             this.TimeLineModule = TimeLineModule;
-            this.NormalModules = NormalModules;
             this.Translate = Translate;
             this.ScaleX = ScaleX;
             this.ScaleY = ScaleY;
@@ -64,7 +62,8 @@ namespace ChartModules.StandardModules
             this.PriceLine = PriceLine;
             this.CurrentScale = CurrentScale;
 
-            BaseConstruct(chart);
+            TimeLine.PreviewMouseDown += TimeLine_MouseDown;
+            PriceLine.PreviewMouseDown += PriceLine_MouseDown;
         }
 
         private double Delta;
@@ -144,7 +143,6 @@ namespace ChartModules.StandardModules
                 });
             }
             await PriceLineModule.Redraw();
-            foreach (var m in NormalModules) _ = m.Redraw();
         }
         public void HorizontalReset()
         {
@@ -189,23 +187,23 @@ namespace ChartModules.StandardModules
             if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
             LastScaleY = CurrentScale.Y;
             VerticalLock = false;
-            mainView.MoveCursor(e, (Vector vec) =>
+            mainView.MoveCursor(e, vec =>
             {
+                if (vec == null) return;
                 Task.Run(async () =>
                 {
-                    var X = vec.Y / 50;
-                    if (vec.Y < 0)
+                    var X = vec.Value.Y / 50;
+                    if (vec.Value.Y < 0)
                     {
                         var Z = Chart.ChHeight / (CurrentScale.Y * Chart.TickSize) - 5 * Chart.ChHeight;
                         if (Z <= 0) return;
                         CurrentScale.Y = LastScaleY * (1 - X);
                     }
-                    else if (vec.Y > 0) CurrentScale.Y = LastScaleY / (1 + X);
+                    else if (vec.Value.Y > 0) CurrentScale.Y = LastScaleY / (1 + X);
                     await Dispatcher.InvokeAsync(() => ScaleY.ScaleY = CurrentScale.Y);
 
                     _ = PriceLineModule.Redraw();
-                    foreach (var m in NormalModules) _ = m.Redraw();
-                    UpdateMagnetData().RunSynchronously();
+                    await UpdateMagnetData();
                 });
             });
         }
@@ -213,7 +211,7 @@ namespace ChartModules.StandardModules
         #region скалирование по временной шкале
         private double LastScaleX;
         private const double MaxCandleWidth = 175;
-        private void TimeLine_MouseDown(object sender, MouseButtonEventArgs e)
+        private async void TimeLine_MouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
             if (e.ClickCount == 2)
@@ -224,21 +222,23 @@ namespace ChartModules.StandardModules
                 Translate.X = 0;
                 HorizontalReset();
 
-                UpdateMagnetData().RunSynchronously();
+                await UpdateMagnetData();
                 return;
             }
             LastScaleX = CurrentScale.X;
-            mainView.MoveCursor(e, (Vector vec) =>
+            mainView.MoveCursor(e, vec =>
             {
+                if (vec == null) return;
+
                 Task.Run(async () =>
                 {
-                    var Y = -vec.X / 50;
-                    if (vec.X > 0)
+                    var Y = -vec.Value.X / 50;
+                    if (vec.Value.X > 0)
                     {
                         CurrentScale.X = LastScaleX / (1 - Y);
                         await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
-                    else if (vec.X < 0)
+                    else if (vec.Value.X < 0)
                     {
                         var nScale = LastScaleX * (1 + Y);
                         var TimeA = StartTime.Value - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime.Value;
@@ -254,7 +254,7 @@ namespace ChartModules.StandardModules
                     }
                     HorizontalReset();
 
-                    UpdateMagnetData().RunSynchronously();
+                    await UpdateMagnetData();
                 });
             });
         }
@@ -264,9 +264,12 @@ namespace ChartModules.StandardModules
         public void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
-            mainView.MoveCursor(e, async (Vector vec) => 
+            mainView.MoveCursor(e, async vec => 
             {
-                var X = LastTranslateVector.X + vec.X / CurrentScale.X;
+                if (vec == null) return;
+
+
+                var X = LastTranslateVector.X + vec.Value.X / CurrentScale.X;
                 var TimeA = StartTime.Value - Math.Floor(((Chart.ChWidth / CurrentScale.X + X) / 15)) * DeltaTime.Value;
                 var TimeB = StartTime.Value - Math.Ceiling((X / 15)) * DeltaTime.Value;
                 var currentCandles = from c in AllCandles.AsParallel()
@@ -291,7 +294,7 @@ namespace ChartModules.StandardModules
                 } 
                 else
                 {
-                    CurrentTranslate.Y = LastTranslateVector.Y + vec.Y / CurrentScale.Y;
+                    CurrentTranslate.Y = LastTranslateVector.Y + vec.Value.Y / CurrentScale.Y;
                     await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
@@ -299,7 +302,6 @@ namespace ChartModules.StandardModules
                     });
                     _ = TimeLineModule.Redraw();
                     _ = PriceLineModule.Redraw();
-                    foreach (var m in NormalModules) _ = m.Redraw();
                 }
             });
         }
@@ -466,11 +468,6 @@ namespace ChartModules.StandardModules
                     VerticalReset();
                 }
             }); 
-        }
-        private protected override void Construct() 
-        {
-            TimeLine.PreviewMouseDown += TimeLine_MouseDown;
-            PriceLine.PreviewMouseDown += PriceLine_MouseDown;
         }
         private protected override void Destroy() 
         {

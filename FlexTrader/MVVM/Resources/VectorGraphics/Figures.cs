@@ -16,19 +16,41 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Resources
 {
     public class CrossHair : UserControl { }
+    public class InteractArrow : UserControl { }
     public class Gear : UserControl { }
     public class Reset : UserControl { }
-
-    public class PaintingLevel : UserControl { }
-    public class PaintingTrend : UserControl { }
-
     public class Magnet : UserControl { }
+
+    public class PaintingLevel : UserControl, ICloneable
+    {
+        public object Clone()
+        {
+            return new PaintingLevel
+            {
+                Foreground = this.Foreground,
+                Background = this.Background
+            };
+        }
+    }
+    public class PaintingTrend : UserControl, ICloneable
+    {
+        public object Clone()
+        {
+            return new PaintingTrend
+            {
+                Foreground = this.Foreground,
+                Background = this.Background
+            };
+        }
+    }
 
     public class Arrow : UserControl
     {

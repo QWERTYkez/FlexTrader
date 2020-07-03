@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -32,7 +31,7 @@ namespace ChartModules.StandardModules
         private readonly List<MarksLayer> MarksLayers = new List<MarksLayer>();
         public MarksLayer Levels { get; }
 
-        public PriceMarksModule(IChart chart, IDrawingCanvas MarksCanvas, IDrawingCanvas PriceLine)
+        public PriceMarksModule(IChart chart, IDrawingCanvas MarksCanvas, IDrawingCanvas PriceLine) : base(chart)
         {
             this.MarksCanvas = MarksCanvas;
             this.PriceLine = PriceLine;
@@ -42,11 +41,8 @@ namespace ChartModules.StandardModules
                 Levels = new MarksLayer(MarksCanvas, PriceLine, RedrawMarks); MarksLayers.Add(Levels);
             }
             #endregion
-
-            BaseConstruct(chart);
         }
 
-        private protected override void Construct() { }
         private readonly IDrawingCanvas MarksCanvas;
         private readonly IDrawingCanvas PriceLine;
         private protected override void Destroy()
@@ -194,23 +190,27 @@ namespace ChartModules.StandardModules
             PriceVisual = new DrawingVisual(); PriceLine.AddVisual(PriceVisual);
 
             var lm = new ObservableCollection<PriceMark>();
-            Marks = lm;
+            Marks = lm; Act = null;
 
             var x = this;
+            Act = () => act(x);
             lm.CollectionChanged += (s, e) => act(x);
         }
+        private Action Act;
 
         public void AddMark(PriceMark pm) => Marks.Add(pm);
-        public void AddMark(double Price, Brush TextBrush, Brush Fill, Brush LineBrush = null) =>
-            Marks.Add(new PriceMark(Price, TextBrush, Fill, LineBrush));
+        public void AddMark(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill, 
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0) =>
+            Marks.Add(new PriceMark(Price, Act, TextBrush, MarkFill, LineBrush, LineThikness, LineDash, LineIndent));
 
         public DrawingVisual ChartVisual { get; }
         public DrawingVisual PriceVisual { get; }
         public ObservableCollection<PriceMark> Marks { get; }
     }
-    public struct PriceMark
+    public class PriceMark
     {
-        public PriceMark(double Price, Brush TextBrush, Brush MarkFill, Brush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
+        public PriceMark(double Price, Action ApplyChanges, SolidColorBrush TextBrush, SolidColorBrush MarkFill, 
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
@@ -219,14 +219,17 @@ namespace ChartModules.StandardModules
             this.LineDash = LineDash;
             this.LineIndent = LineIndent;
             this.LineThikness = LineThikness;
+            Changed = ApplyChanges;
 
             this.TextBrush.Freeze(); this.MarkFill.Freeze(); this.LineBrush.Freeze();
         }
+        public event Action Changed;
+        public void ApplyChanges() => Changed.Invoke();
 
         public double Price { get; set; }
-        public Brush TextBrush { get; set; }
-        public Brush MarkFill { get; set; }
-        public Brush LineBrush { get; set; }
+        public SolidColorBrush TextBrush { get; set; }
+        public SolidColorBrush MarkFill { get; set; }
+        public SolidColorBrush LineBrush { get; set; }
         public double LineDash { get; set; }
         public double LineIndent { get; set; }
         public double LineThikness { get; set; }

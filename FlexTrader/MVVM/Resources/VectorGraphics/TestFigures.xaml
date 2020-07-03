@@ -10,72 +10,29 @@
     mc:Ignorable="d">
     <Viewbox Stretch="Uniform">
         <Path
-            Width="1000"
-            Height="1000"
+            Width="8"
+            Height="18"
             Fill="White">
             <Path.Data>
-                <CombinedGeometry>
-                    <CombinedGeometry.Geometry1>
-                        <GeometryGroup>
-                            <CombinedGeometry GeometryCombineMode="Xor">
-                                <CombinedGeometry.Geometry1>
-                                    <RectangleGeometry Rect="400,100 600,290" />
-                                </CombinedGeometry.Geometry1>
-                                <CombinedGeometry.Geometry2>
-                                    <RectangleGeometry Rect="400,140 350,210" />
-                                </CombinedGeometry.Geometry2>
-                            </CombinedGeometry>
-                            <CombinedGeometry GeometryCombineMode="Xor">
-                                <CombinedGeometry.Geometry1>
-                                    <RectangleGeometry Rect="400,610 600,290" />
-                                </CombinedGeometry.Geometry1>
-                                <CombinedGeometry.Geometry2>
-                                    <RectangleGeometry Rect="400,650 350,210" />
-                                </CombinedGeometry.Geometry2>
-                            </CombinedGeometry>
-                        </GeometryGroup>
-                    </CombinedGeometry.Geometry1>
-                    <CombinedGeometry.Geometry2>
-                        <CombinedGeometry GeometryCombineMode="Exclude">
-                            <CombinedGeometry.Geometry1>
-                                <GeometryGroup>
-                                    <CombinedGeometry GeometryCombineMode="Xor">
-                                        <CombinedGeometry.Geometry1>
-                                            <EllipseGeometry
-                                                Center="400,500"
-                                                RadiusX="400"
-                                                RadiusY="400" />
-                                        </CombinedGeometry.Geometry1>
-                                        <CombinedGeometry.Geometry2>
-                                            <EllipseGeometry
-                                                Center="400,500"
-                                                RadiusX="360"
-                                                RadiusY="360" />
-                                        </CombinedGeometry.Geometry2>
-                                    </CombinedGeometry>
-                                    <CombinedGeometry GeometryCombineMode="Xor">
-                                        <CombinedGeometry.Geometry1>
-                                            <EllipseGeometry
-                                                Center="400,500"
-                                                RadiusX="150"
-                                                RadiusY="150" />
-                                        </CombinedGeometry.Geometry1>
-                                        <CombinedGeometry.Geometry2>
-                                            <EllipseGeometry
-                                                Center="400,500"
-                                                RadiusX="110"
-                                                RadiusY="110" />
-                                        </CombinedGeometry.Geometry2>
-                                    </CombinedGeometry>
-                                </GeometryGroup>
-                            </CombinedGeometry.Geometry1>
-                            <CombinedGeometry.Geometry2>
-                                <RectangleGeometry Rect="400,100 700,800" />
-                            </CombinedGeometry.Geometry2>
-                        </CombinedGeometry>
-                    </CombinedGeometry.Geometry2>
-                </CombinedGeometry>
+                <PathGeometry>
+                    <PathFigure IsClosed="True" StartPoint="4,0">
+                        <LineSegment Point="8,12" />
+                        <LineSegment Point="6,13" />
+                        <LineSegment Point="5,10" />
+                        <LineSegment Point="5,18" />
+                        <LineSegment Point="3,18" />
+                        <LineSegment Point="3,10" />
+                        <LineSegment Point="2,13" />
+                        <LineSegment Point="0,12" />
+                    </PathFigure>
+                </PathGeometry>
             </Path.Data>
+            <Path.RenderTransform>
+                <TransformGroup>
+                    <RotateTransform Angle="-30" />
+                    <TranslateTransform X="-4" Y="3" />
+                </TransformGroup>
+            </Path.RenderTransform>
         </Path>
     </Viewbox>
 </UserControl>

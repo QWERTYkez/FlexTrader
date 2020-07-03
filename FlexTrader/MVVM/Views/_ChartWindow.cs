@@ -33,9 +33,9 @@ namespace FlexTrader.MVVM.Views
 
         #region Обработка таскания мышью
         private Point StartPosition;
-        private Action<Vector> ActA;
+        private Action<Vector?> ActA;
         private Action ActB;
-        public void MoveCursor(MouseButtonEventArgs e, Action<Vector> ActA, Action ActB = null)
+        public void MoveCursor(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null)
         {
             StartPosition = e.GetPosition(this); this.ActA = ActA; this.ActB = ActB;
 
@@ -49,6 +49,7 @@ namespace FlexTrader.MVVM.Views
         }
         private void EndMoving()
         {
+            ActA?.Invoke(null);
             this.MouseMove -= MovingAct;
             ActA = null;
             ActB?.Invoke();

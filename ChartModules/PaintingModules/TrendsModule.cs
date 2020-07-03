@@ -26,18 +26,16 @@ namespace ChartModules.PaintingModules
     public class TrendsModule : ChartModule
     {
         private readonly Action ResetInstrument;
-        public TrendsModule(PriceMarksModule PMM, Action ResetInstrument)
+        public TrendsModule(IChart chart, PriceMarksModule PMM, Action ResetInstrument) : base(chart)
         {
             this.ResetInstrument = ResetInstrument;
         }
 
         public override Task Redraw() => null;
-        private protected override void Construct() { }
         private protected override void Destroy() { }
 
         private protected override void SetsDefinition()
         {
-            throw new NotImplementedException();
         }
 
         public void PaintingTrend(MouseButtonEventArgs e) => ResetInstrument.Invoke();

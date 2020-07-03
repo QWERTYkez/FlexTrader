@@ -36,7 +36,10 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas TimeLine;
         private readonly IDrawingCanvas PriceLine;
         private readonly Grid ChartGRD;
-        public CursorModule(IChart chart, Grid ChartGRD, IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer, IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine, IDrawingCanvas PriceLine)
+        public CursorModule(IChart chart, Grid ChartGRD, 
+            IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer, 
+            IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine, 
+            IDrawingCanvas PriceLine, Action CursorLeaveChart) : base(chart)
         {
             this.CursorLinesLayer = CursorLinesLayer;
             this.CursorLayer = CursorLayer;
@@ -44,11 +47,18 @@ namespace ChartModules.StandardModules
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
             this.ChartGRD = ChartGRD;
+            this.CursorLeaveChart = CursorLeaveChart;
 
             FontBrush = Brushes.White;
             MarksPen = new Pen(Brushes.White, 2); MarksPen.Freeze();
 
-            BaseConstruct(chart);
+            ChartGRD.MouseEnter += ShowCursor;
+            ChartGRD.MouseLeave += CursorLeave;
+            ChartGRD.MouseMove += CursorRedraw;
+            SetCursorLines();
+            CursorLinesLayer.RenderTransform = CursorLinesTransform;
+            CursorLayer.RenderTransform = CursorTransform;
+            MagnetLayer.RenderTransform = MagnetTransform;
         }
 
         private readonly DrawingVisual CursorLinesVisual = new DrawingVisual();
@@ -59,16 +69,6 @@ namespace ChartModules.StandardModules
         private readonly TranslateTransform MagnetTransform = new TranslateTransform();
         private readonly DrawingVisual CursorTimeVisual = new DrawingVisual();
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
-        private protected override void Construct()
-        {
-            ChartGRD.MouseEnter += ShowCursor;
-            ChartGRD.MouseLeave += CursorLeave;
-            ChartGRD.MouseMove += CursorRedraw;
-            SetCursorLines();
-            CursorLinesLayer.RenderTransform = CursorLinesTransform;
-            CursorLayer.RenderTransform = CursorTransform;
-            MagnetLayer.RenderTransform = MagnetTransform;
-        }
         private void ShowCursor(object sender, MouseEventArgs e)
         {
             CursorLinesLayer.AddVisual(CursorLinesVisual);
@@ -96,13 +96,28 @@ namespace ChartModules.StandardModules
             ChartGRD.MouseMove -= CursorRedraw;
         }
 
+        public event Action CursorLeaveChart;
         private Point Pos;
+        public Point CurrentPosition;
         private CandlesModule.MagnetPoint? LastMP;
+        private bool Hide { get; set; } = false;
         public override Task Redraw()
         {
             return Task.Run(() =>
             {
                 var npos = Pos; DateTime dt = DateTime.Now; string price = "";
+                if (Hide)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        using var dcP = CursorPriceVisual.RenderOpen();
+                        using var dcT = CursorTimeVisual.RenderOpen();
+                        using var dcCH = CursorLinesVisual.RenderOpen();
+                        CursorTransform.X = npos.X;
+                        CursorTransform.Y = npos.Y;
+                    });
+                    return;
+                }
 
                 Action act = () =>
                 {
@@ -144,6 +159,8 @@ namespace ChartModules.StandardModules
                     else act.Invoke();
                 }
                 else act.Invoke();
+
+                CurrentPosition = npos;
 
                 var ft = new FormattedText
                             (
@@ -282,6 +299,7 @@ namespace ChartModules.StandardModules
         private CursorT CurrentCursor = CursorT.None;
         public void SetCursor(CursorT t)
         {
+            if (CurrentCursor == t) return;
             CurrentCursor = t;
             switch (t)
             {
@@ -311,6 +329,34 @@ namespace ChartModules.StandardModules
                         });
                     }
                     break;
+                case CursorT.Hook:
+                    {
+                        var geo = new PathGeometry(new[] { new PathFigure(new Point(4, 0),
+                            new[]
+                            {
+                                new LineSegment(new Point(8, 12), true),
+                                new LineSegment(new Point(6, 13), true),
+                                new LineSegment(new Point(5, 10), true),
+                                new LineSegment(new Point(5, 18), true),
+                                new LineSegment(new Point(3, 18), true),
+                                new LineSegment(new Point(3, 10), true),
+                                new LineSegment(new Point(2, 13), true),
+                                new LineSegment(new Point(0, 12), true)
+                            },
+                            true)
+                        }); geo.Freeze();
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            using var dc = CursorVisual.RenderOpen();
+                            dc.PushTransform(new TranslateTransform(-4,3));
+                            dc.PushTransform(new RotateTransform(-30));
+                            dc.PushTransform(new ScaleTransform(1.5, 1.5));
+
+                            dc.DrawGeometry(MarksPen.Brush, null, geo);
+                        });
+                    }
+                    break;
                 case CursorT.None:
                     {
                         Dispatcher.Invoke(() =>
@@ -321,6 +367,9 @@ namespace ChartModules.StandardModules
                     break;
             }
             if (MagnetState) MagnetAdd();
+
+            if (t == CursorT.Hook) Hide = true;
+            else { Hide = false; SetCursorLines(); }
         }
 
         private double MagnetRadius = 25;
@@ -365,6 +414,7 @@ namespace ChartModules.StandardModules
     {
         Paint,
         Standart,
+        Hook,
         None
     }
 }
