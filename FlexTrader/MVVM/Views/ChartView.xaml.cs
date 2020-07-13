@@ -407,16 +407,16 @@ namespace FlexTrader.MVVM.Views
                 BaseFontSize = (b as double?).Value; 
             });
 
-            SpaceSets.Add(new Setting(SetType.Brush, "Фон", ChartBackground, SetChartBackground, new SolidColorBrush(Color.FromRgb(30, 30, 30))));
+            SpaceSets.Add(new Setting(SetType.Brush, "Фон", () => ChartBackground, SetChartBackground, new SolidColorBrush(Color.FromRgb(30, 30, 30))));
             Setting.SetsLevel(SpaceSets, "Сетка", new Setting[] 
             {
-                new Setting(SetType.Brush, "Цвет", LinesPen.Brush, SetGridBrush, Brushes.DarkGray),
-                new Setting(SetType.DoubleSlider, "Толщина", LinesPen.Thickness * 10, SetGridThicknesses, 10d, 1d, 20d)
+                new Setting(SetType.Brush, "Цвет", () => LinesPen.Brush, SetGridBrush, Brushes.DarkGray),
+                new Setting(SetType.DoubleSlider, "Толщина", () => LinesPen.Thickness * 10, SetGridThicknesses, 10d, 1d, 20d)
             });
             Setting.SetsLevel(SpaceSets, "Текст", new Setting[]
             {
-                new Setting(SetType.Brush, "Цвет", FontBrush, SetFontBrush, Brushes.White),
-                new Setting(SetType.DoubleSlider, "Размер", BaseFontSize, SetBaseFontSize, 18d, 10d, 40d)
+                new Setting(SetType.Brush, "Цвет", () => FontBrush, SetFontBrush, Brushes.White),
+                new Setting(SetType.DoubleSlider, "Размер", () => BaseFontSize, SetBaseFontSize, 18d, 10d, 40d)
             });
         }
     }

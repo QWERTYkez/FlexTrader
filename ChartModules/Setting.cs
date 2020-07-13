@@ -27,7 +27,7 @@ namespace ChartModules
         { 
             this.Name = null;
             this.Type = Type;
-            this.Obj = null;
+            this.Get = null;
             this.Set = null;
             this.ResetObj = null;
             this.Param1 = null;
@@ -37,18 +37,18 @@ namespace ChartModules
         {
             this.Name = Name;
             this.Type = Type;
-            this.Obj = null;
+            this.Get = null;
             this.Set = null;
             this.ResetObj = null;
             this.Param1 = null;
             this.Param2 = null;
         }
-        public Setting(SetType Type, string Name, object Obj,
+        public Setting(SetType Type, string Name, Func<object> Get,
                        Action<object> Set, object ResetObj = null,  object Param1 = null, object Param2 = null)
         {
             this.Name = Name;
             this.Type = Type;
-            this.Obj = Obj;
+            this.Get = Get;
             this.Set = Set;
             this.ResetObj = ResetObj;
             this.Param1 = Param1;
@@ -64,7 +64,7 @@ namespace ChartModules
 
         public readonly string Name;
         public readonly SetType Type;
-        public readonly object Obj;
+        public readonly Func<object> Get;
         public readonly Action<object> Set;
         public readonly object ResetObj;
         public readonly object Param1;
@@ -75,6 +75,7 @@ namespace ChartModules
     {
         Brush,
         DoubleSlider,
+        DoublePicker,
         GoDown,
         GoUp
     }

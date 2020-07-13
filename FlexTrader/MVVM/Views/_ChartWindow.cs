@@ -31,8 +31,8 @@ namespace FlexTrader.MVVM.Views
         {
             this.Closing += (s, e) => SettingsWindow?.Close();
 
-            this.PreviewKeyDown += (s, e) => { e.Handled = true; KeyPressed?.Invoke(e); };
-            this.PreviewKeyUp += (s, e) => { e.Handled = true; KeyReleased?.Invoke(e); };
+            this.PreviewKeyDown += (s, e) => { KeyPressed?.Invoke(e); };
+            this.PreviewKeyUp += (s, e) => { KeyReleased?.Invoke(e); };
         }
 
         #region Обработка таскания мышью

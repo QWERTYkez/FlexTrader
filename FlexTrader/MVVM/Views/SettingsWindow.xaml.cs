@@ -46,12 +46,15 @@ namespace FlexTrader.MVVM.Views
                             case SetType.GoDown: sp = AddLevel(sp, s.Name); break;
                             case SetType.GoUp: sp = (sp.Parent as Expander).Parent as StackPanel; break;
                             case SetType.Brush:
-                                AddSetting(sp, s, (obj) => new ColorPicker(obj as SolidColorBrush, s.Set));
+                                AddSetting(sp, s, () => new ColorPicker(s.Get() as SolidColorBrush, s.Set));
                                 break;
                             case SetType.DoubleSlider:
-                                AddSetting(sp, s, (obj) => new DoubleSlider((double)obj,
+                                AddSetting(sp, s, () => new DoubleSlider((double)s.Get(),
                                     (double)s.Param1, (double)s.Param2, s.Set)); break;
-                        }
+                            case SetType.DoublePicker:
+                                AddSetting(sp, s, () => new DoublePicker((double)s.Get(),
+                                    (double)s.Param1, (double)s.Param2, s.Set)); break;
+                        } 
                     }
                 }
             }
@@ -74,7 +77,7 @@ namespace FlexTrader.MVVM.Views
             sp.Children.Add(exp);
             return nsp;
         }
-        private void AddSetting(StackPanel sp, Setting s, Func<object, dynamic> GetEl = null)
+        private void AddSetting(StackPanel sp, Setting s, Func<Control> GetEl = null)
         {
             var grd = new Grid { Margin = new Thickness(20, 2, 50, 2) };
             grd.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
@@ -92,12 +95,11 @@ namespace FlexTrader.MVVM.Views
 
             if (GetEl != null)
             {
-                dynamic el = GetEl.Invoke(s.Obj);
-                grd.Tag = el;
-                el.HorizontalAlignment = HorizontalAlignment.Right;
-                el.Width = 200;
-                Grid.SetColumn(el, 1);
-                grd.Children.Add(el);
+                var El = GetEl();
+                El.HorizontalAlignment = HorizontalAlignment.Right;
+                El.Width = 200;
+                Grid.SetColumn(El, 1);
+                grd.Children.Add(El);
 
                 if (s.ResetObj != null)
                 {
@@ -113,21 +115,20 @@ namespace FlexTrader.MVVM.Views
                     btn.Click += (st, e) =>
                     {
                         s.Set.Invoke(s.ResetObj);
-                        grd.Children.Remove(grd.Tag as UIElement);
+                        grd.Children.Remove(El);
 
-                        dynamic el = GetEl.Invoke(s.ResetObj);
-                        grd.Tag = el;
-                        el.HorizontalAlignment = HorizontalAlignment.Right;
-                        el.Width = 200;
-                        Grid.SetColumn(el, 1);
-                        grd.Children.Add(el);
+                        El = GetEl();
+                        El.HorizontalAlignment = HorizontalAlignment.Right;
+                        El.Width = 200;
+                        Grid.SetColumn(El, 1);
+                        grd.Children.Add(El);
                     };
                     Grid.SetColumn(btn, 2);
                     grd.Children.Add(btn);
                 }
                 else
                 {
-                    el.Margin = new Thickness(0, 0, 50, 0);
+                    El.Margin = new Thickness(0, 0, 50, 0);
                 }
             }
 

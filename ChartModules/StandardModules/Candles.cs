@@ -500,17 +500,17 @@ namespace ChartModules.StandardModules
 
             Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
             {
-                new Setting(SetType.Brush, "Цвет тела", this.UpBrush, SetUpBrush, Brushes.Lime),
-                new Setting(SetType.Brush, "Цвет фитиля", this.UpPen.Brush, SetUpPenBrush, Brushes.Lime)
+                new Setting(SetType.Brush, "Цвет тела", () => this.UpBrush, SetUpBrush, Brushes.Lime),
+                new Setting(SetType.Brush, "Цвет фитиля", () => this.UpPen.Brush, SetUpPenBrush, Brushes.Lime)
             });
 
             Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
             {
-                new Setting(SetType.Brush, "Цвет тела", this.DownBrush, SetDownBrush, Brushes.Red),
-                new Setting(SetType.Brush, "Цвет фитиля", this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
+                new Setting(SetType.Brush, "Цвет тела", () => this.DownBrush, SetDownBrush, Brushes.Red),
+                new Setting(SetType.Brush, "Цвет фитиля", () => this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
             });
 
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", this.DownPen.Thickness, SetThicknesses, 4d, 2d, 6d));
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 4d, 2d, 6d));
         }
     }
 

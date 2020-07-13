@@ -185,10 +185,6 @@ namespace ChartModules
                                     LastValue = NewHook.GetValue(e.GetPosition((IInputElement)Chart));
                                     NewHook.Hide(LastValue, HookVisual, HookPriceVisual, HookTimeVisual);
 
-                                    //PointVisual.Transform = null;
-                                    //using var dc = PointVisual.RenderOpen();
-                                    //dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
-                                    //dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                                     NewHookVisual.Transform = null;
                                     NewHookPriceVisual.Transform = null;
                                     NewHookTimeVisual.Transform = null;
