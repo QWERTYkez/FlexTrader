@@ -249,7 +249,7 @@ namespace ChartModules.StandardModules
         }
 
         private Brush FontBrush;
-        private Pen MarksPen;
+        public Pen MarksPen;
         private double CursorArea = 25;
         private double CursorDash = 5;
         private double CursorIndent = 2;

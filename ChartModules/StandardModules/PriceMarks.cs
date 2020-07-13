@@ -221,7 +221,7 @@ namespace ChartModules.StandardModules
             this.LineThikness = LineThikness;
             Changed = ApplyChanges;
 
-            this.TextBrush.Freeze(); this.MarkFill.Freeze(); this.LineBrush.Freeze();
+            this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
         }
         public event Action Changed;
         public void ApplyChanges() => Changed.Invoke();

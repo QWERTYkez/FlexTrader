@@ -70,7 +70,6 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid
-            x:Name="Base"
             Grid.Column="0"
             Height="50"
             Background="Black">
@@ -78,10 +77,8 @@
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Label
-                HorizontalAlignment="Center"
-                Content="Главная панель"
-                Foreground="White" />
+            <Grid x:Name="xTopPanel" />
+            <ContentPresenter x:Name="xOverlayMenu" />
             <Border
                 Grid.Row="1"
                 BorderBrush="Gray"

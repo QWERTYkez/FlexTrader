@@ -20,6 +20,7 @@ using ChartModules;
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace FlexTrader.MVVM.Views
@@ -29,6 +30,9 @@ namespace FlexTrader.MVVM.Views
         public ChartWindow()
         {
             this.Closing += (s, e) => SettingsWindow?.Close();
+
+            this.PreviewKeyDown += (s, e) => { e.Handled = true; KeyPressed?.Invoke(e); };
+            this.PreviewKeyUp += (s, e) => { e.Handled = true; KeyReleased?.Invoke(e); };
         }
 
         #region Обработка таскания мышью
@@ -70,12 +74,33 @@ namespace FlexTrader.MVVM.Views
 
         #endregion
 
+        public abstract Grid TopPanel { get; }
+        public abstract ContentPresenter OverlayMenu { get; }
+        public void SetMenu(Grid GridMenu = null)
+        {
+            OverlayMenu.Content = GridMenu;
+            if (GridMenu != null)
+            {
+                OverlayMenu.Visibility = Visibility.Visible;
+                TopPanel.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                OverlayMenu.Visibility = Visibility.Hidden;
+                TopPanel.Visibility = Visibility.Visible;
+            }
+        }
+        
+
         public abstract event Action<string> SetInstrument;
         public abstract string CurrentInstrument { get; }
 
         public abstract event Action<bool> SetMagnet;
         public abstract bool CurrentMagnetState { get; }
 
-        public abstract void ResetPB();
+        public event Action<KeyEventArgs> KeyPressed;
+        public event Action<KeyEventArgs> KeyReleased;
+
+        public abstract void ResetPB(string Name);
     }
 }

@@ -31,8 +31,8 @@ namespace ChartModules.PaintingModules
     public class LevelsModule : ChartModule, IHooksModule
     {
         private readonly MarksLayer Levels;
-        private readonly Action ResetInstrument;
-        public LevelsModule(IChart chart, PriceMarksModule PMM, Action ResetInstrument) : base(chart)
+        private readonly Action<string> ResetInstrument;
+        public LevelsModule(IChart chart, PriceMarksModule PMM, Action<string> ResetInstrument) : base(chart)
         {
             Levels = PMM.Levels;
             this.ResetInstrument = ResetInstrument;
@@ -57,7 +57,6 @@ namespace ChartModules.PaintingModules
                          (x, y) => y - Chart.PriceToHeight(z.Mark.Price),
                          (point, hv, pv, tv) =>
                          {
-
                              var c = Dispatcher.Invoke(() => { return ((SolidColorBrush)Chart.ChartBackground).Color; });
 
                              var br = new SolidColorBrush(Color.FromArgb(255,
@@ -124,6 +123,75 @@ namespace ChartModules.PaintingModules
                                  }
                              });
                          },
+                         (point, hv, pv, tv) =>
+                         {
+                             var br = Dispatcher.Invoke(() => { return Chart.ChartBackground; });
+                             var c = ((SolidColorBrush)br).Color;
+
+                             var br2 = new SolidColorBrush(Color.FromArgb(255,
+                                 (byte)(c.R - 15),
+                                 (byte)(c.G - 15),
+                                 (byte)(c.B - 15)));
+
+                             var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
+                             var width = Chart.ChWidth + 2;
+                             var height = point.Y;
+
+                             var price = Chart.HeightToPrice(height);
+                             var ft = new FormattedText
+                                  (
+                                      Chart.HeightToPrice(height).ToString(Chart.TickPriceFormat),
+                                      CultureInfo.CurrentCulture,
+                                      FlowDirection.LeftToRight,
+                                      Chart.FontNumeric,
+                                      Chart.BaseFontSize,
+                                      br,
+                                      VisualTreeHelper.GetDpi(pv).PixelsPerDip
+                                  );
+
+                             var linpen = new Pen(br2, z.Mark.LineThikness + 1); linpen.Freeze();
+                             var geopen = new Pen(br2, 3); geopen.Freeze();
+
+                             var linps = new List<Point>();
+                             if (z.Mark.LineIndent == 0)
+                             {
+                                 linps.Add(new Point(0, height));
+                                 linps.Add(new Point(width, height));
+                             }
+                             else
+                             {
+                                 double s = 0;
+                                 while (s < width)
+                                 {
+                                     linps.Add(new Point(s, height)); s += z.Mark.LineDash;
+                                     linps.Add(new Point(s, height)); s += z.Mark.LineIndent;
+                                 }
+                             }
+
+                             var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
+                                            new[]
+                                            {
+                                                new LineSegment(new Point(Chart.PriceShift, height + ft.Height / 2), true),
+                                                new LineSegment(new Point(Chart.PriceLineWidth - 2, height + ft.Height / 2), true),
+                                                new LineSegment(new Point(Chart.PriceLineWidth - 2, height - ft.Height / 2), true),
+                                                new LineSegment(new Point(Chart.PriceShift, height - ft.Height / 2), true)
+                                            },
+                                            true)}); geo.Freeze();
+
+                             Dispatcher.Invoke(() =>
+                             {
+                                 using (var dc = hv.RenderOpen())
+                                 {
+                                     for (int i = 0; i < linps.Count; i += 2)
+                                         dc.DrawLine(linpen, linps[i], linps[i + 1]);
+                                 }
+                                 using (var dc = pv.RenderOpen())
+                                 {
+                                     dc.DrawGeometry(br2, geopen, geo);
+                                     dc.DrawText(ft, new Point(Chart.PriceShift + 1, height - ft.Height / 2));
+                                 }
+                             });
+                         },
                          (point, vec, hv, pv, tv) =>
                          {
                              hv.Transform = new TranslateTransform(0, vec.Y);
@@ -152,33 +220,38 @@ namespace ChartModules.PaintingModules
 
                              Dispatcher.Invoke(() =>
                              {
-                                 using (var dc = pv.RenderOpen())
-                                 {
-                                     dc.DrawGeometry(z.Mark.MarkFill, geopen, geo);
-                                     dc.DrawText(ft, new Point(Chart.PriceShift + 1, height - ft.Height / 2));
-                                 }
+                                 using var dc = pv.RenderOpen();
+                                 dc.DrawGeometry(z.Mark.MarkFill, geopen, geo);
+                                 dc.DrawText(ft, new Point(Chart.PriceShift + 1, height - ft.Height / 2));
                              });
                          },
-                         () => new Point(0, Chart.PriceToHeight(z.Mark.Price)),
+                         P => new Point(P.X, Chart.PriceToHeight(z.Mark.Price)),
                          Point => 
                          {
                              var m = z.Mark;
                              m.Price = Chart.HeightToPrice(Point.Y);
                              m.ApplyChanges();
                          },
-                         z.Mark.LineThikness / 2 + 2
+                         z.Mark.LineThikness / 2 + 2,
+                         () => null
                      )
                                ).ToList();
         }
         public List<Hook> Hooks { get; private set; } = new List<Hook>();
 
-        public void PaintingLevel(MouseButtonEventArgs e)
+        public void PaintingLevel(MouseEventArgs e)
         {
-            Levels.AddMark(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y), 
+            AddLevel(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y), 
                 Brushes.White, Brushes.Black, Brushes.Lime, 3);
 
-            ResetInstrument.Invoke();
+            if (!Chart.Controlled) 
+                ResetInstrument.Invoke(null);
+            else 
+                Chart.ControlUsed = true;
             ResetPrices();
         }
+        public void AddLevel(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill,
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0) => 
+            Levels.AddMark(Price, TextBrush, MarkFill, LineBrush, LineThikness, LineDash, LineIndent);
     }
 }

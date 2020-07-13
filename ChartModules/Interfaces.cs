@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -61,7 +62,10 @@ namespace ChartModules
         event Action HorizontalСhanges;
         event Action<Point> CursorNewPosition;
         event Action CursorLeave;
+        bool Controlled { get; }
         Point CurrentCursorPosition { get; }
+        bool ControlUsed { get; set; }
+        List<IHooksModule> HooksModules { get; }
     }
 
     public interface IDrawingCanvas
@@ -86,6 +90,8 @@ namespace ChartModules
         public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
+
+        public void SetMenu(Grid GridMenu);
     }
 
     public interface IHooksModule

@@ -23,6 +23,7 @@ using FlexTrader.MVVM.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,7 +59,8 @@ namespace FlexTrader.MVVM.Views
             ChartGRD.MouseLeave += (s, e) => CursorLeave?.Invoke();
             ChartGRD.MouseMove += (s, e) => CursorNewPosition?.Invoke(e.GetPosition(this));
 
-            ChartGRD.PreviewMouseDown += (s, e) => { e.Handled = true; Instrument?.Invoke(e); };
+            mainView.KeyPressed += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) GetControl(); };
+            mainView.KeyReleased += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) LoseControl(); };
 
             PriceMarksModule = new PriceMarksModule(this, MarksLinesLayer, MarksLayer);
 
@@ -75,16 +77,19 @@ namespace FlexTrader.MVVM.Views
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
 
             HooksModule = new HooksModule(this, mainView, HooksLayer, HookPriceLayer, HookTimeLayer,
-                new List<IHooksModule>
-                {
-                    LevelsModule
-                },
+                () => CursorModule.MarksPen,
                 act => { Instrument = act; },
                 new List<FrameworkElement>
                 {
                     SubLayers,
                     MarksLayer
                 });
+            ChartGRD.PreviewMouseDown += (s, e) =>
+            {
+                e.Handled = true;
+                HooksModule.RemoveHook?.Invoke();
+                Instrument?.Invoke(e);
+            };
 
             CandlesModule.WhellScalled += () => CursorModule.Redraw();
 
@@ -96,6 +101,15 @@ namespace FlexTrader.MVVM.Views
 
             SetInsrument(mainView.CurrentInstrument);
             SetMagnetState(mainView.CurrentMagnetState);
+
+
+
+
+            /////////
+            LevelsModule.AddLevel(208.99, Brushes.White, (SolidColorBrush)ChartBackground, Brushes.Yellow, 5, 5, 2);
+            LevelsModule.AddLevel(206.95, (SolidColorBrush)ChartBackground, Brushes.Azure, Brushes.Azure, 4, 6, 3);
+            LevelsModule.AddLevel(204.90, Brushes.Lime, (SolidColorBrush)ChartBackground, Brushes.Lime, 3, 7, 4);
+            //////////
         }
 
         public void Destroy()
@@ -144,59 +158,102 @@ namespace FlexTrader.MVVM.Views
             });
         }
 
+        #region Instrument
         private Action<MouseButtonEventArgs> Instrument;
         private bool MagnetInstrument = false;
-        private readonly Action ResetInstrument;
+        private readonly Action<string> ResetInstrument;
+        private bool Interaction = false;
+        private bool Painting = false;
         private void SetInsrument(string InstrumentName)
         {
-            Task.Run(() => 
+            Task.Run(() =>
             {
                 CursorT t = CursorT.None;
                 switch (InstrumentName)
                 {
-                    case "PaintingLevels": 
-                        Instrument = LevelsModule.PaintingLevel; 
+                    case "PaintingLevels":
+                        Instrument = LevelsModule.PaintingLevel; Painting = true;
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
-                    case "PaintingTrends": 
-                        Instrument = TrendsModule.PaintingTrend;
+                    case "PaintingTrends":
+                        Instrument = TrendsModule.PaintingTrend; Painting = true;
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "Interacion":
-                        Instrument = null;
+                        Instrument = null; Painting = false;
                         MagnetInstrument = true; t = CursorT.Hook; break;
 
-                    default: 
-                        Instrument = CandlesModule.MovingChart;
+                    default:
+                        Instrument = CandlesModule.MovingChart; Painting = false;
                         MagnetInstrument = false; t = CursorT.Standart; break;
                 }
-                if(InstrumentName == "Interacion") ChartGRD.MouseMove += HooksModule.HookElement;
-                else ChartGRD.MouseMove -= HooksModule.HookElement;
+                if (InstrumentName == "Interacion")
+                {
+                    ChartGRD.MouseMove += HooksModule.HookElement;
+                    Interaction = true;
+                }
+                else
+                {
+                    ChartGRD.MouseMove -= HooksModule.HookElement;
+                    Interaction = false;
+                }
 
                 CursorModule.SetCursor(t);
                 SetMagnetState(CurrentMagnetState);
             });
         }
-        private bool CurrentMagnetState;
-        private void SetMagnetState(bool st)
+        #endregion
+        #region Control
+        public bool Controlled { get; private set; } = false;
+        public bool ControlUsed { get; set; }
+        private void GetControl()
         {
-            Task.Run(() => 
+            if (!Controlled)
             {
-                CurrentMagnetState = st;
-                if (MagnetInstrument && CurrentMagnetState)
+                Task.Run(() =>
                 {
-                    CursorModule.MagnetAdd();
-                    CandlesModule.MagnetStatus = true;
-                    CandlesModule.UpdateMagnetData();
-                }
-                else
-                {
-                    CursorModule.MagnetRemove();
-                    CandlesModule.MagnetStatus = false;
-                    CandlesModule.ResetMagnetData();
-                }
+                    if (Instrument == CandlesModule.MovingChart)
+                    {
+                        ResetInstrument.Invoke("Interacion");
+                        Controlled = true;
+                    }
+                    if (Painting)
+                    {
+                        Controlled = true;
+                        ControlUsed = false;
+                    }
+                });
+            }
+            
+        }
+        private void LoseControl()
+        {
+            if (Controlled) Task.Run(() =>
+            {
+                if (Interaction || ControlUsed) ResetInstrument.Invoke(null);
+                Controlled = false;
             });
         }
+        #endregion
+        #region Magnet
+        private bool CurrentMagnetState;
+        private void SetMagnetState(bool st) => Task.Run(() =>
+        {
+            CurrentMagnetState = st;
+            if (MagnetInstrument && CurrentMagnetState)
+            {
+                CursorModule.MagnetAdd();
+                CandlesModule.MagnetStatus = true;
+                CandlesModule.UpdateMagnetData();
+            }
+            else
+            {
+                CursorModule.MagnetRemove();
+                CandlesModule.MagnetStatus = false;
+                CandlesModule.ResetMagnetData();
+            }
+        });
+        #endregion
 
         private int ChangesCounter = 0;
         private void ChartGRD_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -220,6 +277,7 @@ namespace FlexTrader.MVVM.Views
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
 
+        public List<IHooksModule> HooksModules { get; } = new List<IHooksModule>();
         public List<CandlesModule.MagnetPoint> MagnetPoints { get => CandlesModule.MagnetPoints; }
         public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }
         public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }

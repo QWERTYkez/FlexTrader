@@ -30,6 +30,7 @@ namespace ChartModules
         public ChartModule(IChart chart)
         {
             Chart = chart;
+            if (this is IHooksModule) Chart.HooksModules.Add((IHooksModule)this);
             Dispatcher = Chart.Dispatcher;
         }
         public abstract Task Redraw();

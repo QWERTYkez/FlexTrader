@@ -111,13 +111,20 @@ namespace FlexTrader.MVVM.Views
             Palette.Tag = btn;
             SetInstrument?.Invoke((string)btn.Tag);
         }
-        public override void ResetPB()
+        public override void ResetPB(string Name)
         {
-            if (Palette.Tag is PaletteButton lbtn) lbtn.IsActive = false;
-            var btn = PaletteButtonNormal;
-            btn.IsActive = true;
-            Palette.Tag = btn;
-            SetInstrument?.Invoke((string)btn.Tag);
+            Dispatcher.Invoke(() => 
+            {
+                if (Palette.Tag is PaletteButton lbtn) lbtn.IsActive = false;
+                var btn = Name switch
+                {
+                    "Interacion" => PaletteButtonInteracion,
+                    _ => PaletteButtonNormal,
+                };
+                btn.IsActive = true;
+                Palette.Tag = btn;
+                SetInstrument?.Invoke((string)btn.Tag);
+            });
         }
         private void PBCmenu(object sender, RoutedEventArgs e)
         {
@@ -131,6 +138,9 @@ namespace FlexTrader.MVVM.Views
 
         public override event Action<bool> SetMagnet;
         public override bool CurrentMagnetState => MagnetBtn.IsActive;
+
+        public override Grid TopPanel => this.xTopPanel;
+        public override ContentPresenter OverlayMenu => this.xOverlayMenu;
 
         private void SetMagnetState(object sender, RoutedEventArgs e)
         {
