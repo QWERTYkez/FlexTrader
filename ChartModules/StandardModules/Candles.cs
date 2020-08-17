@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -144,7 +145,7 @@ namespace ChartModules.StandardModules
             }
             await PriceLineModule.Redraw();
         }
-        public void HorizontalReset()
+        public void HorizontalReset(bool? HeightChanged = null)
         {
             if (StartTime.HasValue && DeltaTime.HasValue)
             {
@@ -164,7 +165,11 @@ namespace ChartModules.StandardModules
                 max += delta * 0.05;
                 var nMin = mmm - delta * 0.05;
                 var nDelta = max - Min;
-                if (Min == nMin && Delta == nDelta) return;
+                if (Min == nMin && Delta == nDelta)
+                {
+                    if (HeightChanged == null) return;
+                    else if (!HeightChanged.Value) return;
+                }
                 Min = nMin;
                 Delta = nDelta;
 

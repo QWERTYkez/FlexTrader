@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -60,7 +61,7 @@ namespace ChartModules.StandardModules
                 if (Layer.Marks != null)
                 {
                     var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
-                    var width = Chart.ChWidth + 2;
+                    //var width = Chart.ChWidth + 2;
                     foreach (var mark in Layer.Marks)
                     {
                         if (mark.Price > Chart.PricesMin * Chart.TickSize && mark.Price < pricesMax)
@@ -85,12 +86,12 @@ namespace ChartModules.StandardModules
                             if (mark.LineIndent == 0)
                             {
                                 linps.Add(new Point(0, height));
-                                linps.Add(new Point(width, height));
+                                linps.Add(new Point(4096, height));
                             }
                             else
                             {
                                 double s = 0;
-                                while (s < width)
+                                while (s < 4096)
                                 {
                                     linps.Add(new Point(s, height)); s += mark.LineDash;
                                     linps.Add(new Point(s, height)); s += mark.LineIndent;
@@ -232,7 +233,12 @@ namespace ChartModules.StandardModules
             return new List<Setting>
             {
                 new Setting(SetType.DoublePicker, "Price", () => this.Price, pr => { this.Price = (double)pr; ApplyChangesToAll((double)pr); }),
-                new Setting("Line Brush", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); })
+                new Setting("Line Brush", () => this.LineBrush, br => 
+                {
+                    Debug.WriteLine("Line Brush");
+                    this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
+                new Setting("Text Brush", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
+                new Setting("Mark Fill", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); })
             };
         }
 

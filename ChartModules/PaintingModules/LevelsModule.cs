@@ -203,39 +203,6 @@ namespace ChartModules.PaintingModules
                                  }
                              });
                          },
-                         (point, vec, hv, pv, tv) =>
-                         {
-                             hv.Transform = new TranslateTransform(0, vec.Y);
-
-                             var height = point.Y + vec.Y;
-                             var ft = new FormattedText
-                              (
-                                  Chart.HeightToPrice(height).ToString(Chart.TickPriceFormat),
-                                  CultureInfo.CurrentCulture,
-                                  FlowDirection.LeftToRight,
-                                  Chart.FontNumeric,
-                                  Chart.BaseFontSize,
-                                  z.Mark.TextBrush,
-                                  VisualTreeHelper.GetDpi(pv).PixelsPerDip
-                              );
-                             var geopen = new Pen(z.Mark.LineBrush, 2); geopen.Freeze();
-                             var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
-                                            new[]
-                                            {
-                                                new LineSegment(new Point(Chart.PriceShift, height + ft.Height / 2), true),
-                                                new LineSegment(new Point(Chart.PriceLineWidth - 2, height + ft.Height / 2), true),
-                                                new LineSegment(new Point(Chart.PriceLineWidth - 2, height - ft.Height / 2), true),
-                                                new LineSegment(new Point(Chart.PriceShift, height - ft.Height / 2), true)
-                                            },
-                                            true)}); geo.Freeze();
-
-                             Dispatcher.Invoke(() =>
-                             {
-                                 using var dc = pv.RenderOpen();
-                                 dc.DrawGeometry(z.Mark.MarkFill, geopen, geo);
-                                 dc.DrawText(ft, new Point(Chart.PriceShift + 1, height - ft.Height / 2));
-                             });
-                         },
                          Point =>
                          {
                              var m = z.Mark;

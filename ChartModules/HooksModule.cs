@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -44,23 +45,23 @@ namespace ChartModules
 
             this.SetMenuAct = ChartWindow.SetMenu;
 
-            HooksLayer.AddVisual(HookVisual);
-            HooksLayer.AddVisual(NewHookVisual);
+            HooksLayer.AddVisual(ShadowVisual);
+            HooksLayer.AddVisual(OverVisual);
             HooksLayer.AddVisual(PointVisual);
-            HookPriceLayer.AddVisual(HookPriceVisual);
-            HookPriceLayer.AddVisual(NewHookPriceVisual);
-            HookTimeLayer.AddVisual(NewHookTimeVisual);
-            HookTimeLayer.AddVisual(HookTimeVisual);
+            HookPriceLayer.AddVisual(ShadowPriceVisual);
+            HookPriceLayer.AddVisual(OverPriceVisual);
+            HookTimeLayer.AddVisual(OverTimeVisual);
+            HookTimeLayer.AddVisual(ShadowTimeVisual);
         }
         private protected override void Destroy()
         {
-            HooksLayer.DeleteVisual(HookVisual);
-            HooksLayer.DeleteVisual(NewHookVisual);
+            HooksLayer.DeleteVisual(ShadowVisual);
+            HooksLayer.DeleteVisual(OverVisual);
             HooksLayer.DeleteVisual(PointVisual);
-            HookPriceLayer.DeleteVisual(HookPriceVisual);
-            HookPriceLayer.DeleteVisual(NewHookPriceVisual);
-            HookTimeLayer.DeleteVisual(NewHookTimeVisual);
-            HookTimeLayer.DeleteVisual(HookTimeVisual);
+            HookPriceLayer.DeleteVisual(ShadowPriceVisual);
+            HookPriceLayer.DeleteVisual(OverPriceVisual);
+            HookTimeLayer.DeleteVisual(OverTimeVisual);
+            HookTimeLayer.DeleteVisual(ShadowTimeVisual);
         }
         private protected override void SetsDefinition() { }
         public override Task Redraw() => null;
@@ -73,13 +74,13 @@ namespace ChartModules
         private readonly Action<string, List<Setting>> SetMenuAct;
         public Action RemoveHook;
         
-        private readonly DrawingVisual HookVisual = new DrawingVisual();
-        private readonly DrawingVisual HookPriceVisual = new DrawingVisual();
-        private readonly DrawingVisual HookTimeVisual = new DrawingVisual();
+        private readonly DrawingVisual ShadowVisual = new DrawingVisual();
+        private readonly DrawingVisual ShadowPriceVisual = new DrawingVisual();
+        private readonly DrawingVisual ShadowTimeVisual = new DrawingVisual();
         private readonly DrawingVisual PointVisual = new DrawingVisual();
-        private readonly DrawingVisual NewHookVisual = new DrawingVisual();
-        private readonly DrawingVisual NewHookPriceVisual = new DrawingVisual();
-        private readonly DrawingVisual NewHookTimeVisual = new DrawingVisual();
+        private readonly DrawingVisual OverVisual = new DrawingVisual();
+        private readonly DrawingVisual OverPriceVisual = new DrawingVisual();
+        private readonly DrawingVisual OverTimeVisual = new DrawingVisual();
         private Hook CurrentHook;
         private Hook ScanHooks(List<Hook> Hooks, Point P)
         {
@@ -125,9 +126,9 @@ namespace ChartModules
 
                 if (NewHook != CurrentHook)
                 {
-                    HookVisual.RenderOpen().Close();
-                    HookPriceVisual.RenderOpen().Close();
-                    HookTimeVisual.RenderOpen().Close();
+                    ShadowVisual.RenderOpen().Close();
+                    ShadowPriceVisual.RenderOpen().Close();
+                    ShadowTimeVisual.RenderOpen().Close();
 
                     NewHook.ResetElement += ce =>
                     {
@@ -146,21 +147,15 @@ namespace ChartModules
                                     default: throw new Exception();
                                 }
 
-
-                                HookVisual.RenderOpen().Close();
-                                HookPriceVisual.RenderOpen().Close();
-                                HookTimeVisual.RenderOpen().Close();
+                                ShadowVisual.RenderOpen().Close();
+                                ShadowPriceVisual.RenderOpen().Close();
+                                ShadowTimeVisual.RenderOpen().Close();
 
                                 LastValue = NewHook.GetHookPoint(P);
                                 NewValue = LastValue;
                                 CurrentHook = NewHook;
-
-                                NewHook.DrawOver(LastValue, NewHookVisual, NewHookPriceVisual, NewHookTimeVisual);
-
-                                using var dc = PointVisual.RenderOpen();
-                                dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
-                                dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                             }
+                            NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
                         });
                     };
 
@@ -168,7 +163,7 @@ namespace ChartModules
                     NewValue = LastValue;
                     CurrentHook = NewHook;
                     
-                    NewHook.DrawOver(LastValue, NewHookVisual, NewHookPriceVisual, NewHookTimeVisual);
+                    NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
                     
                     SetInstrument.Invoke(e =>
                     {
@@ -176,7 +171,7 @@ namespace ChartModules
                         {
                             LastValue = NewHook.GetHookPoint(e.GetPosition((IInputElement)Chart));
                             Manipulating = true;
-                            NewHook.DrawShadow(LastValue, HookVisual, HookPriceVisual, HookTimeVisual);
+                            NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
                             foreach (var l in OtherLayers)
                                 l.Visibility = Visibility.Visible;
                             PointVisual.Transform = null;
@@ -192,7 +187,7 @@ namespace ChartModules
                                 if (vec != null)
                                 {
                                     NewValue = LastValue + vec.Value;
-                                    NewHook.Manipulating(LastValue, vec.Value, NewHookVisual, NewHookPriceVisual, NewHookTimeVisual);
+                                    NewHook.DrawOver(NewValue, OverVisual, OverPriceVisual, OverTimeVisual);
                                     PointVisual.Transform = new TranslateTransform(vec.Value.X, vec.Value.Y);
                                 }
                                 else
@@ -202,12 +197,12 @@ namespace ChartModules
                                     NewHook.AcceptNewCoordinates(NewValue);
 
                                     LastValue = NewHook.GetHookPoint(e.GetPosition((IInputElement)Chart));
-                                    NewHook.DrawShadow(LastValue, HookVisual, HookPriceVisual, HookTimeVisual);
+                                    NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
-                                    NewHookVisual.Transform = null;
-                                    NewHookPriceVisual.Transform = null;
-                                    NewHookTimeVisual.Transform = null;
-                                    NewHook.DrawOver(LastValue, NewHookVisual, NewHookPriceVisual, NewHookTimeVisual);
+                                    OverVisual.Transform = null;
+                                    OverPriceVisual.Transform = null;
+                                    OverTimeVisual.Transform = null;
+                                    NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
                                 }
                             });
                     });
@@ -229,12 +224,12 @@ namespace ChartModules
                 RemoveHook = null;
                 
                 SetMenuAct(null, null);
-                HookVisual.RenderOpen().Close();
-                HookPriceVisual.RenderOpen().Close();
-                HookTimeVisual.RenderOpen().Close();
-                NewHookVisual.RenderOpen().Close();
-                NewHookPriceVisual.RenderOpen().Close();
-                NewHookTimeVisual.RenderOpen().Close();
+                ShadowVisual.RenderOpen().Close();
+                ShadowPriceVisual.RenderOpen().Close();
+                ShadowTimeVisual.RenderOpen().Close();
+                OverVisual.RenderOpen().Close();
+                OverPriceVisual.RenderOpen().Close();
+                OverTimeVisual.RenderOpen().Close();
                 PointVisual.RenderOpen().Close();
 
                 RestoreChart();
@@ -273,7 +268,6 @@ namespace ChartModules
             Func<Point, Point> GetHookPoint,
             Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> DrawCopy,
             Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> DrawShadow,
-            Action<Point, Vector, DrawingVisual, DrawingVisual, DrawingVisual> Manipulate,
             Action<Point> AcceptChanges,
             List<Hook> SubHooks = null)
         {
@@ -284,7 +278,6 @@ namespace ChartModules
             ActionDrawOver = DrawCopy;
             this.SetsName = Element.SetsName;
             this.SubHooks = SubHooks;
-            this.Manipulate = Manipulate;
             this.MagnetRadius = Element.GetMagnetRadius;
             this.AcceptChanges = AcceptChanges;
 
@@ -305,16 +298,14 @@ namespace ChartModules
         private readonly Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawShadow;
 
         public double GetMagnetRadius() => MagnetRadius();
-        public void Manipulating(Point LastPosition, Vector ChangesVector, DrawingVisual HookVisual, DrawingVisual HookPriceVisual, DrawingVisual HookTimeVisual) => 
-            Manipulate.Invoke(LastPosition, ChangesVector, HookVisual, HookPriceVisual, HookTimeVisual);
         public void AcceptNewCoordinates(Point NewCoordinates) => AcceptChanges.Invoke(NewCoordinates);
         public Point GetCurrentPosition(Point CursorPos) => GetVal.Invoke(CursorPos);
         public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY.Invoke(CursorPoint.X, CursorPoint.Y));
         public Point GetHookPoint(Point P) => GetVal.Invoke(P);
-        public void DrawOver(Point point, DrawingVisual HookVisual, DrawingVisual HookPriceVisual, DrawingVisual HookTimeVisual) =>
-            Task.Run(() => ActionDrawOver.Invoke(point, HookVisual, HookPriceVisual, HookTimeVisual));
-        public void DrawShadow(Point point, DrawingVisual HookVisual, DrawingVisual HookPriceVisual, DrawingVisual HookTimeVisual) =>
-            Task.Run(() => ActionDrawShadow.Invoke(point, HookVisual, HookPriceVisual, HookTimeVisual));
+        public void DrawOver(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
+            Task.Run(() => ActionDrawOver.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual));
+        public void DrawShadow(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
+            Task.Run(() => ActionDrawShadow.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual));
     }
     public abstract class ChangingElement
     {

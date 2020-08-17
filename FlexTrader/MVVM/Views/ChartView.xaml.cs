@@ -266,9 +266,9 @@ namespace FlexTrader.MVVM.Views
                 ChWidth = ChartGRD.ActualWidth;
                 ChangesCounter += 1;
                 var x = ChangesCounter;
-                Thread.Sleep(100);
+                Thread.Sleep(50);
                 if (x != ChangesCounter) return;
-                CandlesModule.HorizontalReset();
+                CandlesModule.HorizontalReset(e.HeightChanged);
                 if (CurrentMagnetState) CandlesModule.ResetMagnetData();
             });
         }
