@@ -357,6 +357,35 @@
         </Setter>
     </Style>
 
+    <Style TargetType="{x:Type local:CheckMark}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:CheckMark}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Viewbox Stretch="Uniform">
+                            <Path
+                                Width="64"
+                                Height="80"
+                                Stroke="{TemplateBinding Foreground}"
+                                StrokeThickness="7">
+                                <Path.Data>
+                                    <GeometryGroup>
+                                        <GeometryGroup.Children>
+                                            <LineGeometry StartPoint="2, 30" EndPoint="23, 80" />
+                                            <LineGeometry StartPoint="62, 0" EndPoint="21, 80" />
+                                        </GeometryGroup.Children>
+                                    </GeometryGroup>
+                                </Path.Data>
+                            </Path>
+                        </Viewbox>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="{x:Type local:PaintingTrend}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="Black" />

@@ -17,7 +17,6 @@
 */
 
 using System;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -28,6 +27,7 @@ namespace FlexTrader.MVVM.Resources
     public class Gear : UserControl { }
     public class Reset : UserControl { }
     public class Magnet : UserControl { }
+    public class CheckMark : UserControl { }
 
     public class PaintingLevel : UserControl, ICloneable
     {

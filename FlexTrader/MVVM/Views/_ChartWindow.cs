@@ -17,11 +17,13 @@
 */
 
 using ChartModules;
+using FlexTrader.MVVM.Resources;
 using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Views
 {
@@ -33,6 +35,8 @@ namespace FlexTrader.MVVM.Views
 
             this.PreviewKeyDown += (s, e) => { KeyPressed?.Invoke(e); };
             this.PreviewKeyUp += (s, e) => { KeyReleased?.Invoke(e); };
+
+            
         }
 
         #region Обработка таскания мышью
@@ -74,15 +78,79 @@ namespace FlexTrader.MVVM.Views
 
         #endregion
 
-        public abstract Grid TopPanel { get; }
-        public abstract ContentPresenter OverlayMenu { get; }
-        public void SetMenu(Grid GridMenu = null)
+        public abstract ScrollViewer TopPanel { get; }
+        public abstract ScrollViewer OverlayMenu { get; }
+        public void SetMenu(string SetsName, List<Setting> Sets)
         {
-            OverlayMenu.Content = GridMenu;
-            if (GridMenu != null)
+            if (Sets != null)
             {
                 OverlayMenu.Visibility = Visibility.Visible;
                 TopPanel.Visibility = Visibility.Hidden;
+
+                var WP = new WrapPanel { Margin = new Thickness(5), Height = 42 };
+                {
+                    WP.Children.Add(new Viewbox
+                    {
+                        Height = 40,
+                        Width = 75,
+                        Margin = new Thickness(2.5, 0, 2.5, 0),
+
+                        Child = new Label
+                        {
+                            VerticalContentAlignment = VerticalAlignment.Center,
+                            Content = SetsName,
+
+                            FontFamily = new FontFamily("Consolas"),
+                            Foreground = Brushes.White,
+                            FontSize = 18
+                        }
+                    });
+
+                    var x = new Label
+                    {
+                        VerticalContentAlignment = VerticalAlignment.Center,
+                        Height = 40,
+                        Margin = new Thickness(2.5, 0, 2.5, 0),
+                        Content = SetsName,
+
+                        FontFamily = new FontFamily("Consolas"),
+                        Foreground = Brushes.White,
+                        FontSize = 18
+                    };
+
+                    foreach (var s in Sets)
+                    {
+                        FrameworkElement fe = null;
+                        switch (s.Type)
+                        {
+                            case SetType.Brush:
+                                WP.Children.Add(fe = new ColorPicker(s.Get() as SolidColorBrush, s.Set)
+                                {
+                                    Width = 40,
+                                    CornerRadius = 10
+                                });
+                                break;
+                            case SetType.DoublePicker:
+                                WP.Children.Add(fe = new Sliding
+                                {
+                                    Background = Brushes.Teal,
+                                    Foreground = Brushes.White,
+                                    Title = s.Name,
+                                    ContentWidth = 100,
+                                    Content = new DoublePicker((double)s.Get(), s.Set, (double?)s.Param1, (double?)s.Param2)
+                                    {
+                                        Background = Brushes.Black, 
+                                        Foreground = Brushes.White, 
+                                        FontSize = 16
+                                    }
+                                });
+                                break;
+                        }
+                        fe.Height = 40;
+                        fe.Margin = new Thickness(2.5, 0, 2.5, 0);
+                    }
+                }
+                OverlayMenu.Content = WP;
             }
             else
             {
@@ -90,7 +158,6 @@ namespace FlexTrader.MVVM.Views
                 TopPanel.Visibility = Visibility.Visible;
             }
         }
-        
 
         public abstract event Action<string> SetInstrument;
         public abstract string CurrentInstrument { get; }

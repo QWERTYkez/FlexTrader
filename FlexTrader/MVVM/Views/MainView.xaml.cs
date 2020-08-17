@@ -18,6 +18,7 @@
 
 using FlexTrader.MVVM.Resources;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -139,8 +140,8 @@ namespace FlexTrader.MVVM.Views
         public override event Action<bool> SetMagnet;
         public override bool CurrentMagnetState => MagnetBtn.IsActive;
 
-        public override Grid TopPanel => this.xTopPanel;
-        public override ContentPresenter OverlayMenu => this.xOverlayMenu;
+        public override ScrollViewer TopPanel => this.xTopPanel;
+        public override ScrollViewer OverlayMenu => this.xOverlayMenu;
 
         private void SetMagnetState(object sender, RoutedEventArgs e)
         {
@@ -159,6 +160,21 @@ namespace FlexTrader.MVVM.Views
             {
                 Palette.Visibility = Visibility.Visible;
                 LeftArrow.ArrowDirection = Direction.Left;
+            }
+        }
+
+        private void ScrollingBar(object sender, MouseWheelEventArgs e)
+        {
+            var sv = sender as ScrollViewer;
+            if (e.Delta < 0)
+            {
+                sv.LineRight();
+                sv.LineRight();
+            }
+            else
+            {
+                sv.LineLeft();
+                sv.LineLeft();
             }
         }
     }

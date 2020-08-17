@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -91,7 +90,7 @@ namespace ChartModules
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
 
-        public void SetMenu(Grid GridMenu);
+        public void SetMenu(string SetsName, List<Setting> Sets);
     }
 
     public interface IHooksModule

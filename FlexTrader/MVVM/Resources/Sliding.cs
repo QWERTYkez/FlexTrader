@@ -16,26 +16,31 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Resources
 {
-    public partial class DoubleSlider : UserControl
+    public class Sliding : UserControl 
     {
-        public event Action<double> ValueChanged;
-        public DoubleSlider(double val, double min, double max, Action<object> set)
+        public static readonly DependencyProperty TitleProperty;
+        public static readonly DependencyProperty ContentWidthProperty;
+
+        public double ContentWidth
         {
-            InitializeComponent();
+            get { return (double)GetValue(ContentWidthProperty); }
+            set { SetValue(ContentWidthProperty, value + 10); }
+        }
+        public string Title
+        {
+            get { return (string)GetValue(TitleProperty); }
+            set { SetValue(TitleProperty, value); }
+        }
 
-            if (set != null) ValueChanged += v => set.Invoke(v);
-
-            slider.Minimum = min;
-            slider.Maximum = max;
-            slider.Value = val;
-
-            slider.ValueChanged += (s, e) => Task.Run(() => ValueChanged.Invoke(e.NewValue));
+        static Sliding()
+        {
+            TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(Sliding));
+            ContentWidthProperty = DependencyProperty.Register("ContentWidth", typeof(double), typeof(Sliding));
         }
     }
 }

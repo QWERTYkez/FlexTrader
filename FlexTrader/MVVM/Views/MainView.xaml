@@ -63,22 +63,81 @@
             <Setter Property="Foreground" Value="White" />
             <Setter Property="Grid.Column" Value="2" />
         </Style>
+        <SolidColorBrush x:Key="PaletteBrush" Color="#FF142B30" />
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle
+                            Margin="2"
+                            SnapsToDevicePixels="true"
+                            Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                            StrokeDashArray="1 2"
+                            StrokeThickness="1" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="LabelStyle1" TargetType="{x:Type Label}">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Label}">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            SnapsToDevicePixels="true">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid
-            Grid.Column="0"
-            Height="50"
-            Background="Black">
+        <Grid Grid.Column="0" Background="{StaticResource PaletteBrush}">
             <Grid.RowDefinitions>
-                <RowDefinition />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Grid x:Name="xTopPanel" />
-            <ContentPresenter x:Name="xOverlayMenu" />
+            <ScrollViewer
+                x:Name="xTopPanel"
+                CanContentScroll="True"
+                HorizontalScrollBarVisibility="Auto"
+                PreviewMouseWheel="ScrollingBar"
+                VerticalScrollBarVisibility="Disabled">
+                <WrapPanel Height="42" Margin="5">
+                    <res:Sliding Title="Price" Background="Lime">
+                        <TextBox Width="40" />
+                    </res:Sliding>
+                </WrapPanel>
+            </ScrollViewer>
+            <ScrollViewer
+                x:Name="xOverlayMenu"
+                CanContentScroll="True"
+                HorizontalScrollBarVisibility="Auto"
+                PreviewMouseWheel="ScrollingBar"
+                VerticalScrollBarVisibility="Disabled"
+                Visibility="Hidden" />
             <Border
                 Grid.Row="1"
                 BorderBrush="Gray"
@@ -92,7 +151,7 @@
             <Grid
                 x:Name="Palette"
                 Grid.Column="0"
-                Background="DimGray">
+                Background="{StaticResource PaletteBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition Width="Auto" />

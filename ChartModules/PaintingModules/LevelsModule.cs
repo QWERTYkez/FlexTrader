@@ -37,13 +37,22 @@ namespace ChartModules.PaintingModules
             Levels = PMM.Levels;
             this.ResetInstrument = ResetInstrument;
             Chart.VerticalСhanges += () => Task.Run(() => ResetPrices());
+            SetsName = "Уровни";
+            Levels.Marks.CollectionChanged += (s, e) => SetsDefinition();
         }
 
         public override Task Redraw() => null;
         private protected override void Destroy() { }
-
         private protected override void SetsDefinition()
         {
+            Sets.Clear();
+            for (int i = 0; i < Levels.Marks.Count; i++)
+            {
+                Setting.SetsLevel(
+                    Sets, 
+                    $"Level {i + 1}", 
+                    Levels.Marks[i].GetSets().ToArray());
+            }
         }
 
         private void ResetPrices()
@@ -54,7 +63,9 @@ namespace ChartModules.PaintingModules
                      where z.Heght > 0 && z.Heght < Chart.ChHeight
                      select new Hook
                      (
+                         z.Mark,
                          (x, y) => y - Chart.PriceToHeight(z.Mark.Price),
+                         P => new Point(P.X, Chart.PriceToHeight(z.Mark.Price)),
                          (point, hv, pv, tv) =>
                          {
                              var c = Dispatcher.Invoke(() => { return ((SolidColorBrush)Chart.ChartBackground).Color; });
@@ -225,15 +236,12 @@ namespace ChartModules.PaintingModules
                                  dc.DrawText(ft, new Point(Chart.PriceShift + 1, height - ft.Height / 2));
                              });
                          },
-                         P => new Point(P.X, Chart.PriceToHeight(z.Mark.Price)),
-                         Point => 
+                         Point =>
                          {
                              var m = z.Mark;
                              m.Price = Chart.HeightToPrice(Point.Y);
                              m.ApplyChanges();
-                         },
-                         z.Mark.LineThikness / 2 + 2,
-                         () => null
+                         }
                      )
                                ).ToList();
         }

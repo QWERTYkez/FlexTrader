@@ -405,8 +405,8 @@ namespace ChartModules.StandardModules
             Sets.Add(new Setting(SetType.DoubleSlider, "Штрих", () => CursorDash, SetCursorDash, 5d, 1d, 10d));
             Sets.Add(new Setting(SetType.DoubleSlider, "Отступ", () => CursorIndent, SetCursorIndent, 2d, 0d, 10d));
             Sets.Add(new Setting(SetType.DoubleSlider, "Толщина", () => CursorThikness, SetCursorThikness, 2d, 1d, 5d));
-            Sets.Add(new Setting(SetType.Brush, "Цвет курсора", () => MarksPen.Brush, SetCursorColor, Brushes.White));
-            Sets.Add(new Setting(SetType.Brush, "Цвет текста", () => FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
+            Sets.Add(new Setting("Цвет курсора", () => MarksPen.Brush, SetCursorColor, Brushes.White));
+            Sets.Add(new Setting("Цвет текста", () => FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
         }
     }
 

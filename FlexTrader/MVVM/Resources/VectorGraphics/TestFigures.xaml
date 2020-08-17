@@ -10,29 +10,17 @@
     mc:Ignorable="d">
     <Viewbox Stretch="Uniform">
         <Path
-            Width="8"
-            Height="18"
-            Fill="White">
+            Width="100"
+            Height="100"
+            Stroke="White" StrokeThickness="7">
             <Path.Data>
-                <PathGeometry>
-                    <PathFigure IsClosed="True" StartPoint="4,0">
-                        <LineSegment Point="8,12" />
-                        <LineSegment Point="6,13" />
-                        <LineSegment Point="5,10" />
-                        <LineSegment Point="5,18" />
-                        <LineSegment Point="3,18" />
-                        <LineSegment Point="3,10" />
-                        <LineSegment Point="2,13" />
-                        <LineSegment Point="0,12" />
-                    </PathFigure>
-                </PathGeometry>
+                <GeometryGroup>
+                    <GeometryGroup.Children>
+                        <LineGeometry StartPoint="20, 40" EndPoint="40, 90" />
+                        <LineGeometry StartPoint="80, 10" EndPoint="40, 90" />
+                    </GeometryGroup.Children>
+                </GeometryGroup>
             </Path.Data>
-            <Path.RenderTransform>
-                <TransformGroup>
-                    <RotateTransform Angle="-30" />
-                    <TranslateTransform X="-4" Y="3" />
-                </TransformGroup>
-            </Path.RenderTransform>
         </Path>
     </Viewbox>
 </UserControl>

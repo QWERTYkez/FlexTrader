@@ -39,8 +39,16 @@
                     <StackPanel x:Name="BaseSP" />
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Colors" />
-            <TabItem x:Name="Other" Header="Other" />
+            <TabItem Header="SP1">
+                <ScrollViewer>
+                    <StackPanel x:Name="SP1" />
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="SP2">
+                <ScrollViewer>
+                    <StackPanel x:Name="SP2" />
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

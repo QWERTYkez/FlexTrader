@@ -24,9 +24,12 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="MVVM\Resources\TextBoxes.xaml" />
                 <ResourceDictionary Source="MVVM\Resources\Buttons.xaml" />
                 <ResourceDictionary Source="MVVM\Resources\VectorGraphics\Figures.xaml" />
                 <ResourceDictionary Source="MVVM\Resources\Converters.xaml" />
+                <ResourceDictionary Source="MVVM\Resources\ScrollBar.xaml" />
+                <ResourceDictionary Source="MVVM\Resources\SlidingRes.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

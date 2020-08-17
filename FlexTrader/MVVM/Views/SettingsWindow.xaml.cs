@@ -34,27 +34,54 @@ namespace FlexTrader.MVVM.Views
         {
             InitializeComponent();
 
-            foreach (var bs in sb)
+            AddSettingsToContainer(BaseSP, sb);
+            AddSettingsToContainer(SP1, sn);
+            AddSettingsToContainer(SP2, st);
+
+        }
+
+        private void AddSettingsToContainer(StackPanel SP, List<(string SetsName, List<Setting> Sets)> Sets)
+        {
+            foreach (var bs in Sets)
             {
                 if (bs.SetsName != null)
                 {
-                    var sp = AddLevel(BaseSP, bs.SetsName);
+                    var sp = AddLevel(SP, bs.SetsName);
                     foreach (var s in bs.Sets)
                     {
                         switch (s.Type)
                         {
-                            case SetType.GoDown: sp = AddLevel(sp, s.Name); break;
-                            case SetType.GoUp: sp = (sp.Parent as Expander).Parent as StackPanel; break;
+                            case SetType.GoDown:
+
+                                sp = AddLevel(sp, s.Name);
+
+                                break;
+                            case SetType.GoUp:
+
+                                sp = (sp.Parent as Expander).Parent as StackPanel;
+
+                                break;
                             case SetType.Brush:
+
                                 AddSetting(sp, s, () => new ColorPicker(s.Get() as SolidColorBrush, s.Set));
+
                                 break;
                             case SetType.DoubleSlider:
+
                                 AddSetting(sp, s, () => new DoubleSlider((double)s.Get(),
-                                    (double)s.Param1, (double)s.Param2, s.Set)); break;
+                                    (double)s.Param1, (double)s.Param2, s.Set));
+
+                                break;
                             case SetType.DoublePicker:
-                                AddSetting(sp, s, () => new DoublePicker((double)s.Get(),
-                                    (double)s.Param1, (double)s.Param2, s.Set)); break;
-                        } 
+
+                                AddSetting(sp, s, () =>
+                                        new DoublePicker(
+                                            (double)s.Get(),
+                                            s.Set,
+                                            (double?)s.Param1,
+                                            (double?)s.Param2));
+                                break;
+                        }
                     }
                 }
             }
@@ -98,6 +125,7 @@ namespace FlexTrader.MVVM.Views
                 var El = GetEl();
                 El.HorizontalAlignment = HorizontalAlignment.Right;
                 El.Width = 200;
+                El.Height = 30;
                 Grid.SetColumn(El, 1);
                 grd.Children.Add(El);
 
@@ -120,6 +148,7 @@ namespace FlexTrader.MVVM.Views
                         El = GetEl();
                         El.HorizontalAlignment = HorizontalAlignment.Right;
                         El.Width = 200;
+                        El.Height = 30;
                         Grid.SetColumn(El, 1);
                         grd.Children.Add(El);
                     };

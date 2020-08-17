@@ -22,9 +22,27 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using System.Xaml;
 
 namespace FlexTrader.MVVM.Resources
 {
+    public class ElementToWidthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double xx = 0;
+            if (value != null)
+            {
+                xx = (value as FrameworkElement).Width + 5;
+            }
+
+            return xx;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            throw new Exception();
+    }
+
     public class BrushToColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>

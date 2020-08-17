@@ -18,12 +18,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace ChartModules
 {
     public struct Setting
     {
-        public Setting(SetType Type)
+        private Setting(SetType Type)
         { 
             this.Name = null;
             this.Type = Type;
@@ -33,31 +34,51 @@ namespace ChartModules
             this.Param1 = null;
             this.Param2 = null;
         }
-        public Setting(SetType Type, string Name)
+        /// <summary>
+        /// New Level of Setting
+        /// </summary>
+        public Setting(string Name)
         {
             this.Name = Name;
-            this.Type = Type;
+            this.Type = SetType.GoDown;
             this.Get = null;
             this.Set = null;
             this.ResetObj = null;
             this.Param1 = null;
             this.Param2 = null;
         }
+        /// <summary>
+        /// New Brush Setting
+        /// </summary>
+        public Setting(string Name, Func<object> Get,
+                       Action<object> Set, SolidColorBrush ResetObj = null)
+        {
+            this.Name = Name;
+            this.Type = SetType.Brush;
+            this.Get = Get;
+            this.Set = Set;
+            this.ResetObj = ResetObj;
+            this.Param1 = 0;
+            this.Param2 = 0;
+        }
+        /// <summary>
+        /// New Double Setting
+        /// </summary>
         public Setting(SetType Type, string Name, Func<object> Get,
-                       Action<object> Set, object ResetObj = null,  object Param1 = null, object Param2 = null)
+                       Action<object> Set, double? Standart = null, double? Min = null, double? Max = null)
         {
             this.Name = Name;
             this.Type = Type;
             this.Get = Get;
             this.Set = Set;
-            this.ResetObj = ResetObj;
-            this.Param1 = Param1;
-            this.Param2 = Param2;
+            this.ResetObj = Standart;
+            this.Param1 = Min;
+            this.Param2 = Max;
         }
 
         public static void SetsLevel(List<Setting> Sets, string Name, Setting[] args)
         {
-            Sets.Add(new Setting(SetType.GoDown, Name));
+            Sets.Add(new Setting(Name));
             Sets.AddRange(args);
             Sets.Add(new Setting(SetType.GoUp));
         }

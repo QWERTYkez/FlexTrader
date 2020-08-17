@@ -18,8 +18,8 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,6 +27,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace FlexTrader.MVVM.Resources
 {
@@ -34,6 +35,7 @@ namespace FlexTrader.MVVM.Resources
     {
         private readonly ColorPickerDataContext DC;
         public event Action<SolidColorBrush> BrushChanged;
+        public ColorPicker() { new NotImplementedException(); }
         public ColorPicker(SolidColorBrush br, Action<object> set = null)
         {
             InitializeComponent();
@@ -45,7 +47,8 @@ namespace FlexTrader.MVVM.Resources
 
             DataContext = DC = new ColorPickerDataContext();
             DC.PropertyChanged += DC_PropertyChanged;
-            DC.Initialize(br);
+            DC.Initialize(br, () => Dispatcher.Invoke(() => Apply(null, null)));
+            NewBrushChanged(br);
 
             AddChannelBinding(RedSlider, CChannels.Red);
             AddChannelBinding(GreenSlider, CChannels.Green);
@@ -197,6 +200,8 @@ namespace FlexTrader.MVVM.Resources
             AddStandardColor(Standard, Brushes.Transparent, "Transparent", Brushes.White);
             #endregion
         }
+        public double CornerRadius { set => DC.CR = value; }
+
         public SolidColorBrush Brush => DC.LastBrush;
         public Color Color => DC.LastBrush.Color;
 
@@ -232,14 +237,43 @@ namespace FlexTrader.MVVM.Resources
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
             }
 
-            public void Initialize(SolidColorBrush br)
+            public void Initialize(SolidColorBrush br, Action A)
             {
                 LastBrush = br;
-                NewBrush = br;
+                nbr = br;
+
+                this.A = A;
             }
 
+            public double CR { get; set; }
+
+            private Action A;
+
             public SolidColorBrush LastBrush { get; set; }
-            public SolidColorBrush NewBrush { get; set; }
+
+            private int ChangesCounter = 0;
+            private SolidColorBrush nbr;
+            public SolidColorBrush NewBrush 
+            {
+                get 
+                { 
+                    return nbr; 
+                }
+                set 
+                {
+                    nbr = value;
+                    OnPropertyChanged();
+
+                    Task.Run(() => 
+                    {
+                        ChangesCounter += 1;
+                        var x = ChangesCounter;
+                        Thread.Sleep(100);
+                        if (x != ChangesCounter) return;
+                        A?.Invoke();
+                    });
+                }
+            }
 
             public SolidColorBrush MiddleSliderBrush { get; set; }
             public SolidColorBrush BottomSliderBrush { get; set; }
@@ -385,64 +419,68 @@ namespace FlexTrader.MVVM.Resources
             {
                 case "NewBrush":
                     {
-                        if (!SlidersLock)
-                        {
-                            var r = (double)DC.NewBrush.Color.R;
-                            var g = (double)DC.NewBrush.Color.G;
-                            var b = (double)DC.NewBrush.Color.B;
-                            double x = 0; double left = 0; double top = 0;
-
-                            if (r >= g && r >= b)
-                            {
-                                top = (1 - r / 255) * 388;
-                                if (g > b)
-                                {
-                                    x = 86.5 * (g / r);
-                                    left = (1 - b / r) * 539;
-                                }
-                                else
-                                {
-                                    x = 519 - 86.5 * (b / r);
-                                    left = (1 - g / r) * 539;
-                                }
-                            }
-                            else if (g >= r && g >= b)
-                            {
-                                top = (1 - g / 255) * 388;
-                                if (r > b)
-                                {
-                                    x = 173 - 86.5 * (r / g);
-                                    left = (1 - b / g) * 539;
-                                }
-                                else
-                                {
-                                    x = 173 + 86.5 * (b / g);
-                                    left = (1 - r / g) * 539;
-                                }
-                            }
-                            else if (b >= r && b >= g)
-                            {
-                                top = (1 - b / 255) * 388;
-                                if (r > g)
-                                {
-                                    x = 346 + 86.5 * (r / b);
-                                    left = (1 - g / b) * 539;
-                                }
-                                else
-                                {
-                                    x = 346 - 86.5 * (g / b);
-                                    left = (1 - r / b) * 539;
-                                }
-                            }
-
-                            SetBottomSlider(x, true);
-                            SetMiddleSlider(left, top, true);
-
-                            DC.MiddleSliderBrush = new SolidColorBrush(Color.FromRgb(
-                                DC.NewBrush.Color.R, DC.NewBrush.Color.G, DC.NewBrush.Color.B));
-                        }
+                        NewBrushChanged(DC.NewBrush);
                     }
                     break;
+            }
+        }
+        private void NewBrushChanged(SolidColorBrush nbr)
+        {
+            if (!SlidersLock)
+            {
+                var r = (double)nbr.Color.R;
+                var g = (double)nbr.Color.G;
+                var b = (double)nbr.Color.B;
+                double x = 0; double left = 0; double top = 0;
+
+                if (r >= g && r >= b)
+                {
+                    top = (1 - r / 255) * 388;
+                    if (g > b)
+                    {
+                        x = 86.5 * (g / r);
+                        left = (1 - b / r) * 539;
+                    }
+                    else
+                    {
+                        x = 519 - 86.5 * (b / r);
+                        left = (1 - g / r) * 539;
+                    }
+                }
+                else if (g >= r && g >= b)
+                {
+                    top = (1 - g / 255) * 388;
+                    if (r > b)
+                    {
+                        x = 173 - 86.5 * (r / g);
+                        left = (1 - b / g) * 539;
+                    }
+                    else
+                    {
+                        x = 173 + 86.5 * (b / g);
+                        left = (1 - r / g) * 539;
+                    }
+                }
+                else if (b >= r && b >= g)
+                {
+                    top = (1 - b / 255) * 388;
+                    if (r > g)
+                    {
+                        x = 346 + 86.5 * (r / b);
+                        left = (1 - g / b) * 539;
+                    }
+                    else
+                    {
+                        x = 346 - 86.5 * (g / b);
+                        left = (1 - r / b) * 539;
+                    }
+                }
+
+                SetBottomSlider(x, true);
+                SetMiddleSlider(left, top, true);
+
+                DC.MiddleSliderBrush = new SolidColorBrush(Color.FromRgb(
+                    nbr.Color.R, nbr.Color.G, nbr.Color.B));
             }
         }
 
@@ -548,7 +586,8 @@ namespace FlexTrader.MVVM.Resources
             G = Convert.ToByte(g * T);
             B = Convert.ToByte(b * T);
 
-            DC.NewBrush = new SolidColorBrush(Color.FromArgb(A, R, G, B));
+            var scb = new SolidColorBrush(Color.FromArgb(A, R, G, B)); scb.Freeze();
+            DC.NewBrush = scb;
             DC.MiddleSliderBrush = new SolidColorBrush(Color.FromRgb(R, G, B));
         }
 
@@ -575,13 +614,12 @@ namespace FlexTrader.MVVM.Resources
         }
         private void Apply(object sender, RoutedEventArgs e)
         {
-            e.Handled = true;
-            DC.LastBrush = DC.NewBrush;
-            Picker.IsOpen = false;
+            if(sender != null) Picker.IsOpen = false;
             Task.Run(() => BrushChanged.Invoke(DC.NewBrush));
         }
         private void Cancel(object sender, RoutedEventArgs e)
         {
+            DC.NewBrush = DC.LastBrush;
             e.Handled = true;
             Picker.IsOpen = false;
         }

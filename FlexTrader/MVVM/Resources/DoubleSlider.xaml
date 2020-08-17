@@ -41,13 +41,14 @@
         <Label
             x:Name="label"
             Grid.Column="1"
-            Margin="2"
-            VerticalAlignment="Center"
+            Margin="2,0,2,0"
+            VerticalContentAlignment="Center"
             Content="{Binding Value, ElementName=slider}"
             FontSize="16"
             FontWeight="Bold"
             Foreground="Black" />
         <Label
+            VerticalContentAlignment="Center"
             Grid.Column="1"
             Margin="{Binding Margin, ElementName=label}"
             Content="{Binding Maximum, ElementName=slider}"

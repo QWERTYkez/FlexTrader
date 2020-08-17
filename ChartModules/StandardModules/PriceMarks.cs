@@ -207,7 +207,7 @@ namespace ChartModules.StandardModules
         public DrawingVisual PriceVisual { get; }
         public ObservableCollection<PriceMark> Marks { get; }
     }
-    public class PriceMark
+    public class PriceMark : ChangingElement
     {
         public PriceMark(double Price, Action ApplyChanges, SolidColorBrush TextBrush, SolidColorBrush MarkFill, 
             SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
@@ -219,12 +219,22 @@ namespace ChartModules.StandardModules
             this.LineDash = LineDash;
             this.LineIndent = LineIndent;
             this.LineThikness = LineThikness;
-            Changed = ApplyChanges;
+            this.ApplyChange = ApplyChanges;
 
             this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
         }
-        public event Action Changed;
-        public void ApplyChanges() => Changed.Invoke();
+
+        private static readonly string sn = "Level";
+        public override string SetsName { get => sn; }
+        public override double GetMagnetRadius() => LineThikness / 2 + 2;
+        public override List<Setting> GetSets()
+        {
+            return new List<Setting>
+            {
+                new Setting(SetType.DoublePicker, "Price", () => this.Price, pr => { this.Price = (double)pr; ApplyChangesToAll((double)pr); }),
+                new Setting("Line Brush", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); })
+            };
+        }
 
         public double Price { get; set; }
         public SolidColorBrush TextBrush { get; set; }
