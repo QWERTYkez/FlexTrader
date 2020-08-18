@@ -145,7 +145,7 @@ namespace ChartModules.StandardModules
             }
             await PriceLineModule.Redraw();
         }
-        public void HorizontalReset(bool? HeightChanged = null)
+        public void HorizontalReset(bool HeightChanged = false)
         {
             if (StartTime.HasValue && DeltaTime.HasValue)
             {
@@ -165,11 +165,7 @@ namespace ChartModules.StandardModules
                 max += delta * 0.05;
                 var nMin = mmm - delta * 0.05;
                 var nDelta = max - Min;
-                if (Min == nMin && Delta == nDelta)
-                {
-                    if (HeightChanged == null) return;
-                    else if (!HeightChanged.Value) return;
-                }
+                if (Min == nMin && Delta == nDelta && !HeightChanged) return;
                 Min = nMin;
                 Delta = nDelta;
 

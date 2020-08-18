@@ -61,7 +61,6 @@ namespace ChartModules.StandardModules
                 if (Layer.Marks != null)
                 {
                     var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
-                    //var width = Chart.ChWidth + 2;
                     foreach (var mark in Layer.Marks)
                     {
                         if (mark.Price > Chart.PricesMin * Chart.TickSize && mark.Price < pricesMax)
@@ -233,10 +232,7 @@ namespace ChartModules.StandardModules
             return new List<Setting>
             {
                 new Setting(SetType.DoublePicker, "Price", () => this.Price, pr => { this.Price = (double)pr; ApplyChangesToAll((double)pr); }),
-                new Setting("Line Brush", () => this.LineBrush, br => 
-                {
-                    Debug.WriteLine("Line Brush");
-                    this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
+                new Setting("Line Brush", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
                 new Setting("Text Brush", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
                 new Setting("Mark Fill", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); })
             };

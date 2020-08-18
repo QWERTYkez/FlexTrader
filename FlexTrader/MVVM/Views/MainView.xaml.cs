@@ -18,7 +18,6 @@
 
 using FlexTrader.MVVM.Resources;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,6 +32,10 @@ namespace FlexTrader.MVVM.Views
         public MainView()
         {
             InitializeComponent();
+
+            TopPanel = this.xTopPanel;
+            TopPanel.SizeChanged += TopPanel_SizeChanged;
+            OverlayMenu = this.xOverlayMenu;
 
             Palette.Tag = PaletteButtonNormal;
             PaletteButtonNormal.IsActive = true;
@@ -139,9 +142,6 @@ namespace FlexTrader.MVVM.Views
 
         public override event Action<bool> SetMagnet;
         public override bool CurrentMagnetState => MagnetBtn.IsActive;
-
-        public override ScrollViewer TopPanel => this.xTopPanel;
-        public override ScrollViewer OverlayMenu => this.xOverlayMenu;
 
         private void SetMagnetState(object sender, RoutedEventArgs e)
         {

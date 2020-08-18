@@ -41,13 +41,12 @@ namespace ChartModules.StandardModules
         private readonly PriceMarksModule PriceMarksModule;
         public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, 
             IDrawingCanvas GridLayer, IDrawingCanvas PriceLine, 
-            PriceMarksModule PriceMarksModule, Action VerticalСhanges) : base (chart)
+            PriceMarksModule PriceMarksModule) : base (chart)
         {
             this.PriceLineCD = PriceLineCD;
             this.GridLayer = GridLayer;
             this.PriceLine = PriceLine;
             this.PriceMarksModule = PriceMarksModule;
-            this.VerticalСhanges = VerticalСhanges;
 
             Chart.FontBrushChanged += () => Redraw();
             GridLayer.AddVisual(PriceGridVisual);

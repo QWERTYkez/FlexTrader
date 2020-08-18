@@ -608,17 +608,23 @@ namespace FlexTrader.MVVM.Resources
 
         private void ShowPicker(object sender, MouseButtonEventArgs e)
         {
+            if(Parent is Sliding) (Parent as Sliding).Freeze = true;
             e.Handled = true;
             DC.NewBrush = DC.LastBrush;
             Picker.IsOpen = true;
         }
         private void Apply(object sender, RoutedEventArgs e)
         {
-            if(sender != null) Picker.IsOpen = false;
+            if (sender != null)
+            {
+                if (Parent is Sliding) (Parent as Sliding).Freeze = false;
+                Picker.IsOpen = false;
+            }
             Task.Run(() => BrushChanged.Invoke(DC.NewBrush));
         }
         private void Cancel(object sender, RoutedEventArgs e)
         {
+            if (Parent is Sliding) (Parent as Sliding).Freeze = false;
             DC.NewBrush = DC.LastBrush;
             e.Handled = true;
             Picker.IsOpen = false;

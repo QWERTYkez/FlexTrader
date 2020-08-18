@@ -32,11 +32,10 @@ namespace ChartModules.StandardModules
 
         private readonly IDrawingCanvas GridLayer;
         private readonly IDrawingCanvas TimeLine;
-        public TimeLineModule(IChart chart, IDrawingCanvas GridLayer, IDrawingCanvas TimeLine, Action HorizontalСhanges) : base(chart)
+        public TimeLineModule(IChart chart, IDrawingCanvas GridLayer, IDrawingCanvas TimeLine) : base(chart)
         {
             this.GridLayer = GridLayer;
             this.TimeLine = TimeLine;
-            this.HorizontalСhanges = HorizontalСhanges;
 
             Chart.FontBrushChanged += () => Redraw();
             GridLayer.AddVisual(TimeGridVisual);

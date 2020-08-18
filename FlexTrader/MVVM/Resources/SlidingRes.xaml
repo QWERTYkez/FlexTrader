@@ -62,6 +62,44 @@
                             </EventTrigger>
                         </Border.Triggers>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger >
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="True"/>
+                                <Condition Property="Freeze" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                        <MultiTrigger >
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="True"/>
+                                <Condition Property="Freeze" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                        <MultiTrigger >
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="False"/>
+                                <Condition Property="Freeze" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                        <MultiTrigger >
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="False"/>
+                                <Condition Property="Freeze" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="0" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

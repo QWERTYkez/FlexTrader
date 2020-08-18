@@ -25,6 +25,8 @@ namespace FlexTrader.MVVM.Resources
     {
         public static readonly DependencyProperty TitleProperty;
         public static readonly DependencyProperty ContentWidthProperty;
+        public static readonly DependencyProperty FreezeProperty;
+        public static readonly DependencyProperty AlwaysOpenProperty;
 
         public double ContentWidth
         {
@@ -36,11 +38,23 @@ namespace FlexTrader.MVVM.Resources
             get { return (string)GetValue(TitleProperty); }
             set { SetValue(TitleProperty, value); }
         }
+        public bool Freeze
+        {
+            get { return (bool)GetValue(FreezeProperty); }
+            set { SetValue(FreezeProperty, value); }
+        }
+        public bool AlwaysOpen
+        {
+            get { return (bool)GetValue(AlwaysOpenProperty); }
+            set { SetValue(AlwaysOpenProperty, value); }
+        }
 
         static Sliding()
         {
             TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(Sliding));
             ContentWidthProperty = DependencyProperty.Register("ContentWidth", typeof(double), typeof(Sliding));
+            FreezeProperty = DependencyProperty.Register("Freeze", typeof(bool), typeof(Sliding));
+            AlwaysOpenProperty = DependencyProperty.Register("AlwaysOpen", typeof(bool), typeof(Sliding));
         }
     }
 }

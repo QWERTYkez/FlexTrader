@@ -45,6 +45,9 @@ namespace ChartModules
 
             this.SetMenuAct = ChartWindow.SetMenu;
 
+            Chart.VerticalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
+            Chart.HorizontalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
+
             HooksLayer.AddVisual(ShadowVisual);
             HooksLayer.AddVisual(OverVisual);
             HooksLayer.AddVisual(PointVisual);
@@ -73,7 +76,8 @@ namespace ChartModules
 
         private readonly Action<string, List<Setting>> SetMenuAct;
         public Action RemoveHook;
-        
+        private Action ResizeHook;
+
         private readonly DrawingVisual ShadowVisual = new DrawingVisual();
         private readonly DrawingVisual ShadowPriceVisual = new DrawingVisual();
         private readonly DrawingVisual ShadowTimeVisual = new DrawingVisual();
@@ -103,6 +107,8 @@ namespace ChartModules
         private bool Manipulating = false;
         private Point LastValue;
         private Point NewValue;
+        private double LastPointPrice;
+        private DateTime LastPointTime;
         public void HookElement(object s, MouseEventArgs e)
         {
             if (Manipulating) return;
@@ -118,7 +124,7 @@ namespace ChartModules
 
             if (NewHook != null)
             {
-                if(NewHook.SubHooks != null)
+                if (NewHook.SubHooks != null)
                 {
                     var SubHook = ScanHooks(NewHook.SubHooks, P);
                     if (SubHook != null) NewHook = SubHook;
@@ -126,50 +132,77 @@ namespace ChartModules
 
                 if (NewHook != CurrentHook)
                 {
+                    CurrentHook?.ClearEvents();
+
                     ShadowVisual.RenderOpen().Close();
                     ShadowPriceVisual.RenderOpen().Close();
                     ShadowTimeVisual.RenderOpen().Close();
 
-                    NewHook.ResetElement += ce =>
-                    {
-                        Dispatcher.Invoke(() => 
-                        {
-                            if (ce != null)
-                            {
-                                switch (ce.Value.type) 
-                                {
-                                    case ChangesElementType.Price:
-                                        P.Y = Chart.PriceToHeight((double)ce.Value.element);
-                                        break;
-                                    case ChangesElementType.Point:
-                                        P = (Point)ce.Value.element;
-                                        break;
-                                    default: throw new Exception();
-                                }
-
-                                ShadowVisual.RenderOpen().Close();
-                                ShadowPriceVisual.RenderOpen().Close();
-                                ShadowTimeVisual.RenderOpen().Close();
-
-                                LastValue = NewHook.GetHookPoint(P);
-                                NewValue = LastValue;
-                                CurrentHook = NewHook;
-                            }
-                            NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
-                        });
-                    };
-
                     LastValue = NewHook.GetHookPoint(P);
+                    
                     NewValue = LastValue;
                     CurrentHook = NewHook;
-                    
+
                     NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
-                    
+
                     SetInstrument.Invoke(e =>
                     {
                         if (!Manipulating)
                         {
                             LastValue = NewHook.GetHookPoint(e.GetPosition((IInputElement)Chart));
+                            LastPointPrice = Chart.HeightToPrice(LastValue.Y);
+                            LastPointTime = Chart.WidthToTime(LastValue.X);
+
+                            NewHook.SetResetElementAction(ce =>
+                            {
+                                if (ce != null)
+                                {
+                                    switch (ce.Value.type)
+                                    {
+                                        case ChangesElementType.Price:
+                                            P.Y = Chart.PriceToHeight((double)ce.Value.element);
+                                            break;
+                                        case ChangesElementType.Point:
+                                            P = (Point)ce.Value.element;
+                                            break;
+                                        default: throw new Exception();
+                                    }
+
+                                    LastValue = NewHook.GetHookPoint(P);
+                                    NewValue = LastValue;
+                                    CurrentHook = NewHook;
+
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        ShadowVisual.RenderOpen().Close();
+                                        ShadowPriceVisual.RenderOpen().Close();
+                                        ShadowTimeVisual.RenderOpen().Close();
+
+                                        using var dc = PointVisual.RenderOpen();
+                                        dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
+                                        dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
+                                    });
+                                }
+                                NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
+                            });
+                            ResizeHook = () =>
+                            {
+                                P = new Point(Chart.TimeToWidth(LastPointTime), Chart.PriceToHeight(LastPointPrice));
+                                LastValue = NewHook.GetHookPoint(P);
+
+                                NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+                                NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
+
+                                Dispatcher.Invoke(() =>
+                                {
+                                    PointVisual.Transform = null;
+                                    using var dc = PointVisual.RenderOpen();
+                                    dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
+                                    dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
+                                });
+
+                            };
+
                             Manipulating = true;
                             NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
                             foreach (var l in OtherLayers)
@@ -195,8 +228,11 @@ namespace ChartModules
                                     Manipulating = false;
 
                                     NewHook.AcceptNewCoordinates(NewValue);
+                                    SetMenuAct(NewHook.SetsName, NewHook.Sets);
 
                                     LastValue = NewHook.GetHookPoint(e.GetPosition((IInputElement)Chart));
+                                    LastPointPrice = Chart.HeightToPrice(LastValue.Y);
+                                    LastPointTime = Chart.WidthToTime(LastValue.X);
                                     NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
                                     OverVisual.Transform = null;
@@ -210,8 +246,13 @@ namespace ChartModules
                         l.Visibility = Visibility.Hidden;
                 }
             }
-            else if (CurrentHook != null)
+            else ReleaseTheHook();
+        }
+        public void ReleaseTheHook()
+        {
+            if (CurrentHook != null)
             {
+                CurrentHook.ClearEvents();
                 RemoveHook = RemoveLastHook;
                 SetInstrument.Invoke(null);
                 RestoreChart();
@@ -284,7 +325,13 @@ namespace ChartModules
             Element.Changed += o => Task.Run(() => ResetElement?.Invoke(o));
         }
 
-        public event Action<(ChangesElementType type, object element)?> ResetElement;
+        private event Action<(ChangesElementType type, object element)?> ResetElement;
+        public void SetResetElementAction(Action<(ChangesElementType type, object element)?> rea)
+        {
+            ResetElement = null;
+            ResetElement += rea;
+        }
+        public void ClearEvents() => ResetElement = null;
 
         public List<Hook> SubHooks { get; }
         public string SetsName { get; }

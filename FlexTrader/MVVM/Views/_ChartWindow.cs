@@ -35,8 +35,33 @@ namespace FlexTrader.MVVM.Views
 
             this.PreviewKeyDown += (s, e) => { KeyPressed?.Invoke(e); };
             this.PreviewKeyUp += (s, e) => { KeyReleased?.Invoke(e); };
+        }
 
-            
+        private bool Scrollable = false;
+        private double LastZize;
+        private protected void TopPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (OverlayMenu.Visibility == Visibility.Visible)
+            {
+                bool b;
+                if (WP.ActualWidth + 10 > OverlayMenu.ActualWidth && !Scrollable)
+                {
+                    LastZize = WP.ActualWidth + 10;
+                    b = false;
+                    Scrollable = true;
+                    goto ending;
+                }
+                else if (Scrollable && LastZize <= OverlayMenu.ActualWidth)
+                {
+                    b = true;
+                    Scrollable = false;
+                    goto ending;
+                }
+                return;
+            ending:
+                foreach (var s in Slidings)
+                    s.AlwaysOpen = b;
+            }
         }
 
         #region Обработка таскания мышью
@@ -78,8 +103,10 @@ namespace FlexTrader.MVVM.Views
 
         #endregion
 
-        public abstract ScrollViewer TopPanel { get; }
-        public abstract ScrollViewer OverlayMenu { get; }
+        private protected ScrollViewer TopPanel { get; set; }
+        private protected ScrollViewer OverlayMenu { get; set; }
+        private WrapPanel WP { get; set; }
+        private List<Sliding> Slidings { get; set; }
         public void SetMenu(string SetsName, List<Setting> Sets)
         {
             if (Sets != null)
@@ -87,7 +114,7 @@ namespace FlexTrader.MVVM.Views
                 OverlayMenu.Visibility = Visibility.Visible;
                 TopPanel.Visibility = Visibility.Hidden;
 
-                var WP = new WrapPanel { Margin = new Thickness(5), Height = 42 };
+                WP = new WrapPanel { Margin = new Thickness(5), Height = 42, HorizontalAlignment = HorizontalAlignment.Left };
                 {
                     WP.Children.Add(new Viewbox
                     {
@@ -106,17 +133,7 @@ namespace FlexTrader.MVVM.Views
                         }
                     });
 
-                    var x = new Label
-                    {
-                        VerticalContentAlignment = VerticalAlignment.Center,
-                        Height = 40,
-                        Margin = new Thickness(2.5, 0, 2.5, 0),
-                        Content = SetsName,
-
-                        FontFamily = new FontFamily("Consolas"),
-                        Foreground = Brushes.White,
-                        FontSize = 18
-                    };
+                    Slidings = new List<Sliding>();
 
                     foreach (var s in Sets)
                     {
@@ -124,11 +141,19 @@ namespace FlexTrader.MVVM.Views
                         switch (s.Type)
                         {
                             case SetType.Brush:
-                                WP.Children.Add(fe = new ColorPicker(s.Get() as SolidColorBrush, s.Set)
+                                WP.Children.Add(fe = new Sliding
                                 {
-                                    Width = 40,
-                                    CornerRadius = 10
+                                    Background = Brushes.Teal,
+                                    Foreground = Brushes.White,
+                                    Title = s.Name,
+                                    ContentWidth = 40,
+                                    AlwaysOpen = true,
+                                    Content = new ColorPicker(s.Get() as SolidColorBrush, s.Set)
+                                    {
+                                        CornerRadius = 10
+                                    }
                                 });
+                                Slidings.Add(fe as Sliding);
                                 break;
                             case SetType.DoublePicker:
                                 WP.Children.Add(fe = new Sliding
@@ -137,6 +162,7 @@ namespace FlexTrader.MVVM.Views
                                     Foreground = Brushes.White,
                                     Title = s.Name,
                                     ContentWidth = 100,
+                                    AlwaysOpen = true,
                                     Content = new DoublePicker((double)s.Get(), s.Set, (double?)s.Param1, (double?)s.Param2)
                                     {
                                         Background = Brushes.Black, 
@@ -144,6 +170,7 @@ namespace FlexTrader.MVVM.Views
                                         FontSize = 16
                                     }
                                 });
+                                Slidings.Add(fe as Sliding);
                                 break;
                         }
                         fe.Height = 40;
@@ -151,6 +178,10 @@ namespace FlexTrader.MVVM.Views
                     }
                 }
                 OverlayMenu.Content = WP;
+
+                
+
+                var xxx = WP.Width;
             }
             else
             {

@@ -67,8 +67,11 @@ namespace FlexTrader.MVVM.Views
             LevelsModule = new LevelsModule(this, PriceMarksModule, ResetInstrument);
             TrendsModule = new TrendsModule(this, null, null);
 
-            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule, VerticalСhanges);
-            TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine, HorizontalСhanges);
+            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
+            PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
+
+            TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
+            TimeLineModule.HorizontalСhanges += () => HorizontalСhanges.Invoke();
 
             CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, CursorMarkLayer, CursorLeave);
 
@@ -268,6 +271,8 @@ namespace FlexTrader.MVVM.Views
                 var x = ChangesCounter;
                 Thread.Sleep(50);
                 if (x != ChangesCounter) return;
+
+                //HooksModule.RemoveLastHook();
                 CandlesModule.HorizontalReset(e.HeightChanged);
                 if (CurrentMagnetState) CandlesModule.ResetMagnetData();
             });
