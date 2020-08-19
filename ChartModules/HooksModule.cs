@@ -66,7 +66,6 @@ namespace ChartModules
             HookTimeLayer.DeleteVisual(OverTimeVisual);
             HookTimeLayer.DeleteVisual(ShadowTimeVisual);
         }
-        private protected override void SetsDefinition() { }
         public override Task Redraw() => null;
 
         private readonly Func<Pen> GetCursorPen;
@@ -246,11 +245,7 @@ namespace ChartModules
                         l.Visibility = Visibility.Hidden;
                 }
             }
-            else ReleaseTheHook();
-        }
-        public void ReleaseTheHook()
-        {
-            if (CurrentHook != null)
+            else if (CurrentHook != null)
             {
                 CurrentHook.ClearEvents();
                 RemoveHook = RemoveLastHook;

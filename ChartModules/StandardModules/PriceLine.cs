@@ -161,10 +161,5 @@ namespace ChartModules.StandardModules
                 VerticalСhanges?.Invoke();
             });
         }
-
-        private protected override void SetsDefinition()
-        {
-            //SetsName = "Настройки шкалы времени";
-        }
     }
 }

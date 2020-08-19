@@ -38,23 +38,23 @@ namespace ChartModules.PaintingModules
             this.ResetInstrument = ResetInstrument;
             Chart.VerticalСhanges += () => Task.Run(() => ResetPrices());
             SetsName = "Уровни";
-            Levels.Marks.CollectionChanged += (s, e) => SetsDefinition();
+
+            Levels.Marks.CollectionChanged += (s, e) => 
+            {
+                Sets.Clear();
+                for (int i = 0; i < Levels.Marks.Count; i++)
+                {
+                    Setting.SetsLevel(
+                        Sets,
+                        $"Level {i + 1}",
+                        Levels.Marks[i].GetSets().ToArray());
+                }
+            };
         }
 
         public override Task Redraw() => null;
         private protected override void Destroy() { }
-        private protected override void SetsDefinition()
-        {
-            Sets.Clear();
-            for (int i = 0; i < Levels.Marks.Count; i++)
-            {
-                Setting.SetsLevel(
-                    Sets, 
-                    $"Level {i + 1}", 
-                    Levels.Marks[i].GetSets().ToArray());
-            }
-        }
-
+        
         private void ResetPrices()
         {
             Hooks = (from x in Levels.Marks

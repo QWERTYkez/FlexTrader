@@ -175,11 +175,6 @@ namespace ChartModules.StandardModules
             public Pen geopen { get; }
             public PathGeometry geo { get; }
         }
-
-        private protected override void SetsDefinition()
-        {
-            //////////////////
-        }
     }
 
     public struct MarksLayer
@@ -232,9 +227,12 @@ namespace ChartModules.StandardModules
             return new List<Setting>
             {
                 new Setting(SetType.DoublePicker, "Price", () => this.Price, pr => { this.Price = (double)pr; ApplyChangesToAll((double)pr); }),
-                new Setting("Line Brush", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting("Text Brush", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting("Mark Fill", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); })
+                new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
+                new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
+                new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); }),
+                new Setting(SetType.DoubleSlider, "Толщина", () => this.LineThikness, pr => { this.LineThikness = (double)pr; ApplyChangesToAll((double)pr); }, 1d, 5d),
+                new Setting(SetType.DoubleSlider, "Отступ", () => this.LineIndent, pr => { this.LineIndent = (double)pr; ApplyChangesToAll((double)pr); }, 0d, 10d),
+                new Setting(SetType.DoubleSlider, "Штрих", () => this.LineDash, pr => { this.LineDash = (double)pr; ApplyChangesToAll((double)pr); }, 1d, 10d)
             };
         }
 

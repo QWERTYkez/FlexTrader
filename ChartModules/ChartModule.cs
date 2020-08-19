@@ -17,7 +17,6 @@
 */
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
@@ -40,7 +39,6 @@ namespace ChartModules
             Destroy();
         }
         private protected abstract void Destroy();
-        private protected abstract void SetsDefinition();
         public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
         private protected List<Setting> Sets { get; } = new List<Setting>();
         private protected string SetsName { get; set; }

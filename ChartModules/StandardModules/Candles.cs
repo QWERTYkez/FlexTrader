@@ -65,6 +65,36 @@ namespace ChartModules.StandardModules
 
             TimeLine.PreviewMouseDown += TimeLine_MouseDown;
             PriceLine.PreviewMouseDown += PriceLine_MouseDown;
+
+            var SetUpBrush = new Action<object>(b => { UpBrush = b as Brush; Redraw(); });
+            var SetUpPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); });
+            var SetDownBrush = new Action<object>(b => { DownBrush = b as Brush; Redraw(); });
+            var SetDownPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); });
+            var SetThicknesses = new Action<object>(b =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    this.DownPen.Thickness = (b as double?).Value;
+                    this.UpPen.Thickness = (b as double?).Value;
+                });
+                Redraw();
+            });
+
+            SetsName = "Настройки свечей";
+
+            Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
+            {
+                new Setting("Цвет тела", () => this.UpBrush, SetUpBrush, Brushes.Lime),
+                new Setting("Цвет фитиля", () => this.UpPen.Brush, SetUpPenBrush, Brushes.Lime)
+            });
+
+            Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
+            {
+                new Setting("Цвет тела", () => this.DownBrush, SetDownBrush, Brushes.Red),
+                new Setting("Цвет фитиля", () => this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
+            });
+
+            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 2d, 6d, 4d));
         }
 
         private double Delta;
@@ -480,39 +510,6 @@ namespace ChartModules.StandardModules
         private Brush DownBrush = Brushes.Red;
         private readonly Pen UpPen = new Pen(Brushes.Lime, 4);
         private readonly Pen DownPen = new Pen(Brushes.Red, 4);
-
-        private protected override void SetsDefinition()
-        {
-            var SetUpBrush = new Action<object>(b => { UpBrush = b as Brush; Redraw(); });
-            var SetUpPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); });
-            var SetDownBrush = new Action<object>(b => { DownBrush = b as Brush; Redraw(); });
-            var SetDownPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); });
-            var SetThicknesses = new Action<object>(b =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    this.DownPen.Thickness = (b as double?).Value;
-                    this.UpPen.Thickness = (b as double?).Value;
-                });
-                Redraw();
-            });
-
-            SetsName = "Настройки свечей";
-
-            Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
-            {
-                new Setting("Цвет тела", () => this.UpBrush, SetUpBrush, Brushes.Lime),
-                new Setting("Цвет фитиля", () => this.UpPen.Brush, SetUpPenBrush, Brushes.Lime)
-            });
-
-            Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
-            {
-                new Setting("Цвет тела", () => this.DownBrush, SetDownBrush, Brushes.Red),
-                new Setting("Цвет фитиля", () => this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
-            });
-
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 4d, 2d, 6d));
-        }
     }
 
     public interface ICandle

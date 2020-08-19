@@ -34,10 +34,6 @@ namespace ChartModules.PaintingModules
         public override Task Redraw() => null;
         private protected override void Destroy() { }
 
-        private protected override void SetsDefinition()
-        {
-        }
-
         public void PaintingTrend(MouseButtonEventArgs e) => ResetInstrument.Invoke();
     }
 }

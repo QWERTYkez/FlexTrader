@@ -164,11 +164,19 @@ namespace FlexTrader.MVVM.Views
                                     ContentWidth = 100,
                                     AlwaysOpen = true,
                                     Content = new DoublePicker((double)s.Get(), s.Set, (double?)s.Param1, (double?)s.Param2)
-                                    {
-                                        Background = Brushes.Black, 
-                                        Foreground = Brushes.White, 
-                                        FontSize = 16
-                                    }
+                                });
+                                Slidings.Add(fe as Sliding);
+                                break;
+                            case SetType.DoubleSlider:
+                                WP.Children.Add(fe = new Sliding
+                                {
+                                    Background = Brushes.Teal,
+                                    Foreground = Brushes.White,
+                                    Title = s.Name,
+                                    ContentWidth = 100,
+                                    AlwaysOpen = true,
+                                    Content = new DoubleSlider((double)s.Get(), s.Set, (double)s.Param1, (double)s.Param2)
+                                    { Foreground = Brushes.White }
                                 });
                                 Slidings.Add(fe as Sliding);
                                 break;

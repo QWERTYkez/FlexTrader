@@ -25,7 +25,7 @@ namespace FlexTrader.MVVM.Resources
     public partial class DoubleSlider : UserControl
     {
         public event Action<double> ValueChanged;
-        public DoubleSlider(double val, double min, double max, Action<object> set)
+        public DoubleSlider(double val, Action<object> set, double min, double max)
         {
             InitializeComponent();
 

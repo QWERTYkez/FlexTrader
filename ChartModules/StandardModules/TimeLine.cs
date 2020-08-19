@@ -318,10 +318,5 @@ namespace ChartModules.StandardModules
                     new Point(width, 0), new Point(width, 4096)));
             }
         }
-
-        private protected override void SetsDefinition()
-        {
-            //SetsName = "Настройки шкалы цены";
-        }
     }
 }

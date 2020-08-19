@@ -68,8 +68,8 @@ namespace FlexTrader.MVVM.Views
                                 break;
                             case SetType.DoubleSlider:
 
-                                AddSetting(sp, s, () => new DoubleSlider((double)s.Get(),
-                                    (double)s.Param1, (double)s.Param2, s.Set));
+                                AddSetting(sp, s, () => new DoubleSlider((double)s.Get(), s.Set,
+                                    (double)s.Param1, (double)s.Param2));
 
                                 break;
                             case SetType.DoublePicker:

@@ -421,12 +421,12 @@ namespace FlexTrader.MVVM.Views
             Setting.SetsLevel(SpaceSets, "Сетка", new Setting[] 
             {
                 new Setting("Цвет", () => LinesPen.Brush, SetGridBrush, Brushes.DarkGray),
-                new Setting(SetType.DoubleSlider, "Толщина", () => LinesPen.Thickness * 10, SetGridThicknesses, 10d, 1d, 20d)
+                new Setting(SetType.DoubleSlider, "Толщина", () => LinesPen.Thickness * 10, SetGridThicknesses, 1d, 20d, 10d)
             });
             Setting.SetsLevel(SpaceSets, "Текст", new Setting[]
             {
                 new Setting("Цвет", () => FontBrush, SetFontBrush, Brushes.White),
-                new Setting(SetType.DoubleSlider, "Размер", () => BaseFontSize, SetBaseFontSize, 18d, 10d, 40d)
+                new Setting(SetType.DoubleSlider, "Размер", () => BaseFontSize, SetBaseFontSize, 10d, 40d, 18d)
             });
         }
     }

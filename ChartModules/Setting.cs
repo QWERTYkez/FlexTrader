@@ -65,7 +65,7 @@ namespace ChartModules
         /// New Double Setting
         /// </summary>
         public Setting(SetType Type, string Name, Func<object> Get,
-                       Action<object> Set, double? Standart = null, double? Min = null, double? Max = null)
+                       Action<object> Set, double? Min = null, double? Max = null, double? Standart = null)
         {
             this.Name = Name;
             this.Type = Type;
