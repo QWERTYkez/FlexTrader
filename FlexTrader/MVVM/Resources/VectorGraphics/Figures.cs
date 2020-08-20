@@ -28,6 +28,21 @@ namespace FlexTrader.MVVM.Resources
     public class Reset : UserControl { }
     public class Magnet : UserControl { }
     public class CheckMark : UserControl { }
+    public class Lock : UserControl 
+    {
+        public static readonly DependencyProperty LockedProperty;
+
+        public bool Locked
+        {
+            get { return (bool)GetValue(LockedProperty); }
+            set { SetValue(LockedProperty, value); }
+        }
+
+        static Lock()
+        {
+            LockedProperty = DependencyProperty.Register("Locked", typeof(bool), typeof(Lock), new PropertyMetadata { DefaultValue = false });
+        }
+    }
 
     public class PaintingLevel : UserControl, ICloneable
     {

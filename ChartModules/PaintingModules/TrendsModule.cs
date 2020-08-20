@@ -16,24 +16,40 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartModules.StandardModules;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace ChartModules.PaintingModules
 {
-    public class TrendsModule : ChartModule
+    public class TrendsModule : PaintingChartModule
     {
-        private readonly Action ResetInstrument;
-        public TrendsModule(IChart chart, PriceMarksModule PMM, Action ResetInstrument) : base(chart)
-        {
-            this.ResetInstrument = ResetInstrument;
-        }
+        public TrendsModule(IChart chart, IDrawingCanvas TrendsLayer, Action<string> ResetInstrument) : 
+            base(chart, TrendsLayer, "Тренды", "Trend", ResetInstrument) { }
 
         public override Task Redraw() => null;
-        private protected override void Destroy() { }
+        
+        public override void PaintingElement(MouseButtonEventArgs e) => ResetInstrument.Invoke(null);
 
-        public void PaintingTrend(MouseButtonEventArgs e) => ResetInstrument.Invoke();
+        private protected override void ResetHooks()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class Trend : ChangingElement
+    {
+        public override string SetsName => "Trend";
+
+        public override double GetMagnetRadius()
+        {
+            throw new NotImplementedException();
+        }
+
+        private protected override List<Setting> GetSets()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

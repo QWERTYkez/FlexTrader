@@ -10,15 +10,49 @@
     mc:Ignorable="d">
     <Viewbox Stretch="Uniform">
         <Path
-            Width="100"
-            Height="100"
-            Stroke="White" StrokeThickness="7">
+            Width="800"
+            Height="700"
+            Fill="White">
             <Path.Data>
                 <GeometryGroup>
-                    <GeometryGroup.Children>
-                        <LineGeometry StartPoint="20, 40" EndPoint="40, 90" />
-                        <LineGeometry StartPoint="80, 10" EndPoint="40, 90" />
-                    </GeometryGroup.Children>
+                    <CombinedGeometry GeometryCombineMode="Union">
+                        <CombinedGeometry.Geometry1>
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="400, 200"
+                                        RadiusX="350"
+                                        RadiusY="200" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <CombinedGeometry GeometryCombineMode="Union">
+                                        <CombinedGeometry.Geometry1>
+                                            <EllipseGeometry
+                                                Center="400, 200"
+                                                RadiusX="150"
+                                                RadiusY="60" />
+                                        </CombinedGeometry.Geometry1>
+                                        <CombinedGeometry.Geometry2>
+                                            <RectangleGeometry Rect="50,200 700,210" />
+                                        </CombinedGeometry.Geometry2>
+                                    </CombinedGeometry>
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+                        </CombinedGeometry.Geometry1>
+                        <CombinedGeometry.Geometry2>
+                            <GeometryGroup>
+                                <CombinedGeometry GeometryCombineMode="Union">
+                                    <CombinedGeometry.Geometry1>
+                                        <RectangleGeometry Rect="50,200 200,300" />
+                                    </CombinedGeometry.Geometry1>
+                                    <CombinedGeometry.Geometry2>
+                                        <RectangleGeometry Rect="0,300 800,400" />
+                                    </CombinedGeometry.Geometry2>
+                                </CombinedGeometry>
+                                <RectangleGeometry Rect="550,200 200,100" />
+                            </GeometryGroup>
+                        </CombinedGeometry.Geometry2>
+                    </CombinedGeometry>
                 </GeometryGroup>
             </Path.Data>
         </Path>

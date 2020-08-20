@@ -62,10 +62,10 @@ namespace FlexTrader.MVVM.Views
             mainView.KeyPressed += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) GetControl(); };
             mainView.KeyReleased += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) LoseControl(); };
 
-            PriceMarksModule = new PriceMarksModule(this, MarksLinesLayer, MarksLayer);
+            PriceMarksModule = new PriceMarksModule(this, LevelsLayer, MarksLayer);
 
-            LevelsModule = new LevelsModule(this, PriceMarksModule, ResetInstrument);
-            TrendsModule = new TrendsModule(this, null, null);
+            LevelsModule = new LevelsModule(this, PriceMarksModule.Levels, ResetInstrument);
+            TrendsModule = new TrendsModule(this, TrendsLayer, ResetInstrument);
 
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
             PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
@@ -179,7 +179,7 @@ namespace FlexTrader.MVVM.Views
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "PaintingTrends":
-                        Instrument = TrendsModule.PaintingTrend; Painting = true;
+                        Instrument = TrendsModule.PaintingElement; Painting = true;
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "Interacion":
@@ -272,7 +272,6 @@ namespace FlexTrader.MVVM.Views
                 Thread.Sleep(50);
                 if (x != ChangesCounter) return;
 
-                //HooksModule.RemoveLastHook();
                 CandlesModule.HorizontalReset(e.HeightChanged);
                 if (CurrentMagnetState) CandlesModule.ResetMagnetData();
             });

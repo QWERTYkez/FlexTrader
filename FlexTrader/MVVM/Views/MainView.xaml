@@ -108,6 +108,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Thickness
+            x:Key="PaletteButtonMargin"
+            Bottom="2.5"
+            Left="0"
+            Right="0"
+            Top="2.5" />
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -126,9 +132,9 @@
                 PreviewMouseWheel="ScrollingBar"
                 VerticalScrollBarVisibility="Disabled">
                 <WrapPanel Height="42" Margin="5">
-                    <res:Sliding Title="Price" Background="Lime">
-                        <TextBox Width="40" />
-                    </res:Sliding>
+                    <res:PaletteButton>
+                        <res:Lock />
+                    </res:PaletteButton>
                 </WrapPanel>
             </ScrollViewer>
             <ScrollViewer

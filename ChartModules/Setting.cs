@@ -75,6 +75,19 @@ namespace ChartModules
             this.Param1 = Min;
             this.Param2 = Max;
         }
+        /// <summary>
+        /// New Lock Setting
+        /// </summary>
+        public Setting(Func<object> Get, Action<object> Set)
+        {
+            this.Name = null;
+            this.Type = SetType.Lock;
+            this.Get = Get;
+            this.Set = Set;
+            this.ResetObj = null;
+            this.Param1 = null;
+            this.Param2 = null;
+        }
 
         public static void SetsLevel(List<Setting> Sets, string Name, Setting[] args)
         {
@@ -98,6 +111,7 @@ namespace ChartModules
         DoubleSlider,
         DoublePicker,
         GoDown,
-        GoUp
+        GoUp,
+        Lock
     }
 }

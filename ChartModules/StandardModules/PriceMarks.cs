@@ -205,7 +205,7 @@ namespace ChartModules.StandardModules
     public class PriceMark : ChangingElement
     {
         public PriceMark(double Price, Action ApplyChanges, SolidColorBrush TextBrush, SolidColorBrush MarkFill, 
-            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0) : base(ApplyChanges)
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
@@ -214,15 +214,13 @@ namespace ChartModules.StandardModules
             this.LineDash = LineDash;
             this.LineIndent = LineIndent;
             this.LineThikness = LineThikness;
-            this.ApplyChange = ApplyChanges;
 
             this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
         }
 
-        private static readonly string sn = "Level";
-        public override string SetsName { get => sn; }
+        public override string SetsName { get => "Level"; }
         public override double GetMagnetRadius() => LineThikness / 2 + 2;
-        public override List<Setting> GetSets()
+        private protected override List<Setting> GetSets()
         {
             return new List<Setting>
             {
@@ -230,9 +228,9 @@ namespace ChartModules.StandardModules
                 new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
                 new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
                 new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting(SetType.DoubleSlider, "Толщина", () => this.LineThikness, pr => { this.LineThikness = (double)pr; ApplyChangesToAll((double)pr); }, 1d, 5d),
-                new Setting(SetType.DoubleSlider, "Отступ", () => this.LineIndent, pr => { this.LineIndent = (double)pr; ApplyChangesToAll((double)pr); }, 0d, 10d),
-                new Setting(SetType.DoubleSlider, "Штрих", () => this.LineDash, pr => { this.LineDash = (double)pr; ApplyChangesToAll((double)pr); }, 1d, 10d)
+                new Setting(SetType.DoubleSlider, "Thickness", () => this.LineThikness, pr => { this.LineThikness = (double)pr; ApplyChangesToAll(); }, 1d, 5d),
+                new Setting(SetType.DoubleSlider, "Gap", () => this.LineIndent, pr => { this.LineIndent = (double)pr; ApplyChangesToAll(); }, 0d, 10d),
+                new Setting(SetType.DoubleSlider, "Dash", () => this.LineDash, pr => { this.LineDash = (double)pr; ApplyChangesToAll(); }, 1d, 10d)
             };
         }
 

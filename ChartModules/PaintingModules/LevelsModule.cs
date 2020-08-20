@@ -32,11 +32,11 @@ namespace ChartModules.PaintingModules
     {
         private readonly MarksLayer Levels;
         private readonly Action<string> ResetInstrument;
-        public LevelsModule(IChart chart, PriceMarksModule PMM, Action<string> ResetInstrument) : base(chart)
+        public LevelsModule(IChart chart, MarksLayer Levels, Action<string> ResetInstrument) : base(chart)
         {
-            Levels = PMM.Levels;
+            this.Levels = Levels;
             this.ResetInstrument = ResetInstrument;
-            Chart.VerticalСhanges += () => Task.Run(() => ResetPrices());
+            Chart.VerticalСhanges += () => Task.Run(() => ResetHooks());
             SetsName = "Уровни";
 
             Levels.Marks.CollectionChanged += (s, e) => 
@@ -47,7 +47,7 @@ namespace ChartModules.PaintingModules
                     Setting.SetsLevel(
                         Sets,
                         $"Level {i + 1}",
-                        Levels.Marks[i].GetSets().ToArray());
+                        Levels.Marks[i].GetSettings().ToArray());
                 }
             };
         }
@@ -55,7 +55,7 @@ namespace ChartModules.PaintingModules
         public override Task Redraw() => null;
         private protected override void Destroy() { }
         
-        private void ResetPrices()
+        private void ResetHooks()
         {
             Hooks = (from x in Levels.Marks
                      select new { Mark = x, Heght = Chart.PriceToHeight(x.Price) }
@@ -205,9 +205,7 @@ namespace ChartModules.PaintingModules
                          },
                          Point =>
                          {
-                             var m = z.Mark;
-                             m.Price = Chart.HeightToPrice(Point.Y);
-                             m.ApplyChanges();
+                             z.Mark.Price = Chart.HeightToPrice(Point.Y);
                          }
                      )
                                ).ToList();
@@ -223,7 +221,7 @@ namespace ChartModules.PaintingModules
                 ResetInstrument.Invoke(null);
             else 
                 Chart.ControlUsed = true;
-            ResetPrices();
+            ResetHooks();
         }
         public void AddLevel(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill,
             SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0) => 

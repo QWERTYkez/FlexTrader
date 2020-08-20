@@ -28,11 +28,17 @@
     <SolidColorBrush x:Key="Button.Pressed.BorderBrush" Color="#FF68AADC" />
     <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FF17293E" />
     <SolidColorBrush x:Key="Button.Disabled.BorderBrush" Color="Black" />
+    <Thickness
+        x:Key="PaletteButtonMargin"
+        Bottom="0"
+        Left="0"
+        Right="0"
+        Top="0" />
     <Style TargetType="{x:Type local:PaletteButton}">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="40" />
-        <Setter Property="Margin" Value="0,2.5,0,2.5" />
+        <Setter Property="Margin" Value="{DynamicResource PaletteButtonMargin}" />
         <Setter Property="BorderBrush" Value="{StaticResource Button.Static.BorderBrush}" />
         <Setter Property="Background" Value="{DynamicResource Button.Static.Background}" />
         <Setter Property="Foreground" Value="White" />

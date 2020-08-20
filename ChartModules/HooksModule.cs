@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -123,6 +122,8 @@ namespace ChartModules
 
             if (NewHook != null)
             {
+                RemoveHook = null;
+
                 if (NewHook.SubHooks != null)
                 {
                     var SubHook = ScanHooks(NewHook.SubHooks, P);
@@ -182,6 +183,7 @@ namespace ChartModules
                                         dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                                     });
                                 }
+                                NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
                                 NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
                             });
                             ResizeHook = () =>
@@ -213,7 +215,9 @@ namespace ChartModules
                             dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                         }
 
-                        ChartWindow.MoveCursor(e,
+                        if (!NewHook.Locked)
+                        {
+                            ChartWindow.MoveCursor(e,
                             vec =>
                             {
                                 if (vec != null)
@@ -240,6 +244,16 @@ namespace ChartModules
                                     NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
                                 }
                             });
+                        }
+                        else
+                        {
+                            ChartWindow.MoveCursor(e,
+                            vec =>
+                            {
+                                if(vec == null)
+                                    Manipulating = false;
+                            });
+                        }
                     });
                     foreach (var l in OtherLayers)
                         l.Visibility = Visibility.Hidden;
@@ -255,6 +269,7 @@ namespace ChartModules
         }
         public void RemoveLastHook()
         {
+            ResizeHook = null;
             Dispatcher.Invoke(() =>
             {
                 RemoveHook = null;
@@ -307,12 +322,11 @@ namespace ChartModules
             Action<Point> AcceptChanges,
             List<Hook> SubHooks = null)
         {
+            this.Element = Element;
             this.GetDistanceXY = GetDistanceXY;
-            this.Sets = Element.GetSets();
             ActionDrawShadow = DrawShadow;
             GetVal = GetHookPoint;
             ActionDrawOver = DrawCopy;
-            this.SetsName = Element.SetsName;
             this.SubHooks = SubHooks;
             this.MagnetRadius = Element.GetMagnetRadius;
             this.AcceptChanges = AcceptChanges;
@@ -328,11 +342,13 @@ namespace ChartModules
         }
         public void ClearEvents() => ResetElement = null;
 
+        private readonly ChangingElement Element;
+        public bool Locked { get => Element.Locked; }
+
         public List<Hook> SubHooks { get; }
-        public string SetsName { get; }
-        public List<Setting> Sets { get; }
+        public string SetsName { get => Element.SetsName; }
+        public List<Setting> Sets { get => Element.GetSettings(); }
         private Func<double> MagnetRadius { get; }
-        private Action<Point, Vector, DrawingVisual, DrawingVisual, DrawingVisual> Manipulate { get; }
         private Action<Point> AcceptChanges { get; }
         private readonly Func<double, double, double> GetDistanceXY;
         private readonly Func<Point, Point> GetVal;
@@ -340,19 +356,38 @@ namespace ChartModules
         private readonly Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawShadow;
 
         public double GetMagnetRadius() => MagnetRadius();
-        public void AcceptNewCoordinates(Point NewCoordinates) => AcceptChanges.Invoke(NewCoordinates);
+        
         public Point GetCurrentPosition(Point CursorPos) => GetVal.Invoke(CursorPos);
         public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY.Invoke(CursorPoint.X, CursorPoint.Y));
         public Point GetHookPoint(Point P) => GetVal.Invoke(P);
-        public void DrawOver(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
-            Task.Run(() => ActionDrawOver.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual));
+
+        public void AcceptNewCoordinates(Point NewCoordinates)
+        { AcceptChanges.Invoke(NewCoordinates); Element.ApplyChange.Invoke(); }
+
         public void DrawShadow(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
-            Task.Run(() => ActionDrawShadow.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual));
+            ActionDrawShadow.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+
+        public void DrawOver(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
+            ActionDrawOver.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
     }
     public abstract class ChangingElement
     {
+        public ChangingElement(Action ApplyChanges)
+        {
+            this.ApplyChange = ApplyChanges;
+        }
+        public ChangingElement() { }
+
+        public bool Locked = true;
         public abstract string SetsName { get; }
-        public abstract List<Setting> GetSets();
+        private protected abstract List<Setting> GetSets();
+        public List<Setting> GetSettings()
+        {
+            var sets = new List<Setting> { new Setting(() => this.Locked, b => this.Locked = (bool)b) };
+            sets.AddRange(this.GetSets());
+            return sets;
+        }
+
         public abstract double GetMagnetRadius();
 
         public event Action<(ChangesElementType type, object element)?> Changed;

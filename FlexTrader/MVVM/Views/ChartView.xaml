@@ -72,7 +72,8 @@
                 </Grid>
             </Grid>
             <Grid x:Name="SubLayers">
-                <mvvm:DrawingCanvas x:Name="MarksLinesLayer" />
+                <mvvm:DrawingCanvas x:Name="LevelsLayer" />
+                <mvvm:DrawingCanvas x:Name="TrendsLayer" />
             </Grid>
             <mvvm:DrawingCanvas x:Name="HooksLayer" />
             <Grid>

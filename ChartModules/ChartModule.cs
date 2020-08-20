@@ -16,8 +16,11 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace ChartModules
@@ -42,6 +45,51 @@ namespace ChartModules
         public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
         private protected List<Setting> Sets { get; } = new List<Setting>();
         private protected string SetsName { get; set; }
+    }
 
+    public abstract class PaintingChartModule : ChartModule, IHooksModule
+    {
+        private readonly IDrawingCanvas ElementsCanvas;
+        private protected readonly Action<string> ResetInstrument;
+        private protected PaintingChartModule(IChart chart, IDrawingCanvas ElementsCanvas, string SetsName, string ElementName, Action<string> ResetInstrument) : base(chart) 
+        {
+            this.ElementName = ElementName;
+            this.SetsName = SetsName;
+            this.ElementsCanvas = ElementsCanvas;
+            this.ResetInstrument = ResetInstrument;
+
+            ElementsCanvas.AddVisual(ElementsVisual);
+        }
+
+        private protected readonly DrawingVisual ElementsVisual = new DrawingVisual();
+        private protected override void Destroy()
+        {
+            ElementsCanvas.ClearVisuals();
+        }
+
+        private string ElementName { get; }
+
+        private protected readonly List<ChangingElement> ElementsCollection = new List<ChangingElement>();
+        private void CollectionChanged()
+        {
+            Sets.Clear();
+            for (int i = 0; i < ElementsCollection.Count; i++)
+                Setting.SetsLevel(Sets, $"{ElementName} {i + 1}", ElementsCollection[i].GetSettings().ToArray());
+
+            Redraw();
+        }
+
+        private protected void AddElementToCollection(ChangingElement el)
+        {
+            el.ApplyChange = CollectionChanged;
+            ElementsCollection.Add(el);
+            CollectionChanged();
+        }
+
+        public abstract void PaintingElement(MouseButtonEventArgs e);
+
+        //IHooksModule
+        private protected abstract void ResetHooks();
+        public List<Hook> Hooks { get; private set; } = new List<Hook>();
     }
 }
