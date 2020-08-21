@@ -22,8 +22,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
-namespace ChartModules
+namespace ChartModules.PaintingModule
 {
     public class HooksModule : ChartModule
     {
@@ -32,7 +33,7 @@ namespace ChartModules
         private readonly IDrawingCanvas HookTimeLayer;
 
         public HooksModule(IChart chart, IChartWindow ChartWindow, IDrawingCanvas HooksLayer, IDrawingCanvas HookPriceLayer, IDrawingCanvas HookTimeLayer,
-            Func<Pen> GetCursorPen, Action<Action<MouseButtonEventArgs>> SetInstrument, List<FrameworkElement> OtherLayers) : base(chart)
+            Func<Pen> GetCursorPen, Func<List<Hook>> GetVisibleHooks, Action<Action<MouseButtonEventArgs>> SetInstrument, List<FrameworkElement> OtherLayers) : base(chart)
         {
             this.ChartWindow = ChartWindow;
             this.SetInstrument = SetInstrument;
@@ -41,6 +42,7 @@ namespace ChartModules
             this.HookPriceLayer = HookPriceLayer;
             this.HookTimeLayer = HookTimeLayer;
             this.GetCursorPen = GetCursorPen;
+            this.GetVisibleHooks = GetVisibleHooks;
 
             this.SetMenuAct = ChartWindow.SetMenu;
 
@@ -68,6 +70,7 @@ namespace ChartModules
         public override Task Redraw() => null;
 
         private readonly Func<Pen> GetCursorPen;
+        private readonly Func<List<Hook>> GetVisibleHooks;
         private readonly IChartWindow ChartWindow;
         private readonly List<FrameworkElement> OtherLayers;
         private readonly Action<Action<MouseButtonEventArgs>> SetInstrument;
@@ -114,11 +117,7 @@ namespace ChartModules
             var pn = GetCursorPen.Invoke();
             var P = e.GetPosition((IInputElement)Chart);
 
-            var AllHooks = new List<Hook>();
-            foreach (var m in Chart.HooksModules)
-                AllHooks.AddRange(m.Hooks);
-
-            var NewHook = ScanHooks(AllHooks, P);
+            var NewHook = ScanHooks(GetVisibleHooks.Invoke(), P);
 
             if (NewHook != null)
             {
@@ -209,7 +208,7 @@ namespace ChartModules
                             foreach (var l in OtherLayers)
                                 l.Visibility = Visibility.Visible;
                             PointVisual.Transform = null;
-                            SetMenuAct(NewHook.SetsName, NewHook.Sets);
+                            SetMenuAct(NewHook.ElementName, NewHook.Sets);
                             using var dc = PointVisual.RenderOpen();
                             dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
                             dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
@@ -231,7 +230,7 @@ namespace ChartModules
                                     Manipulating = false;
 
                                     NewHook.AcceptNewCoordinates(NewValue);
-                                    SetMenuAct(NewHook.SetsName, NewHook.Sets);
+                                    SetMenuAct(NewHook.ElementName, NewHook.Sets);
 
                                     LastValue = NewHook.GetHookPoint(e.GetPosition((IInputElement)Chart));
                                     LastPointPrice = Chart.HeightToPrice(LastValue.Y);
@@ -306,30 +305,29 @@ namespace ChartModules
         /// Класс для манипуляции нарисованными элемнтами
         /// </summary>
         /// <param name="GetDistanceXY">Функция возвращающая дистанцию до цели</param>
-        /// <param name="DrawCopy">Рисование копии объекта</param>
+        /// <param name="DrawElement">Рисование копии объекта</param>
         /// <param name="DrawShadow">Рисование тени объекта</param>
-        /// <param name="Manipulate">Передвижение объекта</param>
         /// <param name="GetHookPoint">Функция возвращающая точку захвата</param>
-        /// <param name="AcceptChanges">Применить изменения к оригиналу</param>
+        /// <param name="AcceptNewCoordinates">Применить изменения к оригиналу</param>
         /// <param name="Element">Манипулируемый элемент</param>
         /// <param name="SubHooks"></param>
         public Hook(
             ChangingElement Element,
             Func<double, double, double> GetDistanceXY,
             Func<Point, Point> GetHookPoint,
-            Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> DrawCopy,
+            Action<Point?, DrawingVisual, DrawingVisual, DrawingVisual> DrawElement,
             Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> DrawShadow,
-            Action<Point> AcceptChanges,
+            Action<Point> AcceptNewCoordinates,
             List<Hook> SubHooks = null)
         {
             this.Element = Element;
             this.GetDistanceXY = GetDistanceXY;
             ActionDrawShadow = DrawShadow;
             GetVal = GetHookPoint;
-            ActionDrawOver = DrawCopy;
+            ActionDrawOver = DrawElement;
             this.SubHooks = SubHooks;
             this.MagnetRadius = Element.GetMagnetRadius;
-            this.AcceptChanges = AcceptChanges;
+            this.AcceptChanges = AcceptNewCoordinates;
 
             Element.Changed += o => Task.Run(() => ResetElement?.Invoke(o));
         }
@@ -346,13 +344,13 @@ namespace ChartModules
         public bool Locked { get => Element.Locked; }
 
         public List<Hook> SubHooks { get; }
-        public string SetsName { get => Element.SetsName; }
+        public string ElementName { get => Element.ElementName; }
         public List<Setting> Sets { get => Element.GetSettings(); }
         private Func<double> MagnetRadius { get; }
         private Action<Point> AcceptChanges { get; }
         private readonly Func<double, double, double> GetDistanceXY;
         private readonly Func<Point, Point> GetVal;
-        private readonly Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawOver;
+        private readonly Action<Point?, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawOver;
         private readonly Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawShadow;
 
         public double GetMagnetRadius() => MagnetRadius();
@@ -369,53 +367,5 @@ namespace ChartModules
 
         public void DrawOver(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
             ActionDrawOver.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
-    }
-    public abstract class ChangingElement
-    {
-        public ChangingElement(Action ApplyChanges)
-        {
-            this.ApplyChange = ApplyChanges;
-        }
-        public ChangingElement() { }
-
-        public bool Locked = true;
-        public abstract string SetsName { get; }
-        private protected abstract List<Setting> GetSets();
-        public List<Setting> GetSettings()
-        {
-            var sets = new List<Setting> { new Setting(() => this.Locked, b => this.Locked = (bool)b) };
-            sets.AddRange(this.GetSets());
-            return sets;
-        }
-
-        public abstract double GetMagnetRadius();
-
-        public event Action<(ChangesElementType type, object element)?> Changed;
-        public Action ApplyChange;
-        public Action ChangeHook { get; set; }
-        public void ApplyChanges() => ApplyChange.Invoke();
-
-        private protected void ApplyChangesToAll() 
-        {
-            ApplyChanges();
-            Changed.Invoke(null);
-        } 
-        private protected void ApplyChangesToAll(double Price)
-        {
-            ApplyChanges();
-            Changed.Invoke((ChangesElementType.Price, Price));
-        }
-        private protected void ApplyChangesToAll(Point Point) 
-        {
-            ApplyChanges();
-            Changed.Invoke((ChangesElementType.Point, Point));
-        }
-
-        
-    }
-    public enum ChangesElementType
-    {
-        Price,
-        Point
     }
 }

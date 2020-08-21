@@ -89,11 +89,15 @@ namespace ChartModules
             this.Param2 = null;
         }
 
+        private static readonly object key = new object();
         public static void SetsLevel(List<Setting> Sets, string Name, Setting[] args)
         {
-            Sets.Add(new Setting(Name));
-            Sets.AddRange(args);
-            Sets.Add(new Setting(SetType.GoUp));
+            lock(key)
+            {
+                Sets.Add(new Setting(Name));
+                Sets.AddRange(args);
+                Sets.Add(new Setting(SetType.GoUp));
+            }
         }
 
         public readonly string Name;

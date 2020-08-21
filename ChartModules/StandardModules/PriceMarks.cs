@@ -202,10 +202,10 @@ namespace ChartModules.StandardModules
         public DrawingVisual PriceVisual { get; }
         public ObservableCollection<PriceMark> Marks { get; }
     }
-    public class PriceMark : ChangingElement
+    public class PriceMark
     {
         public PriceMark(double Price, Action ApplyChanges, SolidColorBrush TextBrush, SolidColorBrush MarkFill, 
-            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0) : base(ApplyChanges)
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
@@ -216,22 +216,6 @@ namespace ChartModules.StandardModules
             this.LineThikness = LineThikness;
 
             this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
-        }
-
-        public override string SetsName { get => "Level"; }
-        public override double GetMagnetRadius() => LineThikness / 2 + 2;
-        private protected override List<Setting> GetSets()
-        {
-            return new List<Setting>
-            {
-                new Setting(SetType.DoublePicker, "Price", () => this.Price, pr => { this.Price = (double)pr; ApplyChangesToAll((double)pr); }),
-                new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting(SetType.DoubleSlider, "Thickness", () => this.LineThikness, pr => { this.LineThikness = (double)pr; ApplyChangesToAll(); }, 1d, 5d),
-                new Setting(SetType.DoubleSlider, "Gap", () => this.LineIndent, pr => { this.LineIndent = (double)pr; ApplyChangesToAll(); }, 0d, 10d),
-                new Setting(SetType.DoubleSlider, "Dash", () => this.LineDash, pr => { this.LineDash = (double)pr; ApplyChangesToAll(); }, 1d, 10d)
-            };
         }
 
         public double Price { get; set; }

@@ -64,7 +64,6 @@ namespace ChartModules
         bool Controlled { get; }
         Point CurrentCursorPosition { get; }
         bool ControlUsed { get; set; }
-        List<IHooksModule> HooksModules { get; }
     }
 
     public interface IDrawingCanvas
@@ -91,10 +90,5 @@ namespace ChartModules
                                  List<(string SetsName, List<Setting> Sets)> st);
 
         public void SetMenu(string SetsName, List<Setting> Sets);
-    }
-
-    public interface IHooksModule
-    {
-        List<Hook> Hooks { get; }
     }
 }

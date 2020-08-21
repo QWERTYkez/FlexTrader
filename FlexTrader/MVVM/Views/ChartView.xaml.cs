@@ -17,7 +17,7 @@
 */
 
 using ChartModules;
-using ChartModules.PaintingModules;
+using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.ViewModels;
 using System;
@@ -42,9 +42,7 @@ namespace FlexTrader.MVVM.Views
         private readonly PriceLineModule PriceLineModule;
         private readonly CandlesModule CandlesModule;
 
-        private readonly LevelsModule LevelsModule;
-        private readonly TrendsModule TrendsModule;
-
+        private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;
 
         public ChartView() { } //конструктор для intellisense
@@ -62,10 +60,18 @@ namespace FlexTrader.MVVM.Views
             mainView.KeyPressed += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) GetControl(); };
             mainView.KeyReleased += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) LoseControl(); };
 
-            PriceMarksModule = new PriceMarksModule(this, LevelsLayer, MarksLayer);
+            PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
-            LevelsModule = new LevelsModule(this, PriceMarksModule.Levels, ResetInstrument);
-            TrendsModule = new TrendsModule(this, TrendsLayer, ResetInstrument);
+            PaintingModule = new PaintingModule(this, PaintingsLayer, PaintingMarksLayer, PaintingTimeLayer, ResetInstrument);
+            HooksModule = new HooksModule(this, mainView, HooksLayer, HookPriceLayer, HookTimeLayer,
+                () => CursorModule.MarksPen,
+                () => PaintingModule.VisibleHooks,
+                act => { Instrument = act; },
+                new List<FrameworkElement>
+                {
+                    SubLayers,
+                    PaintingMarksLayer
+                });
 
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
             PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
@@ -78,15 +84,7 @@ namespace FlexTrader.MVVM.Views
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
                 Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
-
-            HooksModule = new HooksModule(this, mainView, HooksLayer, HookPriceLayer, HookTimeLayer,
-                () => CursorModule.MarksPen,
-                act => { Instrument = act; },
-                new List<FrameworkElement>
-                {
-                    SubLayers,
-                    MarksLayer
-                });
+            
             ChartGRD.PreviewMouseDown += (s, e) =>
             {
                 e.Handled = true;
@@ -104,15 +102,6 @@ namespace FlexTrader.MVVM.Views
 
             SetInsrument(mainView.CurrentInstrument);
             SetMagnetState(mainView.CurrentMagnetState);
-
-
-
-
-            /////////
-            LevelsModule.AddLevel(208.99, Brushes.White, (SolidColorBrush)ChartBackground, Brushes.Yellow, 5, 5, 2);
-            LevelsModule.AddLevel(206.95, (SolidColorBrush)ChartBackground, Brushes.Azure, Brushes.Azure, 4, 6, 3);
-            LevelsModule.AddLevel(204.90, Brushes.Lime, (SolidColorBrush)ChartBackground, Brushes.Lime, 3, 7, 4);
-            //////////
         }
 
         public void Destroy()
@@ -122,8 +111,7 @@ namespace FlexTrader.MVVM.Views
             this.TimeLineModule.Restruct();
             this.PriceLineModule.Restruct();
             this.CandlesModule.Restruct();
-            this.LevelsModule.Restruct();
-            this.TrendsModule.Restruct();
+            this.PaintingModule.Restruct();
 
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged -= DC_PropertyChanged;
@@ -175,11 +163,11 @@ namespace FlexTrader.MVVM.Views
                 switch (InstrumentName)
                 {
                     case "PaintingLevels":
-                        Instrument = LevelsModule.PaintingLevel; Painting = true;
+                        Instrument = PaintingModule.PaintingLevel; Painting = true;
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "PaintingTrends":
-                        Instrument = TrendsModule.PaintingElement; Painting = true;
+                        Instrument = PaintingModule.PaintingTrend; Painting = true;
                         MagnetInstrument = true; t = CursorT.Paint; break;
 
                     case "Interacion":
@@ -265,13 +253,13 @@ namespace FlexTrader.MVVM.Views
         {
             Task.Run(() =>
             {
-                ChHeight = ChartGRD.ActualHeight;
-                ChWidth = ChartGRD.ActualWidth;
                 ChangesCounter += 1;
                 var x = ChangesCounter;
                 Thread.Sleep(50);
                 if (x != ChangesCounter) return;
 
+                ChHeight = ChartGRD.ActualHeight;
+                ChWidth = ChartGRD.ActualWidth;
                 CandlesModule.HorizontalReset(e.HeightChanged);
                 if (CurrentMagnetState) CandlesModule.ResetMagnetData();
             });
@@ -283,7 +271,6 @@ namespace FlexTrader.MVVM.Views
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
 
-        public List<IHooksModule> HooksModules { get; } = new List<IHooksModule>();
         public List<CandlesModule.MagnetPoint> MagnetPoints { get => CandlesModule.MagnetPoints; }
         public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }
         public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
@@ -346,7 +333,7 @@ namespace FlexTrader.MVVM.Views
             basesets.Add(CandlesModule.GetSets());
             basesets.Add(CursorModule.GetSets());
 
-            var s = LevelsModule.GetSets();
+            var s = PaintingModule.GetSets();
             normalsets.Add(s);
 
             ShowSettings.Invoke(basesets, normalsets, transsets);

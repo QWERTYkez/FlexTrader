@@ -73,7 +73,7 @@
             </Grid>
             <Grid x:Name="SubLayers">
                 <mvvm:DrawingCanvas x:Name="LevelsLayer" />
-                <mvvm:DrawingCanvas x:Name="TrendsLayer" />
+                <mvvm:DrawingCanvas x:Name="PaintingsLayer" />
             </Grid>
             <mvvm:DrawingCanvas x:Name="HooksLayer" />
             <Grid>
@@ -98,7 +98,7 @@
             Background="{Binding ChartBackground}"
             ClipToBounds="True">
             <mvvm:DrawingCanvas x:Name="PricesLayer" />
-            <mvvm:DrawingCanvas x:Name="MarksLayer" />
+            <mvvm:DrawingCanvas x:Name="PaintingMarksLayer" />
             <mvvm:DrawingCanvas x:Name="HookPriceLayer" />
             <mvvm:DrawingCanvas x:Name="CursorMarkLayer" />
         </Grid>
@@ -107,6 +107,7 @@
             Background="{Binding ChartBackground}"
             ClipToBounds="True">
             <mvvm:DrawingCanvas x:Name="TimeLine" />
+            <mvvm:DrawingCanvas x:Name="PaintingTimeLayer" />
             <mvvm:DrawingCanvas x:Name="HookTimeLayer" />
         </Grid>
 
