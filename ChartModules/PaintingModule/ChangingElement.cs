@@ -53,6 +53,7 @@ namespace ChartModules.PaintingModule
 
         public event Action<(ChangesElementType type, object element)?> Changed;
         public Action ApplyChange;
+        public Action<ChangingElement> Delete;
         public Action ChangeHook { get; set; }
         public void ApplyChanges() => ApplyChange.Invoke();
 
@@ -99,6 +100,8 @@ namespace ChartModules.PaintingModule
                     acts[2]?.Invoke(dc);
             });
         }
+
+        public abstract List<(string Name, Action Act)> GetContextMenu();
     }
     public enum ChangesElementType
     {

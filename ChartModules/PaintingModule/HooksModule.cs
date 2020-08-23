@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -86,6 +87,26 @@ namespace ChartModules.PaintingModule
         private readonly DrawingVisual OverVisual = new DrawingVisual();
         private readonly DrawingVisual OverPriceVisual = new DrawingVisual();
         private readonly DrawingVisual OverTimeVisual = new DrawingVisual();
+
+        public (List<(string Name, Action Act)> Menus, Action RemoveMenu)? ShowContextMenu(object s, MouseEventArgs e)
+        {
+            var P = e.GetPosition((IInputElement)Chart);
+            var Hook = ScanHooks(GetVisibleHooks.Invoke(), P);
+
+            if (Hook != null)
+            {
+                RemoveLastHook();
+                P = Hook.GetHookPoint(P);
+                var pn = GetCursorPen.Invoke();
+                using var dc = PointVisual.RenderOpen();
+                dc.DrawLine(pn, new Point(P.X + 10, P.Y + 10), new Point(P.X - 10, P.Y - 10));
+                dc.DrawLine(pn, new Point(P.X + 10, P.Y - 10), new Point(P.X - 10, P.Y + 10));
+
+                return (Hook.GetContextMenu(), () => PointVisual.RenderOpen().Close());
+            }
+            else return null;
+        }
+
         private Hook CurrentHook;
         private Hook ScanHooks(List<Hook> Hooks, Point P)
         {
@@ -299,6 +320,7 @@ namespace ChartModules.PaintingModule
         }
     }
 
+
     public class Hook
     {
         /// <summary>
@@ -367,5 +389,17 @@ namespace ChartModules.PaintingModule
 
         public void DrawOver(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
             ActionDrawOver.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+
+        public List<(string Name, Action Act)> GetContextMenu() 
+        {
+            var Items = Element.GetContextMenu();
+
+            if (Items.Count > 0) Items.Add(("+++", null));
+            if (Locked) Items.Add(("Unlock", () => Element.Locked = !Element.Locked));
+            else Items.Add(("Lock", () => Element.Locked = !Element.Locked));
+            Items.Add(("Delete", () => Element.Delete.Invoke(Element)));
+
+            return Items;
+        }
     }
 }

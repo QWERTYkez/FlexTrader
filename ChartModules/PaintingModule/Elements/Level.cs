@@ -232,5 +232,10 @@ namespace ChartModules.PaintingModule.Elements
         {
             this.Price = Chart.HeightToPrice(Coordinates.Y);
         }
+
+        public override List<(string Name, Action Act)> GetContextMenu()
+        {
+            return new List<(string Name, Action Act)>();
+        }
     }
 }

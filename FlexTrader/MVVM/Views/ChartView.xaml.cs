@@ -85,11 +85,27 @@ namespace FlexTrader.MVVM.Views
                 Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
             
-            ChartGRD.PreviewMouseDown += (s, e) =>
+            ChartGRD.PreviewMouseLeftButtonDown += (s, e) =>
             {
                 e.Handled = true;
                 HooksModule.RemoveHook?.Invoke();
                 Instrument?.Invoke(e);
+            };
+            ChartGRD.PreviewMouseRightButtonDown += (s, e) =>
+            {
+                var items = HooksModule.ShowContextMenu(s, e);
+                if (items == null)
+                {
+                    items = (new List<(string Name, Action Act)>()
+                    {
+                        ("Test 1", () => { Debug.WriteLine("Test 1"); }),
+                        ("+++", null),
+                        ("Test 2", () => { Debug.WriteLine("Test 2"); }),
+                        ("+++", null),
+                        ("Test 3", () => { Debug.WriteLine("Test 3"); })
+                    }, null);
+                }
+                mainView.ShowContextMenu(items.Value);
             };
 
             CandlesModule.WhellScalled += () => CursorModule.Redraw();
@@ -246,6 +262,14 @@ namespace FlexTrader.MVVM.Views
                 CandlesModule.ResetMagnetData();
             }
         });
+        #endregion
+        #region
+        private void ShowContextMenu()
+        {
+            var cm = new ContextMenu();
+
+            
+        }
         #endregion
 
         private int ChangesCounter = 0;

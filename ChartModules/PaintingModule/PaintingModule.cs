@@ -19,6 +19,7 @@
 using ChartModules.PaintingModule.Elements;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace ChartModules.PaintingModule
         private readonly IDrawingCanvas ElementsCanvas;
         private readonly IDrawingCanvas PricesCanvas;
         private readonly IDrawingCanvas TimesCanvas;
-        private protected readonly Action<string> ResetInstrument;
+        private readonly Action<string> ResetInstrument;
         public PaintingModule(IChart chart, IDrawingCanvas ElementsCanvas, IDrawingCanvas PricesCanvas, 
             IDrawingCanvas TimesCanvas, Action<string> ResetInstrument) : base(chart)
         {
@@ -48,14 +49,14 @@ namespace ChartModules.PaintingModule
             SetsName = "Paintings";
 
             ////////////////////
-            AddElementToCollection(new Level(208.99, Brushes.White, Brushes.Black, Brushes.Yellow, 5, 5, 2));
-            AddElementToCollection(new Level(206.95, Brushes.Black, Brushes.Azure, Brushes.Azure, 4, 6, 3));
-            AddElementToCollection(new Level(204.90, Brushes.Lime, Brushes.Black, Brushes.Lime, 3, 7, 4));
+            AddElement(new Level(208.99, Brushes.White, Brushes.Black, Brushes.Yellow, 5, 5, 2));
+            AddElement(new Level(206.95, Brushes.Black, Brushes.Azure, Brushes.Azure, 4, 6, 3));
+            AddElement(new Level(204.90, Brushes.Lime, Brushes.Black, Brushes.Lime, 3, 7, 4));
         }
 
-        private protected readonly DrawingVisual ElementsVisual = new DrawingVisual();
-        private protected readonly DrawingVisual PricesVisual = new DrawingVisual();
-        private protected readonly DrawingVisual TimesVisual = new DrawingVisual();
+        private readonly DrawingVisual ElementsVisual = new DrawingVisual();
+        private readonly DrawingVisual PricesVisual = new DrawingVisual();
+        private readonly DrawingVisual TimesVisual = new DrawingVisual();
         private protected override void Destroy()
         {
             ElementsCanvas.ClearVisuals();
@@ -63,46 +64,49 @@ namespace ChartModules.PaintingModule
             TimesCanvas.ClearVisuals();
         }
 
-        private protected readonly List<ChangingElement> ElementsCollection = new List<ChangingElement>();
+        private readonly List<ChangingElement> ElementsCollection = new List<ChangingElement>();
         private void CollectionChanged()
         {
-            Task.Run(() => 
+            Sets.Clear();
+            if (ElementsCollection.Count > 99)
             {
-                Sets.Clear();
-                if (ElementsCollection.Count > 99)
-                {
-                    for (int i = 0; i < ElementsCollection.Count; i++)
-                        Setting.SetsLevel(Sets, $"{i + 1:000}.{ElementsCollection[i].ElementName}",
-                            ElementsCollection[i].GetSettings().ToArray());
-                }
-                else if (ElementsCollection.Count > 9)
-                {
-                    for (int i = 0; i < ElementsCollection.Count; i++)
-                        Setting.SetsLevel(Sets, $"{i + 1:00}.{ElementsCollection[i].ElementName}",
-                            ElementsCollection[i].GetSettings().ToArray());
-                }
-                else
-                {
-                    for (int i = 0; i < ElementsCollection.Count; i++)
-                        Setting.SetsLevel(Sets, $"{i + 1}.{ElementsCollection[i].ElementName}",
-                            ElementsCollection[i].GetSettings().ToArray());
-                }
+                for (int i = 0; i < ElementsCollection.Count; i++)
+                    Setting.SetsLevel(Sets, $"{i + 1:000}. {ElementsCollection[i].ElementName}",
+                        ElementsCollection[i].GetSettings().ToArray());
+            }
+            else if (ElementsCollection.Count > 9)
+            {
+                for (int i = 0; i < ElementsCollection.Count; i++)
+                    Setting.SetsLevel(Sets, $"{i + 1:00}. {ElementsCollection[i].ElementName}",
+                        ElementsCollection[i].GetSettings().ToArray());
+            }
+            else
+            {
+                for (int i = 0; i < ElementsCollection.Count; i++)
+                    Setting.SetsLevel(Sets, $"{i + 1}. {ElementsCollection[i].ElementName}",
+                        ElementsCollection[i].GetSettings().ToArray());
+            }
 
-                Redraw();
-            });
+            Redraw();
         }
 
-        private protected void AddElementToCollection(ChangingElement el)
+        private void AddElement(ChangingElement el)
         {
             el.ApplyChange = CollectionChanged;
             el.Chart = Chart;
+            el.Delete = DeleteElement;
             ElementsCollection.Add(el);
+            CollectionChanged();
+        }
+        private void DeleteElement(ChangingElement el)
+        {
+            ElementsCollection.Remove(el);
             CollectionChanged();
         }
 
         public void PaintingLevel(MouseButtonEventArgs e) 
         {
-            AddElementToCollection(new Level(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y),
+            AddElement(new Level(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y),
                 Brushes.White, Brushes.Black, Brushes.Lime, 3));
 
             if (!Chart.Controlled)
@@ -136,9 +140,13 @@ namespace ChartModules.PaintingModule
                 var ppd = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
                 List<Action<DrawingContext>[]> lacts = new List<Action<DrawingContext>[]>();
 
-                foreach (var el in ElementsCollection)
-                    lacts.Add(el.PrepareToDrawing(null, ppd));
-
+                try
+                {
+                    foreach (var el in ElementsCollection)
+                        lacts.Add(el.PrepareToDrawing(null, ppd));
+                }
+                catch (InvalidOperationException e) { return; }
+                
                 Dispatcher.Invoke(() =>
                 {
                     using (var dc = ElementsVisual.RenderOpen())

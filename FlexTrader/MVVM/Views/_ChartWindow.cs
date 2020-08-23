@@ -20,8 +20,11 @@ using ChartModules;
 using FlexTrader.MVVM.Resources;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -35,33 +38,23 @@ namespace FlexTrader.MVVM.Views
 
             this.PreviewKeyDown += (s, e) => { KeyPressed?.Invoke(e); };
             this.PreviewKeyUp += (s, e) => { KeyReleased?.Invoke(e); };
-        }
 
-        private bool Scrollable = false;
-        private double LastZize;
-        private protected void TopPanel_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (OverlayMenu.Visibility == Visibility.Visible)
+            ContextMenuPopup = new Popup
             {
-                bool b;
-                if (BWP.ActualWidth + 10 > OverlayMenu.ActualWidth && !Scrollable)
+                Placement = PlacementMode.Mouse,
+                Child = new Border 
                 {
-                    LastZize = BWP.ActualWidth + 10;
-                    b = false;
-                    Scrollable = true;
-                    goto ending;
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = Brushes.White,
+                    Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                    Child = ContextMenuSP
                 }
-                else if (Scrollable && LastZize <= OverlayMenu.ActualWidth)
-                {
-                    b = true;
-                    Scrollable = false;
-                    goto ending;
-                }
-                return;
-            ending:
-                foreach (var s in Slidings)
-                    s.AlwaysOpen = b;
-            }
+            };
+            ContextMenuPopup.MouseEnter += (s, e) => { OverMenu = true; };
+            ContextMenuPopup.MouseLeave += (s, e) => { OverMenu = false; };
+            Initialized += (s, e) => { ((Grid)this.Content).Children.Add(ContextMenuPopup); };
+            this.PreviewMouseLeftButtonDown += (s, e) => 
+            { if (!OverMenu) { InvokeRemoveMenu(); ContextMenuPopup.IsOpen = false; } };
         }
 
         #region Обработка таскания мышью
@@ -102,6 +95,34 @@ namespace FlexTrader.MVVM.Views
         }
 
         #endregion
+
+        #region Блок TopMenu
+        private bool Scrollable = false;
+        private double LastZize;
+        private protected void TopPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (OverlayMenu.Visibility == Visibility.Visible)
+            {
+                bool b;
+                if (BWP.ActualWidth + 10 > OverlayMenu.ActualWidth && !Scrollable)
+                {
+                    LastZize = BWP.ActualWidth + 10;
+                    b = false;
+                    Scrollable = true;
+                    goto ending;
+                }
+                else if (Scrollable && LastZize <= OverlayMenu.ActualWidth)
+                {
+                    b = true;
+                    Scrollable = false;
+                    goto ending;
+                }
+                return;
+            ending:
+                foreach (var s in Slidings)
+                    s.AlwaysOpen = b;
+            }
+        }
 
         private protected ScrollViewer TopPanel { get; set; }
         private protected ScrollViewer OverlayMenu { get; set; }
@@ -224,6 +245,56 @@ namespace FlexTrader.MVVM.Views
                 TopPanel.Visibility = Visibility.Visible;
             }
         }
+        #endregion
+
+        #region Контекстное меню
+        private bool OverMenu = false;
+        private StackPanel ContextMenuSP { get; } = new StackPanel();
+        private protected Popup ContextMenuPopup { get; }
+        private Action RemoveMenu { get; set; }
+        private void InvokeRemoveMenu()
+        {
+            RemoveMenu?.Invoke(); 
+            RemoveMenu = null;
+        }
+        public void ShowContextMenu((List<(string Name, Action Act)> Items, Action RemoveMenu) Menu)
+        {
+            InvokeRemoveMenu();
+            ContextMenuPopup.IsOpen = false;
+            RemoveMenu = Menu.RemoveMenu;
+            ContextMenuSP.Children.Clear();
+            {
+                foreach (var item in Menu.Items)
+                {
+                    if (item.Name != "+++")
+                    {
+                        var btn = new Button
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Stretch,
+                            Content = item.Name
+                        };
+                        btn.Click += (s, e) =>
+                        {
+                            Task.Run(() => item.Act.Invoke());
+                            InvokeRemoveMenu();
+                            ContextMenuPopup.IsOpen = false;
+                        };
+                        btn.Style = (Style)btn.FindResource("ContextMenuButton");
+                        ContextMenuSP.Children.Add(btn);
+                    }
+                    else
+                    {
+                        ContextMenuSP.Children.Add(new Border 
+                        {
+                            BorderBrush = new SolidColorBrush(Color.FromRgb(75, 75, 75)),
+                            BorderThickness = new Thickness(1)
+                        });
+                    }
+                }
+            }
+            ContextMenuPopup.IsOpen = true;
+        }
+        #endregion
 
         public abstract event Action<string> SetInstrument;
         public abstract string CurrentInstrument { get; }
