@@ -19,7 +19,6 @@
 using ChartModules.PaintingModule.Elements;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,15 +42,19 @@ namespace ChartModules.PaintingModule
 
             Chart.VerticalСhanges += () => Task.Run(() => ResetHooks());
             Chart.VerticalСhanges += () => Redraw();
+            Chart.HorizontalСhanges += () => Task.Run(() => ResetHooks());
             Chart.HorizontalСhanges += () => Redraw();
             this.ResetInstrument = ResetInstrument;
 
             SetsName = "Paintings";
 
             ////////////////////
-            AddElement(new Level(208.99, Brushes.White, Brushes.Black, Brushes.Yellow, 5, 5, 2));
-            AddElement(new Level(206.95, Brushes.Black, Brushes.Azure, Brushes.Azure, 4, 6, 3));
-            AddElement(new Level(204.90, Brushes.Lime, Brushes.Black, Brushes.Lime, 3, 7, 4));
+            Task.Run(() => 
+            {
+                AddElement(new Level(208.99, Brushes.White, Brushes.Black, Brushes.Yellow, 5, 5, 2));
+                AddElement(new Level(206.95, Brushes.Black, Brushes.Azure, Brushes.Azure, 4, 6, 3));
+                AddElement(new Level(204.90, Brushes.Lime, Brushes.Black, Brushes.Lime, 3, 7, 4));
+            });
         }
 
         private readonly DrawingVisual ElementsVisual = new DrawingVisual();
@@ -92,16 +95,18 @@ namespace ChartModules.PaintingModule
 
         private void AddElement(ChangingElement el)
         {
-            el.ApplyChange = CollectionChanged;
+            el.SetApplyChangeAction(CollectionChanged);
             el.Chart = Chart;
-            el.Delete = DeleteElement;
+            el.SetDeleteAction(DeleteElement);
             ElementsCollection.Add(el);
             CollectionChanged();
+            ResetHooks();
         }
         private void DeleteElement(ChangingElement el)
         {
             ElementsCollection.Remove(el);
             CollectionChanged();
+            ResetHooks();
         }
 
         public void PaintingLevel(MouseButtonEventArgs e) 
@@ -113,7 +118,6 @@ namespace ChartModules.PaintingModule
                 ResetInstrument.Invoke(null);
             else
                 Chart.ControlUsed = true;
-            ResetHooks();
         }
         public void PaintingTrend(MouseButtonEventArgs e)
         {
@@ -145,7 +149,7 @@ namespace ChartModules.PaintingModule
                     foreach (var el in ElementsCollection)
                         lacts.Add(el.PrepareToDrawing(null, ppd));
                 }
-                catch (InvalidOperationException e) { return; }
+                catch (InvalidOperationException) { return; }
                 
                 Dispatcher.Invoke(() =>
                 {

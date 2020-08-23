@@ -103,7 +103,8 @@ namespace FlexTrader.MVVM.Views
                         ("Test 2", () => { Debug.WriteLine("Test 2"); }),
                         ("+++", null),
                         ("Test 3", () => { Debug.WriteLine("Test 3"); })
-                    }, null);
+                    }, 
+                    null, null);
                 }
                 mainView.ShowContextMenu(items.Value);
             };

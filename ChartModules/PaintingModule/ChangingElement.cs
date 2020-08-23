@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.DirectoryServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -44,7 +45,11 @@ namespace ChartModules.PaintingModule
         private protected abstract List<Setting> GetSets();
         public List<Setting> GetSettings()
         {
-            var sets = new List<Setting> { new Setting(() => this.Locked, b => this.Locked = (bool)b) };
+            var sets = new List<Setting> 
+            { 
+                new Setting(() => this.Locked, b => this.Locked = (bool)b),
+                new Setting(Delete)
+            };
             sets.AddRange(this.GetSets());
             return sets;
         }
@@ -52,11 +57,20 @@ namespace ChartModules.PaintingModule
         public abstract double GetMagnetRadius();
 
         public event Action<(ChangesElementType type, object element)?> Changed;
-        public Action ApplyChange;
-        public Action<ChangingElement> Delete;
+        private Action ApplyChangeAct;
+        public void SetApplyChangeAction(Action ApplyChangeAct)
+        {
+            this.ApplyChangeAct = ApplyChangeAct;
+        }
+        public void ApplyChanges() => ApplyChangeAct.Invoke();
+        private Action<ChangingElement> DeleteAct;
+        public void SetDeleteAction(Action<ChangingElement> DeleteAct)
+        {
+            this.DeleteAct = DeleteAct;
+        }
+        public void Delete() => DeleteAct.Invoke(this);
         public Action ChangeHook { get; set; }
-        public void ApplyChanges() => ApplyChange.Invoke();
-
+        
         private protected void ApplyChangesToAll()
         {
             ApplyChanges();
@@ -78,7 +92,7 @@ namespace ChartModules.PaintingModule
         public void AcceptNewCoordinates(Point Coordinates)
         {
             this.NewCoordinates(Coordinates);
-            this.ApplyChange.Invoke();
+            this.ApplyChanges();
         }
         private protected abstract double GetDistance(double x, double y);
         private protected abstract Point GetHookPoint(Point P);

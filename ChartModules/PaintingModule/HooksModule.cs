@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -76,7 +75,26 @@ namespace ChartModules.PaintingModule
         private readonly List<FrameworkElement> OtherLayers;
         private readonly Action<Action<MouseButtonEventArgs>> SetInstrument;
 
-        private readonly Action<string, List<Setting>> SetMenuAct;
+        private readonly Action<string, List<Setting>, Action, Action, IChart> SetMenuAct;
+        private void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook) => 
+            SetMenuAct.Invoke(SetsName, Sets, DrawHook, () => 
+            {
+                ResizeHook = null;
+                Dispatcher.Invoke(() =>
+                {
+                    RemoveHook = null;
+
+                    ShadowVisual.RenderOpen().Close();
+                    ShadowPriceVisual.RenderOpen().Close();
+                    ShadowTimeVisual.RenderOpen().Close();
+                    OverVisual.RenderOpen().Close();
+                    OverPriceVisual.RenderOpen().Close();
+                    OverTimeVisual.RenderOpen().Close();
+                    PointVisual.RenderOpen().Close();
+
+                    RestoreChart();
+                });
+            }, Chart);
         public Action RemoveHook;
         private Action ResizeHook;
 
@@ -88,23 +106,31 @@ namespace ChartModules.PaintingModule
         private readonly DrawingVisual OverPriceVisual = new DrawingVisual();
         private readonly DrawingVisual OverTimeVisual = new DrawingVisual();
 
-        public (List<(string Name, Action Act)> Menus, Action RemoveMenu)? ShowContextMenu(object s, MouseEventArgs e)
+        public (List<(string Name, Action Act)> Menus, Action DrawHook, Action RemoveHook)? ShowContextMenu(object s, MouseEventArgs e)
         {
             var P = e.GetPosition((IInputElement)Chart);
             var Hook = ScanHooks(GetVisibleHooks.Invoke(), P);
 
             if (Hook != null)
             {
-                RemoveLastHook();
                 P = Hook.GetHookPoint(P);
                 var pn = GetCursorPen.Invoke();
-                using var dc = PointVisual.RenderOpen();
-                dc.DrawLine(pn, new Point(P.X + 10, P.Y + 10), new Point(P.X - 10, P.Y - 10));
-                dc.DrawLine(pn, new Point(P.X + 10, P.Y - 10), new Point(P.X - 10, P.Y + 10));
 
-                return (Hook.GetContextMenu(), () => PointVisual.RenderOpen().Close());
+
+                return (Hook.GetContextMenu(),
+                        () =>
+                        {
+                            using var dc = PointVisual.RenderOpen();
+                            dc.DrawLine(pn, new Point(P.X + 10, P.Y + 10), new Point(P.X - 10, P.Y - 10));
+                            dc.DrawLine(pn, new Point(P.X + 10, P.Y - 10), new Point(P.X - 10, P.Y + 10));
+                        },
+                        () => RemoveLastHook());
             }
-            else return null;
+            else
+            {
+                RemoveLastHook();
+                return null;
+            }
         }
 
         private Hook CurrentHook;
@@ -229,10 +255,13 @@ namespace ChartModules.PaintingModule
                             foreach (var l in OtherLayers)
                                 l.Visibility = Visibility.Visible;
                             PointVisual.Transform = null;
-                            SetMenuAct(NewHook.ElementName, NewHook.Sets);
-                            using var dc = PointVisual.RenderOpen();
-                            dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
-                            dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
+                            SetMenu(NewHook.ElementName, NewHook.Sets, () => 
+                            {
+                                using var dc = PointVisual.RenderOpen();
+                                dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
+                                dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
+                            });
+                            
                         }
 
                         if (!NewHook.Locked)
@@ -251,7 +280,12 @@ namespace ChartModules.PaintingModule
                                     Manipulating = false;
 
                                     NewHook.AcceptNewCoordinates(NewValue);
-                                    SetMenuAct(NewHook.ElementName, NewHook.Sets);
+                                    SetMenu(NewHook.ElementName, NewHook.Sets, () => 
+                                    {
+                                        using var dc = PointVisual.RenderOpen();
+                                        dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
+                                        dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
+                                    });
 
                                     LastValue = NewHook.GetHookPoint(e.GetPosition((IInputElement)Chart));
                                     LastPointPrice = Chart.HeightToPrice(LastValue.Y);
@@ -294,7 +328,7 @@ namespace ChartModules.PaintingModule
             {
                 RemoveHook = null;
                 
-                SetMenuAct(null, null);
+                SetMenuAct(null, null, null, null, null);
                 ShadowVisual.RenderOpen().Close();
                 ShadowPriceVisual.RenderOpen().Close();
                 ShadowTimeVisual.RenderOpen().Close();
@@ -382,7 +416,7 @@ namespace ChartModules.PaintingModule
         public Point GetHookPoint(Point P) => GetVal.Invoke(P);
 
         public void AcceptNewCoordinates(Point NewCoordinates)
-        { AcceptChanges.Invoke(NewCoordinates); Element.ApplyChange.Invoke(); }
+        { AcceptChanges.Invoke(NewCoordinates); Element.ApplyChanges(); }
 
         public void DrawShadow(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
             ActionDrawShadow.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
@@ -397,7 +431,7 @@ namespace ChartModules.PaintingModule
             if (Items.Count > 0) Items.Add(("+++", null));
             if (Locked) Items.Add(("Unlock", () => Element.Locked = !Element.Locked));
             else Items.Add(("Lock", () => Element.Locked = !Element.Locked));
-            Items.Add(("Delete", () => Element.Delete.Invoke(Element)));
+            Items.Add(("Delete", Element.Delete));
 
             return Items;
         }

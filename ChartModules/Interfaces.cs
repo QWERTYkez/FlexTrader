@@ -89,6 +89,6 @@ namespace ChartModules
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
 
-        public void SetMenu(string SetsName, List<Setting> Sets);
+        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook, Action RemoveHook, IChart Chart);
     }
 }

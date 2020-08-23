@@ -24,11 +24,12 @@ namespace FlexTrader.MVVM.Resources
     public class PaletteButton : Button
     {
         public static readonly DependencyProperty IsActiveProperty;
+        public static readonly DependencyProperty ColorProperty;
 
         static PaletteButton()
         {
-            var pm = new PropertyMetadata { DefaultValue = false };
-            IsActiveProperty = DependencyProperty.Register("IsActive", typeof(bool), typeof(PaletteButton), pm);
+            IsActiveProperty = DependencyProperty.Register("IsActive", typeof(bool), typeof(PaletteButton), new PropertyMetadata { DefaultValue = false });
+            ColorProperty = DependencyProperty.Register("Color", typeof(PaletteButtonColor), typeof(PaletteButton), new PropertyMetadata { DefaultValue = PaletteButtonColor.Blue });
         }
 
         public bool IsActive
@@ -36,5 +37,16 @@ namespace FlexTrader.MVVM.Resources
             get { return (bool)GetValue(IsActiveProperty); }
             set { SetValue(IsActiveProperty, value); }
         }
+        public PaletteButtonColor Color
+        {
+            get { return (PaletteButtonColor)GetValue(ColorProperty); }
+            set { SetValue(ColorProperty, value); }
+        }
+    }
+
+    public enum PaletteButtonColor 
+    { 
+        Blue,
+        Red
     }
 }

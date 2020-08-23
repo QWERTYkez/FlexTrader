@@ -22,7 +22,21 @@ using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Resources
 {
-    public class CrossHair : UserControl { }
+    public class CrossHair : UserControl 
+    {
+        public static readonly DependencyProperty RotatedProperty;
+
+        public bool Rotated
+        {
+            get { return (bool)GetValue(RotatedProperty); }
+            set { SetValue(RotatedProperty, value); }
+        }
+
+        static CrossHair()
+        {
+            RotatedProperty = DependencyProperty.Register("Rotated", typeof(bool), typeof(CrossHair), new PropertyMetadata { DefaultValue = false });
+        }
+    }
     public class InteractArrow : UserControl { }
     public class Gear : UserControl { }
     public class Reset : UserControl { }

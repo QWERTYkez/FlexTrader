@@ -54,7 +54,7 @@ namespace FlexTrader.MVVM.Views
             ContextMenuPopup.MouseLeave += (s, e) => { OverMenu = false; };
             Initialized += (s, e) => { ((Grid)this.Content).Children.Add(ContextMenuPopup); };
             this.PreviewMouseLeftButtonDown += (s, e) => 
-            { if (!OverMenu) { InvokeRemoveMenu(); ContextMenuPopup.IsOpen = false; } };
+            { if (!OverMenu) { InvokeRemoveHook(); ContextMenuPopup.IsOpen = false; } };
         }
 
         #region Обработка таскания мышью
@@ -127,11 +127,24 @@ namespace FlexTrader.MVVM.Views
         private protected ScrollViewer TopPanel { get; set; }
         private protected ScrollViewer OverlayMenu { get; set; }
         private WrapPanel BWP { get; set; }
+        private Action RemoveTopMenuHook;
+        private IChart LastChart;
         private List<Sliding> Slidings { get; set; }
-        public void SetMenu(string SetsName, List<Setting> Sets)
+        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook, Action RemoveHook, IChart Chart)
         {
+            if (LastChart != null)
+            {
+                if (LastChart != Chart)
+                {
+                    RemoveTopMenuHook?.Invoke();
+                    LastChart = Chart;
+                }
+            }
+            else { LastChart = Chart; }
             if (Sets != null)
             {
+                DrawHook.Invoke();
+                RemoveTopMenuHook = RemoveHook;
                 OverlayMenu.Visibility = Visibility.Visible;
                 TopPanel.Visibility = Visibility.Hidden;
 
@@ -162,12 +175,12 @@ namespace FlexTrader.MVVM.Views
                         var L = new Lock
                         {
                             Foreground = Brushes.White,
-                            Margin = new Thickness(2.5, 0, 2.5, 0),
                             Locked = (bool)(Sets[0].Get())
                         };
                         var lpb = new PaletteButton()
                         {
                             VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(2.5, 0, 2.5, 0),
                             Content = L,
                             IsActive = L.Locked
                         };
@@ -177,15 +190,35 @@ namespace FlexTrader.MVVM.Views
                             Sets[0].Set(L.Locked);
                             lpb.IsActive = L.Locked;
                         };
-
-
                         BWP.Children.Add(lpb);
                     }
-                    
+
+                    {// Delete button
+
+                        var lpb = new PaletteButton()
+                        {
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(2.5, 0, 2.5, 0),
+                            Color = PaletteButtonColor.Red,
+                            Content = new CrossHair
+                            {
+                                Foreground = Brushes.White,
+                                Rotated = true
+                            }
+                        };
+                        lpb.Click += (s, e) =>
+                        {
+                            OverlayMenu.Visibility = Visibility.Hidden;
+                            TopPanel.Visibility = Visibility.Visible;
+                            Sets[1].Set(null);
+                            RemoveHook.Invoke();
+                        };
+                        BWP.Children.Add(lpb);
+                    }
 
                     var WP = new WrapPanel { Margin = new Thickness(5), Height = 42, HorizontalAlignment = HorizontalAlignment.Left };
                     {
-                        for (int i = 1; i < Sets.Count; i++)
+                        for (int i = 2; i < Sets.Count; i++)
                         {
                             FrameworkElement fe = null;
                             switch (Sets[i].Type)
@@ -251,17 +284,18 @@ namespace FlexTrader.MVVM.Views
         private bool OverMenu = false;
         private StackPanel ContextMenuSP { get; } = new StackPanel();
         private protected Popup ContextMenuPopup { get; }
-        private Action RemoveMenu { get; set; }
-        private void InvokeRemoveMenu()
+        private Action RemoveHook { get; set; }
+        private void InvokeRemoveHook()
         {
-            RemoveMenu?.Invoke(); 
-            RemoveMenu = null;
+            RemoveHook?.Invoke();
+            RemoveHook = null;
         }
-        public void ShowContextMenu((List<(string Name, Action Act)> Items, Action RemoveMenu) Menu)
+        public void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu)
         {
-            InvokeRemoveMenu();
             ContextMenuPopup.IsOpen = false;
-            RemoveMenu = Menu.RemoveMenu;
+            RemoveHook?.Invoke();
+            Menu.DrawHook?.Invoke();
+            RemoveHook = Menu.RemoveHook;
             ContextMenuSP.Children.Clear();
             {
                 foreach (var item in Menu.Items)
@@ -276,7 +310,7 @@ namespace FlexTrader.MVVM.Views
                         btn.Click += (s, e) =>
                         {
                             Task.Run(() => item.Act.Invoke());
-                            InvokeRemoveMenu();
+                            InvokeRemoveHook();
                             ContextMenuPopup.IsOpen = false;
                         };
                         btn.Style = (Style)btn.FindResource("ContextMenuButton");

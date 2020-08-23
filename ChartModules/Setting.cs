@@ -88,6 +88,19 @@ namespace ChartModules
             this.Param1 = null;
             this.Param2 = null;
         }
+        /// <summary>
+        /// New Delete Setting
+        /// </summary>
+        public Setting(Action Set)
+        {
+            this.Name = null;
+            this.Type = SetType.Delete;
+            this.Get = null;
+            this.Set = o => Set();
+            this.ResetObj = null;
+            this.Param1 = null;
+            this.Param2 = null;
+        }
 
         private static readonly object key = new object();
         public static void SetsLevel(List<Setting> Sets, string Name, Setting[] args)
@@ -112,6 +125,7 @@ namespace ChartModules
     public enum SetType
     {
         Brush,
+        Delete,
         DoubleSlider,
         DoublePicker,
         GoDown,

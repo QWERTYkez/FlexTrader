@@ -36,8 +36,10 @@ namespace FlexTrader.MVVM.ViewModels
         {
             Dispatcher = mainView.Dispatcher;
             Chart = new ChartView(mainView);
+            Chart2 = new ChartView(mainView);
         }
 
         public ChartView Chart { get; set; }
+        public ChartView Chart2 { get; set; }
     }
 }

@@ -18,16 +18,28 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <SolidColorBrush x:Key="Button.IsActive.Background" Color="#FF284568" />
-    <SolidColorBrush x:Key="Button.IsActive.BorderBrush" Color="#FF8EC0FD" />
-    <SolidColorBrush x:Key="Button.Static.Background" Color="#FF284568" />
-    <SolidColorBrush x:Key="Button.Static.BorderBrush" Color="#FF284568" />
-    <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FF426DA2" />
-    <SolidColorBrush x:Key="Button.MouseOver.BorderBrush" Color="#FF569BEE" />
-    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FF68AADC" />
-    <SolidColorBrush x:Key="Button.Pressed.BorderBrush" Color="#FF68AADC" />
-    <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FF17293E" />
-    <SolidColorBrush x:Key="Button.Disabled.BorderBrush" Color="Black" />
+
+    <SolidColorBrush x:Key="Button.Blue.IsActive.Background" Color="#FF284568" />
+    <SolidColorBrush x:Key="Button.Blue.IsActive.BorderBrush" Color="#FF8EC0FD" />
+    <SolidColorBrush x:Key="Button.Blue.Static.Background" Color="#FF284568" />
+    <SolidColorBrush x:Key="Button.Blue.Static.BorderBrush" Color="#FF284568" />
+    <SolidColorBrush x:Key="Button.Blue.MouseOver.Background" Color="#FF426DA2" />
+    <SolidColorBrush x:Key="Button.Blue.MouseOver.BorderBrush" Color="#FF569BEE" />
+    <SolidColorBrush x:Key="Button.Blue.Pressed.Background" Color="#FF68AADC" />
+    <SolidColorBrush x:Key="Button.Blue.Pressed.BorderBrush" Color="#FF68AADC" />
+    <SolidColorBrush x:Key="Button.Blue.Disabled.Background" Color="#FF17293E" />
+    <SolidColorBrush x:Key="Button.Blue.Disabled.BorderBrush" Color="Black" />
+
+    <SolidColorBrush x:Key="Button.Red.IsActive.Background" Color="#FF682828" />
+    <SolidColorBrush x:Key="Button.Red.IsActive.BorderBrush" Color="#FFFD8E8E" />
+    <SolidColorBrush x:Key="Button.Red.Static.Background" Color="#FF682828" />
+    <SolidColorBrush x:Key="Button.Red.Static.BorderBrush" Color="#FF682828" />
+    <SolidColorBrush x:Key="Button.Red.MouseOver.Background" Color="#FFA24242" />
+    <SolidColorBrush x:Key="Button.Red.MouseOver.BorderBrush" Color="#FFEE5656" />
+    <SolidColorBrush x:Key="Button.Red.Pressed.Background" Color="#FFDC6868" />
+    <SolidColorBrush x:Key="Button.Red.Pressed.BorderBrush" Color="#FFDC6868" />
+    <SolidColorBrush x:Key="Button.Red.Disabled.Background" Color="#FF3E1717" />
+    <SolidColorBrush x:Key="Button.Red.Disabled.BorderBrush" Color="Black" />
     <Thickness
         x:Key="PaletteButtonMargin"
         Bottom="0"
@@ -39,8 +51,8 @@
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="40" />
         <Setter Property="Margin" Value="{DynamicResource PaletteButtonMargin}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Button.Static.BorderBrush}" />
-        <Setter Property="Background" Value="{DynamicResource Button.Static.Background}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Button.Blue.Static.BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource Button.Blue.Static.Background}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -68,26 +80,88 @@
                             TextElement.Foreground="{TemplateBinding Foreground}" />
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsActive" Value="False">
-                            <Setter Property="BorderBrush" Value="{StaticResource Button.Static.BorderBrush}" />
-                            <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
-                        </Trigger>
-                        <Trigger Property="IsActive" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource Button.IsActive.BorderBrush}" />
-                            <Setter Property="Background" Value="{StaticResource Button.IsActive.Background}" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="BorderBrush" Value="{StaticResource Button.MouseOver.BorderBrush}" />
-                            <Setter Property="Background" Value="{StaticResource Button.MouseOver.Background}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="BorderBrush" Value="{StaticResource Button.Pressed.BorderBrush}" />
-                            <Setter Property="Background" Value="{StaticResource Button.Pressed.Background}" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter Property="BorderBrush" Value="{StaticResource Button.Disabled.BorderBrush}" />
-                            <Setter Property="Background" Value="{StaticResource Button.Disabled.Background}" />
-                        </Trigger>
+                        <!--  Blue  -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsActive" Value="False" />
+                                <Condition Property="Color" Value="Blue" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Blue.Static.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Blue.Static.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsActive" Value="True" />
+                                <Condition Property="Color" Value="Blue" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Blue.IsActive.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Blue.IsActive.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="true" />
+                                <Condition Property="Color" Value="Blue" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Blue.MouseOver.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Blue.MouseOver.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsPressed" Value="true" />
+                                <Condition Property="Color" Value="Blue" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Blue.Pressed.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Blue.Pressed.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsEnabled" Value="false" />
+                                <Condition Property="Color" Value="Blue" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Blue.Disabled.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Blue.Disabled.Background}" />
+                        </MultiTrigger>
+                        <!--  Red  -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsActive" Value="False" />
+                                <Condition Property="Color" Value="Red" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Red.Static.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Red.Static.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsActive" Value="True" />
+                                <Condition Property="Color" Value="Red" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Red.IsActive.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Red.IsActive.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="true" />
+                                <Condition Property="Color" Value="Red" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Red.MouseOver.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Red.MouseOver.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsPressed" Value="true" />
+                                <Condition Property="Color" Value="Red" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Red.Pressed.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Red.Pressed.Background}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsEnabled" Value="false" />
+                                <Condition Property="Color" Value="Red" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="{StaticResource Button.Red.Disabled.BorderBrush}" />
+                            <Setter Property="Background" Value="{StaticResource Button.Red.Disabled.Background}" />
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

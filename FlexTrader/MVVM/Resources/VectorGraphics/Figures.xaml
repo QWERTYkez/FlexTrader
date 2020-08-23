@@ -112,6 +112,7 @@
                     <Grid Background="{TemplateBinding Background}">
                         <Viewbox Stretch="Uniform">
                             <Path
+                                x:Name="PAth"
                                 Width="1000"
                                 Height="1000"
                                 Fill="{TemplateBinding Foreground}">
@@ -135,6 +136,19 @@
                             </Path>
                         </Viewbox>
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Rotated" Value="true">
+                            <Setter TargetName="PAth" Property="RenderTransform">
+                                <Setter.Value>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="1.334" ScaleY="1.334" />
+                                        <RotateTransform Angle="45" CenterX="500" CenterY="500" />
+                                        <TranslateTransform Y="-236" />
+                                    </TransformGroup>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
