@@ -42,7 +42,7 @@ namespace FlexTrader.MVVM.Views
             ContextMenuPopup = new Popup
             {
                 Placement = PlacementMode.Mouse,
-                Child = new Border 
+                Child = new Border
                 {
                     BorderThickness = new Thickness(1),
                     BorderBrush = Brushes.White,
@@ -53,7 +53,7 @@ namespace FlexTrader.MVVM.Views
             ContextMenuPopup.MouseEnter += (s, e) => { OverMenu = true; };
             ContextMenuPopup.MouseLeave += (s, e) => { OverMenu = false; };
             Initialized += (s, e) => { ((Grid)this.Content).Children.Add(ContextMenuPopup); };
-            this.PreviewMouseLeftButtonDown += (s, e) => 
+            this.PreviewMouseLeftButtonDown += (s, e) =>
             { if (!OverMenu) { InvokeRemoveHook(); ContextMenuPopup.IsOpen = false; } };
         }
 
@@ -184,8 +184,8 @@ namespace FlexTrader.MVVM.Views
                             Content = L,
                             IsActive = L.Locked
                         };
-                        lpb.Click += (s,e) => 
-                        { 
+                        lpb.Click += (s, e) =>
+                        {
                             L.Locked = !L.Locked;
                             Sets[0].Set(L.Locked);
                             lpb.IsActive = L.Locked;
@@ -284,6 +284,7 @@ namespace FlexTrader.MVVM.Views
         private bool OverMenu = false;
         private StackPanel ContextMenuSP { get; } = new StackPanel();
         private protected Popup ContextMenuPopup { get; }
+        private static Style ContextMenuButtonStyle { get; } = (Style)(new Button()).FindResource("ContextMenuButton");
         private Action RemoveHook { get; set; }
         private void InvokeRemoveHook()
         {
@@ -313,7 +314,7 @@ namespace FlexTrader.MVVM.Views
                             InvokeRemoveHook();
                             ContextMenuPopup.IsOpen = false;
                         };
-                        btn.Style = (Style)btn.FindResource("ContextMenuButton");
+                        btn.Style = ContextMenuButtonStyle;
                         ContextMenuSP.Children.Add(btn);
                     }
                     else

@@ -121,7 +121,7 @@ namespace ChartModules.PaintingModule
         }
         public void PaintingTrend(MouseButtonEventArgs e)
         {
-
+             
 
             
         }
@@ -142,14 +142,14 @@ namespace ChartModules.PaintingModule
             return Task.Run(() => 
             {
                 var ppd = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
-                List<Action<DrawingContext>[]> lacts = new List<Action<DrawingContext>[]>();
+                Action<DrawingContext>[][] lacts = new Action<DrawingContext>[ElementsCollection.Count][];
 
                 try
                 {
-                    foreach (var el in ElementsCollection)
-                        lacts.Add(el.PrepareToDrawing(null, ppd));
+                    for (int i = 0; i < ElementsCollection.Count; i++)
+                        lacts[i] = ElementsCollection[i].PrepareToDrawing(null, ppd);
                 }
-                catch (InvalidOperationException) { return; }
+                catch (IndexOutOfRangeException) { return; }
                 
                 Dispatcher.Invoke(() =>
                 {

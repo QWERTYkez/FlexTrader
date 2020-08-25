@@ -46,14 +46,17 @@ namespace FlexTrader.MVVM.Views
             {
                 if (bs.SetsName != null)
                 {
-                    var sp = AddLevel(SP, bs.SetsName);
-                    foreach (var s in bs.Sets)
+                    StackPanel sp;
+                    sp = AddLevel(SP, bs.SetsName);
+                    for (int i = 0; i < bs.Sets.Count; i++)
                     {
-                        switch (s.Type)
+                        switch (bs.Sets[i].Type)
                         {
                             case SetType.GoDown:
 
-                                sp = AddLevel(sp, s.Name);
+                                if (bs.Sets[i + 1].Type == SetType.Lock)
+                                    sp = AddLevel(sp, bs.Sets[i].Name, bs.Sets[i + 1], bs.Sets[i + 2]);
+                                else sp = AddLevel(sp, bs.Sets[i].Name);
 
                                 break;
                             case SetType.GoUp:
@@ -63,23 +66,23 @@ namespace FlexTrader.MVVM.Views
                                 break;
                             case SetType.Brush:
 
-                                AddSetting(sp, s, () => new ColorPicker(s.Get() as SolidColorBrush, s.Set));
+                                AddSetting(sp, bs.Sets[i], () => new ColorPicker(bs.Sets[i].Get() as SolidColorBrush, bs.Sets[i].Set));
 
                                 break;
                             case SetType.DoubleSlider:
 
-                                AddSetting(sp, s, () => new DoubleSlider((double)s.Get(), s.Set,
-                                    (double)s.Param1, (double)s.Param2));
+                                AddSetting(sp, bs.Sets[i], () => new DoubleSlider((double)bs.Sets[i].Get(), bs.Sets[i].Set,
+                                    (double)bs.Sets[i].Param1, (double)bs.Sets[i].Param2));
 
                                 break;
                             case SetType.DoublePicker:
 
-                                AddSetting(sp, s, () =>
+                                AddSetting(sp, bs.Sets[i], () =>
                                         new DoublePicker(
-                                            (double)s.Get(),
-                                            s.Set,
-                                            (double?)s.Param1,
-                                            (double?)s.Param2));
+                                            (double)bs.Sets[i].Get(),
+                                            bs.Sets[i].Set,
+                                            (double?)bs.Sets[i].Param1,
+                                            (double?)bs.Sets[i].Param2));
                                 break;
                         }
                     }
@@ -87,20 +90,87 @@ namespace FlexTrader.MVVM.Views
             }
         }
 
-        private StackPanel AddLevel(StackPanel sp, string header)
+        private StackPanel AddLevel(StackPanel sp, string header, 
+            Setting LockSetting = null, Setting DeleteSetting = null)
         {
             if (header == null || header == "") header = "---";
 
             var nsp = new StackPanel { Margin = new Thickness(20, 5, 0, 5) };
-            var exp = new Expander 
-            { 
-                Header = header, 
-                Content = nsp, 
-                IsExpanded = true, 
-                FontSize = 12, 
+            var hr = new Grid { Height = 19, Width = 250 };
+
+            nsp.SizeChanged += (s, e) => { hr.Width = nsp.ActualWidth - 105; };
+
+            hr.Children.Add(new Label 
+            {
+                Content = header,
+                Padding = new Thickness(0),
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Expander exp = new Expander
+            {
+                Header = hr,
+                Content = nsp,
+                IsExpanded = true,
+                FontSize = 12,
                 VerticalAlignment = VerticalAlignment.Center,
-                FontWeight = FontWeights.Bold 
+                FontWeight = FontWeights.Bold
             };
+            if (LockSetting != null && DeleteSetting != null)
+            {
+                var vb = new Viewbox { Stretch = Stretch.Uniform,
+                    HorizontalAlignment = HorizontalAlignment.Right };
+                {
+                    var wp = new WrapPanel();
+
+                    {// Lock button
+                        var L = new Lock
+                        {
+                            Foreground = Brushes.White,
+                            Locked = (bool)(LockSetting.Get())
+                        };
+                        var lpb = new PaletteButton()
+                        {
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(0, 0, 2.5, 0),
+                            Content = L,
+                            IsActive = L.Locked
+                        };
+                        lpb.Click += (s, e) =>
+                        {
+                            L.Locked = !L.Locked;
+                            LockSetting.Set(L.Locked);
+                            lpb.IsActive = L.Locked;
+                        };
+                        wp.Children.Add(lpb);
+                    }
+
+                    {// Delete button
+
+                        var lpb = new PaletteButton()
+                        {
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(2.5, 0, 0, 0),
+                            Color = PaletteButtonColor.Red,
+                            Content = new CrossHair
+                            {
+                                Foreground = Brushes.White,
+                                Rotated = true
+                            }
+                        };
+                        lpb.Click += (s, e) =>
+                        {
+                            sp.Children.Remove(exp);
+                            DeleteSetting.Set(null);
+                        };
+                        wp.Children.Add(lpb);
+                    }
+
+                    vb.Child = wp;
+                }
+                hr.Children.Add(vb);
+            }
             sp.Children.Add(exp);
             return nsp;
         }

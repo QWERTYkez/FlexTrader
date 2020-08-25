@@ -22,30 +22,16 @@ using System.Windows.Media;
 
 namespace ChartModules
 {
-    public struct Setting
+    public class Setting
     {
-        private Setting(SetType Type)
+        private Setting()
         { 
-            this.Name = null;
-            this.Type = Type;
-            this.Get = null;
-            this.Set = null;
-            this.ResetObj = null;
-            this.Param1 = null;
-            this.Param2 = null;
+            this.Type = SetType.GoUp;
         }
-        /// <summary>
-        /// New Level of Setting
-        /// </summary>
-        public Setting(string Name)
+        private Setting(string Name)
         {
             this.Name = Name;
             this.Type = SetType.GoDown;
-            this.Get = null;
-            this.Set = null;
-            this.ResetObj = null;
-            this.Param1 = null;
-            this.Param2 = null;
         }
         /// <summary>
         /// New Brush Setting
@@ -58,8 +44,6 @@ namespace ChartModules
             this.Get = Get;
             this.Set = Set;
             this.ResetObj = ResetObj;
-            this.Param1 = 0;
-            this.Param2 = 0;
         }
         /// <summary>
         /// New Double Setting
@@ -80,26 +64,17 @@ namespace ChartModules
         /// </summary>
         public Setting(Func<object> Get, Action<object> Set)
         {
-            this.Name = null;
             this.Type = SetType.Lock;
             this.Get = Get;
             this.Set = Set;
-            this.ResetObj = null;
-            this.Param1 = null;
-            this.Param2 = null;
         }
         /// <summary>
         /// New Delete Setting
         /// </summary>
         public Setting(Action Set)
         {
-            this.Name = null;
             this.Type = SetType.Delete;
-            this.Get = null;
             this.Set = o => Set();
-            this.ResetObj = null;
-            this.Param1 = null;
-            this.Param2 = null;
         }
 
         private static readonly object key = new object();
@@ -109,7 +84,7 @@ namespace ChartModules
             {
                 Sets.Add(new Setting(Name));
                 Sets.AddRange(args);
-                Sets.Add(new Setting(SetType.GoUp));
+                Sets.Add(new Setting());
             }
         }
 
