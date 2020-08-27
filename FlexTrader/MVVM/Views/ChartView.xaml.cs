@@ -233,9 +233,9 @@ namespace FlexTrader.MVVM.Views
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
         private int digits = 8;
-        public double HeightToPrice(double height) => 
+        public double HeightToPrice(in double height) => 
             Math.Round(PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight, digits);
-        public double PriceToHeight(double price) =>
+        public double PriceToHeight(in double price) =>
             (ChHeight * (PricesDelta * TickSize - price + PricesMin * TickSize)) / (PricesDelta * TickSize);
         public DateTime CorrectTimePosition(ref double X)
         {
@@ -251,9 +251,9 @@ namespace FlexTrader.MVVM.Views
             pos.X = TimeToWidth(dt);
             return dt;
         }
-        public double TimeToWidth(DateTime dt) =>
+        public double TimeToWidth(in DateTime dt) =>
             ChWidth * ((dt - TimeA) / (TimeB - TimeA));
-        public DateTime WidthToTime(double width)
+        public DateTime WidthToTime(in double width)
         {
             if(ChWidth == 0) return TimeA + (TimeB - TimeA) / 2;
             return TimeA + ((width - 2) / ChWidth) * (TimeB - TimeA);

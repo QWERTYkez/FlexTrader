@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -167,6 +166,7 @@ namespace ChartModules.PaintingModule
         private bool Manipulating = false;
         private Point LastValue;
         private Point NewValue;
+        private Vector LastVector;
         private double LastPointPrice;
         private DateTime LastPointTime;
         public void HookElement(MouseEventArgs e)
@@ -204,7 +204,7 @@ namespace ChartModules.PaintingModule
                         NewValue = LastValue;
                         CurrentHook = NewHook;
 
-                        NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
+                        NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
 
                         HookingAct = e =>
                         {
@@ -244,16 +244,16 @@ namespace ChartModules.PaintingModule
                                             dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                                         });
                                     }
-                                    NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
-                                    NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
+                                    NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+                                    NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
                                 });
                                 ResizeHook = () =>
                                 {
                                     P = new Point(Chart.TimeToWidth(LastPointTime), Chart.PriceToHeight(LastPointPrice));
                                     LastValue = NewHook.GetHookPoint(P);
 
-                                    NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
-                                    NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
+                                    NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+                                    NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
 
                                     Dispatcher.Invoke(() =>
                                     {
@@ -266,7 +266,7 @@ namespace ChartModules.PaintingModule
                                 };
 
                                 Manipulating = true;
-                                NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+                                NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
                                 foreach (var l in OtherLayers)
                                     l.Visibility = Visibility.Visible;
                                 PointVisual.Transform = null;
@@ -284,17 +284,18 @@ namespace ChartModules.PaintingModule
                                 Chart.MWindow.MoveCursor(e,
                                 vec =>
                                 {
-                                    if (vec != null)
+                                    if (vec.HasValue)
                                     {
+                                        LastVector = vec.Value;
                                         NewValue = LastValue + vec.Value;
-                                        NewHook.DrawOver(NewValue, OverVisual, OverPriceVisual, OverTimeVisual);
+                                        NewHook.DrawOver(vec, OverVisual, OverPriceVisual, OverTimeVisual);
                                         PointVisual.Transform = new TranslateTransform(vec.Value.X, vec.Value.Y);
                                     }
                                     else
                                     {
                                         Manipulating = false;
 
-                                        NewHook.AcceptNewCoordinates(NewValue);
+                                        NewHook.AcceptNewCoordinates(LastVector);
                                         SetMenu(NewHook.ElementName, NewHook.Sets, () =>
                                         {
                                             using var dc = PointVisual.RenderOpen();
@@ -305,12 +306,12 @@ namespace ChartModules.PaintingModule
                                         LastValue = NewHook.GetHookPoint(Chart.CurrentCursorPosition);
                                         LastPointPrice = Chart.HeightToPrice(LastValue.Y);
                                         LastPointTime = Chart.WidthToTime(LastValue.X);
-                                        NewHook.DrawShadow(LastValue, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+                                        NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
                                         OverVisual.Transform = null;
                                         OverPriceVisual.Transform = null;
                                         OverTimeVisual.Transform = null;
-                                        NewHook.DrawOver(LastValue, OverVisual, OverPriceVisual, OverTimeVisual);
+                                        NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
                                     }
                                 });
                             }
@@ -388,11 +389,11 @@ namespace ChartModules.PaintingModule
         /// <param name="SubHooks"></param>
         public Hook(
             ChangingElement Element,
-            Func<double, double, double> GetDistanceXY,
+            Func<Point, double> GetDistanceXY,
             Func<Point, Point> GetHookPoint,
-            Action<Point?, DrawingVisual, DrawingVisual, DrawingVisual> DrawElement,
-            Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> DrawShadow,
-            Action<Point> AcceptNewCoordinates,
+            Action<Vector?, DrawingVisual, DrawingVisual, DrawingVisual> DrawElement,
+            Action<DrawingVisual, DrawingVisual, DrawingVisual> DrawShadow,
+            Action<Vector> AcceptNewCoordinates,
             List<Hook> SubHooks = null)
         {
             this.Element = Element;
@@ -422,26 +423,26 @@ namespace ChartModules.PaintingModule
         public string ElementName { get => Element.ElementName; }
         public List<Setting> Sets { get => Element.GetSettings(); }
         private Func<double> MagnetRadius { get; }
-        private Action<Point> AcceptChanges { get; }
-        private readonly Func<double, double, double> GetDistanceXY;
+        private Action<Vector> AcceptChanges { get; }
+        private readonly Func<Point, double> GetDistanceXY;
         private readonly Func<Point, Point> GetVal;
-        private readonly Action<Point?, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawOver;
-        private readonly Action<Point, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawShadow;
+        private readonly Action<Vector?, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawOver;
+        private readonly Action<DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawShadow;
 
         public double GetMagnetRadius() => MagnetRadius();
         
         public Point GetCurrentPosition(Point CursorPos) => GetVal.Invoke(CursorPos);
-        public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY.Invoke(CursorPoint.X, CursorPoint.Y));
+        public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY.Invoke(CursorPoint));
         public Point GetHookPoint(Point P) => GetVal.Invoke(P);
 
-        public void AcceptNewCoordinates(Point NewCoordinates)
-        { AcceptChanges.Invoke(NewCoordinates); Element.ApplyChanges(); }
+        public void AcceptNewCoordinates(Vector Changes)
+        { AcceptChanges.Invoke(Changes); Element.ApplyChanges(); }
 
-        public void DrawShadow(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
-            ActionDrawShadow.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+        public void DrawShadow(DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
+            ActionDrawShadow.Invoke(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
-        public void DrawOver(Point point, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
-            ActionDrawOver.Invoke(point, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+        public void DrawOver(Vector? vec, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
+            ActionDrawOver.Invoke(vec, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
         public List<(string Name, Action Act)> GetContextMenu() 
         {

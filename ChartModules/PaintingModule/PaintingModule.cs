@@ -182,7 +182,11 @@ namespace ChartModules.PaintingModule
 
             Chart.PaintingTrend = e => 
             {
-                
+                AddElement(new Trend(Chart.PaintingPoints[0].ToChartPoint(Chart), 
+                    Chart.CurrentCursorPosition.ToChartPoint(Chart)));
+
+                if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
+                else Chart.MWindow.ControlUsed = true;
             };
         }
 

@@ -42,10 +42,10 @@ namespace ChartModules
         public List<Point> PaintingPoints { get; set; }
         Dispatcher Dispatcher { get; }
         double TickSize { get; }
-        double PriceToHeight(double price);
-        double HeightToPrice(double height);
-        double TimeToWidth(DateTime dt);
-        DateTime WidthToTime(double width);
+        double PriceToHeight(in double price);
+        double HeightToPrice(in double height);
+        double TimeToWidth(in DateTime dt);
+        DateTime WidthToTime(in double width);
         DateTime CorrectTimePosition(ref double X);
         DateTime CorrectTimePosition(ref Point pos);
         DateTime TimeA { get; }

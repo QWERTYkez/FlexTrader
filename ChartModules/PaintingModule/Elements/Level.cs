@@ -169,23 +169,23 @@ namespace ChartModules.PaintingModule.Elements
             };
         }
 
-        public double Price { get; set; }
-        public SolidColorBrush TextBrush { get; set; }
-        public SolidColorBrush MarkFill { get; set; }
-        public SolidColorBrush LineBrush { get; set; }
-        public double LineDash { get; set; }
-        public double LineIndent { get; set; }
-        public double LineThikness { get; set; }
+        private double Price { get; set; }
+        private SolidColorBrush TextBrush { get; set; }
+        private SolidColorBrush MarkFill { get; set; }
+        private SolidColorBrush LineBrush { get; set; }
+        private double LineDash { get; set; }
+        private double LineIndent { get; set; }
+        private double LineThikness { get; set; }
 
-        private protected override double GetDistance(double x, double y)
+        private protected override double GetDistance(Point P)
         {
-            return y - Chart.PriceToHeight(this.Price);
+            return P.Y - Chart.PriceToHeight(this.Price);
         }
         private protected override Point GetHookPoint(Point P)
         {
             return new Point(P.X, Chart.PriceToHeight(this.Price));
         }
-        private protected override void DrawShadow(Point point, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
+        private protected override void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
         {
             var br = Dispatcher.Invoke(() => { return Chart.ChartBackground; });
             var c = ((SolidColorBrush)br).Color;
@@ -196,10 +196,11 @@ namespace ChartModules.PaintingModule.Elements
                 (byte)(c.B - 15)));
 
             var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
-            var width = Chart.ChWidth + 2;
-            var height = point.Y;
 
-            var price = Chart.HeightToPrice(height);
+            var price = this.Price;
+            var height = Chart.PriceToHeight(price);
+            var width = Chart.ChWidth + 2;
+
             var ft = new FormattedText
                  (
                      Chart.HeightToPrice(height).ToString(Chart.TickPriceFormat),
@@ -254,14 +255,14 @@ namespace ChartModules.PaintingModule.Elements
                 }
             });
         }
-        public override Action<DrawingContext>[] PrepareToDrawing(Point? point, double PixelsPerDip)
+        public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip)
         {
             var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
 
             double height, price, width;
-            if (point != null)
+            if (vec.HasValue)
             {
-                height = point.Value.Y;
+                height = Chart.PriceToHeight(this.Price) + vec.Value.Y;
                 price = Chart.HeightToPrice(height);
                 width = Chart.ChWidth + 2;
             }
@@ -327,9 +328,9 @@ namespace ChartModules.PaintingModule.Elements
                     null
                 };
         }
-        private protected override void NewCoordinates(Point Coordinates)
+        private protected override void NewCoordinates(Vector Changes)
         {
-            this.Price = Chart.HeightToPrice(Coordinates.Y);
+            this.Price = Chart.HeightToPrice(Chart.PriceToHeight(this.Price) + Changes.Y);
         }
 
         public override List<(string Name, Action Act)> GetContextMenu()

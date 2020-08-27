@@ -88,20 +88,20 @@ namespace ChartModules.PaintingModule
 
         public Hook Hook { get; }
 
-        public void AcceptNewCoordinates(Point Coordinates)
+        public void AcceptNewCoordinates(Vector Changes)
         {
-            this.NewCoordinates(Coordinates);
+            this.NewCoordinates(Changes);
             this.ApplyChanges();
         }
-        private protected abstract double GetDistance(double x, double y);
+        private protected abstract double GetDistance(Point P);
         private protected abstract Point GetHookPoint(Point P);
-        public abstract Action<DrawingContext>[] PrepareToDrawing(Point? point, double PixelsPerDip);
-        private protected abstract void DrawShadow(Point point, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual);
-        private protected abstract void NewCoordinates(Point Coordinates);
+        public abstract Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip);
+        private protected abstract void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual);
+        private protected abstract void NewCoordinates(Vector Changes);
 
-        private protected void DrawElement(Point? point, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
+        private protected void DrawElement(Vector? vec, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
         {
-            var acts = PrepareToDrawing(point, VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip);
+            var acts = PrepareToDrawing(vec, VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip);
 
             Dispatcher.Invoke(() =>
             {
