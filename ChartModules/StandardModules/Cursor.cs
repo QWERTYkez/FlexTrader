@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,8 +36,7 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas MagnetLayer;
         private readonly IDrawingCanvas TimeLine;
         private readonly IDrawingCanvas PriceLine;
-        private readonly Grid ChartGRD;
-        public CursorModule(IChart chart, Grid ChartGRD, 
+        public CursorModule(IChart chart, 
             IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer, 
             IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine, 
             IDrawingCanvas PriceLine, Action CursorLeaveChart) : base(chart)
@@ -46,15 +46,23 @@ namespace ChartModules.StandardModules
             this.MagnetLayer = MagnetLayer;
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
-            this.ChartGRD = ChartGRD;
             this.CursorLeaveChart = CursorLeaveChart;
 
             FontBrush = Brushes.White;
             MarksPen = new Pen(Brushes.White, 2); MarksPen.Freeze();
 
-            ChartGRD.MouseEnter += ShowCursor;
-            ChartGRD.MouseLeave += CursorLeave;
-            ChartGRD.MouseMove += CursorRedraw;
+            Chart.ChartGrid.MouseEnter += ShowCursor;
+            Chart.ChartGrid.MouseLeave += CursorLeave;
+            Chart.CursorNewPosition += CursorRedraw;
+            Chart.MWindow.SetCursor += SetCursor;
+            Chart.MWindow.ToggleMagnet += b => 
+            {
+                Task.Run(() => 
+                {
+                    if (b) MagnetAdd();
+                    else MagnetRemove();
+                }); 
+            };
             SetCursorLines();
             CursorLinesLayer.RenderTransform = CursorLinesTransform;
             CursorLayer.RenderTransform = CursorTransform;
@@ -88,6 +96,7 @@ namespace ChartModules.StandardModules
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
         private void ShowCursor(object sender, MouseEventArgs e)
         {
+            RedrawAct = Redraw;
             CursorLinesLayer.AddVisual(CursorLinesVisual);
             CursorLayer.AddVisual(CursorVisual);
             MagnetLayer.AddVisual(MagnetVisual);
@@ -96,21 +105,23 @@ namespace ChartModules.StandardModules
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
+            RedrawAct = null;
             CursorLinesLayer.DeleteVisual(CursorLinesVisual);
             CursorLayer.DeleteVisual(CursorVisual);
             MagnetLayer.DeleteVisual(MagnetVisual);
             TimeLine.DeleteVisual(CursorTimeVisual);
             PriceLine.DeleteVisual(CursorPriceVisual);
         }
-        private void CursorRedraw(object sender, MouseEventArgs e)
+        private Func<Task> RedrawAct;
+        private void CursorRedraw(Point P)
         {
-            Pos = e.GetPosition(ChartGRD); Redraw();
+            Pos = P; RedrawAct?.Invoke();
         }
         private protected override void Destroy()
         {
-            ChartGRD.MouseEnter -= ShowCursor;
-            ChartGRD.MouseLeave -= CursorLeave;
-            ChartGRD.MouseMove -= CursorRedraw;
+            Chart.ChartGrid.MouseEnter -= ShowCursor;
+            Chart.ChartGrid.MouseLeave -= CursorLeave;
+            Chart.CursorNewPosition -= CursorRedraw;
         }
 
         public event Action CursorLeaveChart;
@@ -122,7 +133,7 @@ namespace ChartModules.StandardModules
         {
             return Task.Run(() =>
             {
-                var npos = Pos; DateTime dt = DateTime.Now; string price = "";
+                var npos = CurrentPosition = Pos; DateTime dt = DateTime.Now; string price = "";
                 if (Hide)
                 {
                     Dispatcher.Invoke(() =>
@@ -314,41 +325,43 @@ namespace ChartModules.StandardModules
         }
 
         private CursorT CurrentCursor = CursorT.None;
-        public void SetCursor(CursorT t)
+        private void SetCursor(CursorT t)
         {
-            if (CurrentCursor == t) return;
-            CurrentCursor = t;
-            switch (t)
+            Task.Run(() => 
             {
-                case CursorT.Paint:
-                    {
-                        Dispatcher.Invoke(() =>
+                if (CurrentCursor == t) return;
+                CurrentCursor = t;
+                switch (t)
+                {
+                    case CursorT.Paint:
                         {
-                            var rt = new RotateTransform(45);
-                            using var dc = CursorVisual.RenderOpen();
-                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                            dc.PushTransform(rt);
-                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                            dc.PushTransform(rt);
-                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                            dc.PushTransform(rt);
-                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                        });
-                    }
-                    break;
-                case CursorT.Standart:
-                    {
-                        Dispatcher.Invoke(() =>
+                            Dispatcher.Invoke(() =>
+                            {
+                                var rt = new RotateTransform(45);
+                                using var dc = CursorVisual.RenderOpen();
+                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                                dc.PushTransform(rt);
+                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                                dc.PushTransform(rt);
+                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                                dc.PushTransform(rt);
+                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                            });
+                        }
+                        break;
+                    case CursorT.Standart:
                         {
-                            using var dc = CursorVisual.RenderOpen();
-                            dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                            dc.DrawLine(MarksPen, new Point(0, -15), new Point(0, 15));
-                        });
-                    }
-                    break;
-                case CursorT.Hook:
-                    {
-                        var geo = new PathGeometry(new[] { new PathFigure(new Point(4, 0),
+                            Dispatcher.Invoke(() =>
+                            {
+                                using var dc = CursorVisual.RenderOpen();
+                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
+                                dc.DrawLine(MarksPen, new Point(0, -15), new Point(0, 15));
+                            });
+                        }
+                        break;
+                    case CursorT.Hook:
+                        {
+                            var geo = new PathGeometry(new[] { new PathFigure(new Point(4, 0),
                             new[]
                             {
                                 new LineSegment(new Point(8, 12), true),
@@ -363,30 +376,31 @@ namespace ChartModules.StandardModules
                             true)
                         }); geo.Freeze();
 
-                        Dispatcher.Invoke(() =>
-                        {
-                            using var dc = CursorVisual.RenderOpen();
-                            dc.PushTransform(new TranslateTransform(-4,3));
-                            dc.PushTransform(new RotateTransform(-30));
-                            dc.PushTransform(new ScaleTransform(1.5, 1.5));
+                            Dispatcher.Invoke(() =>
+                            {
+                                using var dc = CursorVisual.RenderOpen();
+                                dc.PushTransform(new TranslateTransform(-4, 3));
+                                dc.PushTransform(new RotateTransform(-30));
+                                dc.PushTransform(new ScaleTransform(1.5, 1.5));
 
-                            dc.DrawGeometry(MarksPen.Brush, null, geo);
-                        });
-                    }
-                    break;
-                case CursorT.None:
-                    {
-                        Dispatcher.Invoke(() =>
+                                dc.DrawGeometry(MarksPen.Brush, null, geo);
+                            });
+                        }
+                        break;
+                    case CursorT.None:
                         {
-                            using var dc = CursorVisual.RenderOpen();
-                        });
-                    }
-                    break;
-            }
-            if (MagnetState) MagnetAdd();
+                            Dispatcher.Invoke(() =>
+                            {
+                                using var dc = CursorVisual.RenderOpen();
+                            });
+                        }
+                        break;
+                }
+                if (MagnetState) MagnetAdd();
 
-            if (t == CursorT.Hook) Hide = true;
-            else { Hide = false; SetCursorLines(); }
+                if (t == CursorT.Hook) Hide = true;
+                else { Hide = false; SetCursorLines(); }
+            });
         }
 
         private double MagnetRadius = 25;

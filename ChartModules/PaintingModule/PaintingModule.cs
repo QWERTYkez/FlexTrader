@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -32,21 +33,45 @@ namespace ChartModules.PaintingModule
         private readonly IDrawingCanvas ElementsCanvas;
         private readonly IDrawingCanvas PricesCanvas;
         private readonly IDrawingCanvas TimesCanvas;
+        private readonly IDrawingCanvas PrototypeCanvas;
+        private readonly IDrawingCanvas PrototypePriceCanvas;
+        private readonly IDrawingCanvas PrototypeTimeCanvas;
         private readonly Action<string> ResetInstrument;
-        public PaintingModule(IChart chart, IDrawingCanvas ElementsCanvas, IDrawingCanvas PricesCanvas, 
-            IDrawingCanvas TimesCanvas, Action<string> ResetInstrument) : base(chart)
+        public PaintingModule(IChart chart, IDrawingCanvas ElementsCanvas, IDrawingCanvas PricesCanvas,
+            IDrawingCanvas TimesCanvas, IDrawingCanvas PrototypeCanvas, IDrawingCanvas PrototPCanvas,
+            IDrawingCanvas PrototTCanvas) : base(chart)
         {
             this.ElementsCanvas = ElementsCanvas;   ElementsCanvas.AddVisual(ElementsVisual);
             this.PricesCanvas = PricesCanvas;       PricesCanvas.AddVisual(PricesVisual);
             this.TimesCanvas = TimesCanvas;         TimesCanvas.AddVisual(TimesVisual);
+            this.PrototypeCanvas = PrototypeCanvas;     PrototypeCanvas.AddVisual(PrototypeVisual);
+            this.PrototypePriceCanvas = PrototPCanvas;  PrototPCanvas.AddVisual(PrototypePriceVisual);
+            this.PrototypeTimeCanvas = PrototTCanvas;   PrototTCanvas.AddVisual(PrototypeTimeVisual);
+
+            Chart.ChartGrid.MouseEnter += (s, e) => 
+            {
+                PrototypeCanvas.Visibility = Visibility.Visible;
+                PrototypePriceCanvas.Visibility = Visibility.Visible;
+                PrototypeTimeCanvas.Visibility = Visibility.Visible;
+            };
+            Chart.ChartGrid.MouseLeave += (s, e) => 
+            {
+                PrototypeCanvas.Visibility = Visibility.Hidden;
+                PrototypePriceCanvas.Visibility = Visibility.Hidden;
+                PrototypeTimeCanvas.Visibility = Visibility.Hidden;
+            };
+            Chart.ChartGrid.MouseMove += (s, e) => DrawPrototype?.Invoke(e.GetPosition(Chart.ChartGrid), Chart,
+                PrototypeVisual, PrototypePriceVisual, PrototypeTimeVisual);
+            this.SetMenuAct = chart.MWindow.SetMenu;
 
             Chart.VerticalСhanges += () => Task.Run(() => ResetHooks());
             Chart.VerticalСhanges += () => Redraw();
             Chart.HorizontalСhanges += () => Task.Run(() => ResetHooks());
             Chart.HorizontalСhanges += () => Redraw();
-            this.ResetInstrument = ResetInstrument;
+            this.ResetInstrument = Chart.MWindow.ResetInstrument;
 
             SetsName = "Paintings";
+            Chart.PaintingLevel = PaintingLevel;
 
             ////////////////////
             Task.Run(() => 
@@ -57,14 +82,22 @@ namespace ChartModules.PaintingModule
             });
         }
 
+        private Action<Point, IChart, DrawingVisual, DrawingVisual, DrawingVisual> DrawPrototype;
+        private readonly Action<string, List<Setting>, IChart, Action, Action> SetMenuAct;
         private readonly DrawingVisual ElementsVisual = new DrawingVisual();
         private readonly DrawingVisual PricesVisual = new DrawingVisual();
         private readonly DrawingVisual TimesVisual = new DrawingVisual();
+        private readonly DrawingVisual PrototypeVisual = new DrawingVisual();
+        private readonly DrawingVisual PrototypePriceVisual = new DrawingVisual();
+        private readonly DrawingVisual PrototypeTimeVisual = new DrawingVisual();
         private protected override void Destroy()
         {
             ElementsCanvas.ClearVisuals();
             PricesCanvas.ClearVisuals();
             TimesCanvas.ClearVisuals();
+            PrototypeCanvas.ClearVisuals();
+            PrototypePriceCanvas.ClearVisuals();
+            PrototypeTimeCanvas.ClearVisuals();
         }
 
         private readonly List<ChangingElement> ElementsCollection = new List<ChangingElement>();
@@ -109,21 +142,48 @@ namespace ChartModules.PaintingModule
             ResetHooks();
         }
 
+        public void ClearPrototype()
+        {
+            Task.Run(() => 
+            {
+                DrawPrototype = null;
+                Dispatcher.Invoke(() =>
+                {
+                    PrototypeVisual.RenderOpen().Close();
+                    PrototypePriceVisual.RenderOpen().Close();
+                    PrototypeTimeVisual.RenderOpen().Close();
+                });
+            });
+        }
+
+        public void PreparePaintingLevel()
+        {
+            DrawPrototype = Level.DrawPrototype;
+            SetMenuAct.Invoke("New level", Level.StGetSets(), Chart, null, null);
+        }
         public void PaintingLevel(MouseButtonEventArgs e) 
         {
-            AddElement(new Level(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y),
-                Brushes.White, Brushes.Black, Brushes.Lime, 3));
+            AddElement(new Level(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y)));
 
-            if (!Chart.Controlled)
-                ResetInstrument.Invoke(null);
-            else
-                Chart.ControlUsed = true;
+            if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
+            else Chart.MWindow.ControlUsed = true;
+        }
+
+        public void PreparePaintingTrend()
+        {
+            DrawPrototype = Trend.DrawFirstPoint;
+            SetMenuAct.Invoke("New trend", Trend.StGetSets(), Chart, null, null);
+            Chart.PaintingTrend = PaintingTrend;
         }
         public void PaintingTrend(MouseButtonEventArgs e)
         {
-             
+            Chart.PaintingPoints = new List<Point> { Chart.CurrentCursorPosition };
+            DrawPrototype = Trend.DrawSecondPoint;
 
-            
+            Chart.PaintingTrend = e => 
+            {
+                
+            };
         }
 
         private void ResetHooks() 

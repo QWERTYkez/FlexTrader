@@ -35,9 +35,10 @@ namespace FlexTrader.MVVM.Views
             InitializeComponent();
 
             AddSettingsToContainer(BaseSP, sb);
-            AddSettingsToContainer(SP1, sn);
-            AddSettingsToContainer(SP2, st);
+            //AddSettingsToContainer(SP1, sn);
+            //AddSettingsToContainer(SP2, st);
 
+            Show();
         }
 
         private void AddSettingsToContainer(StackPanel SP, List<(string SetsName, List<Setting> Sets)> Sets)

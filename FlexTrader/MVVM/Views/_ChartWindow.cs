@@ -17,6 +17,7 @@
 */
 
 using ChartModules;
+using ChartModules.StandardModules;
 using FlexTrader.MVVM.Resources;
 using System;
 using System.Collections.Generic;
@@ -52,9 +53,136 @@ namespace FlexTrader.MVVM.Views
             };
             ContextMenuPopup.MouseEnter += (s, e) => { OverMenu = true; };
             ContextMenuPopup.MouseLeave += (s, e) => { OverMenu = false; };
+            KeyPressed += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) GetControl(); };
+            KeyReleased += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) LoseControl(); };
             Initialized += (s, e) => { ((Grid)this.Content).Children.Add(ContextMenuPopup); };
             this.PreviewMouseLeftButtonDown += (s, e) =>
             { if (!OverMenu) { InvokeRemoveHook(); ContextMenuPopup.IsOpen = false; } };
+
+            //PreviewMouseLeftButtonDown
+            Interacion = e => Chart?.Interacion?.Invoke(e);
+            Moving = e => Chart?.Moving.Invoke(e);
+            PaintingLevel = e => Chart?.PaintingLevel.Invoke(e);
+            PaintingTrend = e => Chart?.PaintingTrend.Invoke(e);
+
+            //MouseMove
+            HookElement = e => Chart?.HookElement?.Invoke(e);
+        }
+
+        private protected void ChartsGRD_PreviewMouseLeftButtonDown(object s, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+            RemoveHooks?.Invoke();
+            LBDInstrument.Invoke(e);
+        }
+        private protected void ChartsGRD_MouseMove(object s, MouseEventArgs e) => MMInstrument?.Invoke(e);
+
+        public IChart Chart { get; set; }
+        private protected abstract Grid ChartsGRD { get; }
+
+        public event Action<string> PrepareInstrument;
+        public event Action<CursorT> SetCursor; 
+        public event Action<bool> SetMagnetState;
+        public event Action RemoveHooks;
+        public event Action NonInteraction;
+
+        private Action<MouseButtonEventArgs> LBDInstrument { get; set; }
+        private readonly Action<MouseButtonEventArgs> Interacion;
+        private readonly Action<MouseButtonEventArgs> Moving;
+        private readonly Action<MouseButtonEventArgs> PaintingLevel;
+        private readonly Action<MouseButtonEventArgs> PaintingTrend;
+
+        private Action<MouseEventArgs> MMInstrument { get; set; }
+        private readonly Action<MouseEventArgs> HookElement;
+
+
+        private bool MagnetInstrument = false;
+        public abstract void ResetInstrument(string Name);
+        private bool Interaction = false;
+        private bool painting = false;
+        private bool Painting
+        {
+            get => painting;
+            set
+            {
+                painting = value;
+                if (!painting) ClearPrototypes?.Invoke();
+            }
+        }
+        public event Action ClearPrototypes;
+        private protected void SetInsrument(string InstrumentName)
+        {
+            Task.Run(() =>
+            {
+                CursorT t = CursorT.None;
+                switch (InstrumentName)
+                {
+                    case "PaintingLevels":
+                        LBDInstrument = PaintingLevel; PrepareInstrument.Invoke(InstrumentName);
+                        Painting = true; MagnetInstrument = true;
+                        break;
+
+                    case "PaintingTrends":
+                        LBDInstrument = PaintingTrend; PrepareInstrument.Invoke(InstrumentName);
+                        Painting = true; MagnetInstrument = true;
+                        break;
+
+                    case "Interacion":
+                        LBDInstrument = Interacion; Painting = false; Interaction = true;
+                        MagnetInstrument = true; t = CursorT.Hook;
+                        MMInstrument = HookElement;
+                        break;
+
+                    default:
+                        LBDInstrument = Moving; Painting = false;
+                        MagnetInstrument = false; t = CursorT.Standart; break;
+                }
+                if (InstrumentName != "Interacion" && Interaction)
+                {
+                    MMInstrument = null;
+                    NonInteraction.Invoke();
+                    Interaction = false;
+                }
+
+                SetCursor.Invoke(t);
+                SetMagnet();
+            });
+        }
+
+        private protected abstract bool CurrentMagnetState { get; set; }
+        public event Action<bool> ToggleMagnet;
+        private protected void SetMagnet() => 
+            ToggleMagnet.Invoke(MagnetInstrument && CurrentMagnetState);
+
+        public bool Controlled { get; private set; } = false;
+        public bool ControlUsed { get; set; }
+        private void GetControl()
+        {
+            if (!Controlled)
+            {
+                Task.Run(() =>
+                {
+                    if (LBDInstrument == Moving)
+                    {
+                        ResetInstrument("Interacion");
+                        Controlled = true;
+                    }
+                    if (Painting)
+                    {
+                        Controlled = true;
+                        ControlUsed = false;
+                    }
+                });
+            }
+
+        }
+        private void LoseControl()
+        {
+            if (Controlled) Task.Run(() =>
+            {
+                if (Interaction || ControlUsed) ResetInstrument(null);
+                Controlled = false;
+            });
         }
 
         #region Обработка таскания мышью
@@ -89,9 +217,12 @@ namespace FlexTrader.MVVM.Views
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st)
         {
-            SettingsWindow?.Close();
-            SettingsWindow = new SettingsWindow(sb, sn, st);
-            SettingsWindow.Show();
+            Dispatcher.Invoke(() => 
+            {
+                SettingsWindow?.Close();
+                SettingsWindow = new SettingsWindow(sb, sn, st);
+                SettingsWindow.Closed += (s, e) => { SettingsWindow = null; };
+            });
         }
 
         #endregion
@@ -130,7 +261,7 @@ namespace FlexTrader.MVVM.Views
         private Action RemoveTopMenuHook;
         private IChart LastChart;
         private List<Sliding> Slidings { get; set; }
-        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook, Action RemoveHook, IChart Chart)
+        public void SetMenu(string SetsName, List<Setting> Sets, IChart Chart, Action DrawHook, Action RemoveHook)
         {
             if (LastChart != null)
             {
@@ -143,139 +274,143 @@ namespace FlexTrader.MVVM.Views
             else { LastChart = Chart; }
             if (Sets != null)
             {
-                DrawHook.Invoke();
+                DrawHook?.Invoke();
                 RemoveTopMenuHook = RemoveHook;
-                OverlayMenu.Visibility = Visibility.Visible;
-                TopPanel.Visibility = Visibility.Hidden;
-
-                BWP = new WrapPanel { Height = 52, HorizontalAlignment = HorizontalAlignment.Left };
+                Dispatcher.Invoke(() => 
                 {
-                    BWP.Children.Add(new Viewbox
+                    OverlayMenu.Visibility = Visibility.Visible;
+                    TopPanel.Visibility = Visibility.Hidden;
+
+                    BWP = new WrapPanel { Height = 52, HorizontalAlignment = HorizontalAlignment.Left };
                     {
-                        Height = 40,
-                        Width = 75,
-                        Margin = new Thickness(2.5, 0, 2.5, 0),
-
-                        Child = new Label
+                        BWP.Children.Add(new Viewbox
                         {
-                            VerticalContentAlignment = VerticalAlignment.Center,
-                            Content = SetsName,
-
-                            FontFamily = new FontFamily("Consolas"),
-                            Foreground = Brushes.White,
-                            FontSize = 18
-                        }
-                    });
-
-                    Slidings = new List<Sliding>();
-
-
-                    {// Lock button
-
-                        var L = new Lock
-                        {
-                            Foreground = Brushes.White,
-                            Locked = (bool)(Sets[0].Get())
-                        };
-                        var lpb = new PaletteButton()
-                        {
-                            VerticalAlignment = VerticalAlignment.Center,
+                            Height = 40,
+                            Width = 75,
                             Margin = new Thickness(2.5, 0, 2.5, 0),
-                            Content = L,
-                            IsActive = L.Locked
-                        };
-                        lpb.Click += (s, e) =>
-                        {
-                            L.Locked = !L.Locked;
-                            Sets[0].Set(L.Locked);
-                            lpb.IsActive = L.Locked;
-                        };
-                        BWP.Children.Add(lpb);
-                    }
 
-                    {// Delete button
-
-                        var lpb = new PaletteButton()
-                        {
-                            VerticalAlignment = VerticalAlignment.Center,
-                            Margin = new Thickness(2.5, 0, 2.5, 0),
-                            Color = PaletteButtonColor.Red,
-                            Content = new CrossHair
+                            Child = new Label
                             {
+                                VerticalContentAlignment = VerticalAlignment.Center,
+                                Content = SetsName,
+
+                                FontFamily = new FontFamily("Consolas"),
                                 Foreground = Brushes.White,
-                                Rotated = true
+                                FontSize = 18
                             }
-                        };
-                        lpb.Click += (s, e) =>
-                        {
-                            OverlayMenu.Visibility = Visibility.Hidden;
-                            TopPanel.Visibility = Visibility.Visible;
-                            Sets[1].Set(null);
-                            RemoveHook.Invoke();
-                        };
-                        BWP.Children.Add(lpb);
-                    }
+                        });
 
-                    var WP = new WrapPanel { Margin = new Thickness(5), Height = 42, HorizontalAlignment = HorizontalAlignment.Left };
-                    {
-                        for (int i = 2; i < Sets.Count; i++)
+                        Slidings = new List<Sliding>();
+
+                        var WP = new WrapPanel { Margin = new Thickness(5), Height = 42, HorizontalAlignment = HorizontalAlignment.Left };
                         {
-                            FrameworkElement fe = null;
-                            switch (Sets[i].Type)
+                            for (int i = 0; i < Sets.Count; i++)
                             {
-                                case SetType.Brush:
-                                    WP.Children.Add(fe = new Sliding
-                                    {
-                                        Background = Brushes.Teal,
-                                        Foreground = Brushes.White,
-                                        Title = Sets[i].Name,
-                                        ContentWidth = 40,
-                                        AlwaysOpen = true,
-                                        Content = new ColorPicker(Sets[i].Get() as SolidColorBrush, Sets[i].Set)
+                                FrameworkElement fe = null;
+                                switch (Sets[i].Type)
+                                {
+                                    case SetType.Lock:
+                                        var L = new Lock
                                         {
-                                            CornerRadius = 10
-                                        }
-                                    });
-                                    Slidings.Add(fe as Sliding);
-                                    break;
-                                case SetType.DoublePicker:
-                                    WP.Children.Add(fe = new Sliding
-                                    {
-                                        Background = Brushes.Teal,
-                                        Foreground = Brushes.White,
-                                        Title = Sets[i].Name,
-                                        ContentWidth = 100,
-                                        AlwaysOpen = true,
-                                        Content = new DoublePicker((double)Sets[i].Get(), Sets[i].Set, (double?)Sets[i].Param1, (double?)Sets[i].Param2)
-                                    });
-                                    Slidings.Add(fe as Sliding);
-                                    break;
-                                case SetType.DoubleSlider:
-                                    WP.Children.Add(fe = new Sliding
-                                    {
-                                        Background = Brushes.Teal,
-                                        Foreground = Brushes.White,
-                                        Title = Sets[i].Name,
-                                        ContentWidth = 100,
-                                        AlwaysOpen = true,
-                                        Content = new DoubleSlider((double)Sets[i].Get(), Sets[i].Set, (double)Sets[i].Param1, (double)Sets[i].Param2)
-                                        { Foreground = Brushes.White }
-                                    });
-                                    Slidings.Add(fe as Sliding);
-                                    break;
+                                            Foreground = Brushes.White,
+                                            Locked = (bool)(Sets[0].Get())
+                                        };
+                                        var lpb = new PaletteButton()
+                                        {
+                                            VerticalAlignment = VerticalAlignment.Center,
+                                            Margin = new Thickness(2.5, 0, 2.5, 0),
+                                            Content = L,
+                                            IsActive = L.Locked
+                                        };
+                                        lpb.Click += (s, e) =>
+                                        {
+                                            L.Locked = !L.Locked;
+                                            Sets[0].Set(L.Locked);
+                                            lpb.IsActive = L.Locked;
+                                        };
+                                        BWP.Children.Add(lpb);
+                                        break;
+                                    case SetType.Delete:
+                                        var dpb = new PaletteButton()
+                                        {
+                                            VerticalAlignment = VerticalAlignment.Center,
+                                            Margin = new Thickness(2.5, 0, 2.5, 0),
+                                            Color = PaletteButtonColor.Red,
+                                            Content = new CrossHair
+                                            {
+                                                Foreground = Brushes.White,
+                                                Rotated = true
+                                            }
+                                        };
+                                        dpb.Click += (s, e) =>
+                                        {
+                                            OverlayMenu.Visibility = Visibility.Hidden;
+                                            TopPanel.Visibility = Visibility.Visible;
+                                            Sets[1].Set(null);
+                                            RemoveHook.Invoke();
+                                        };
+                                        BWP.Children.Add(dpb);
+                                        break;
+                                    case SetType.Brush:
+                                        WP.Children.Add(fe = new Sliding
+                                        {
+                                            Background = Brushes.Teal,
+                                            Foreground = Brushes.White,
+                                            Title = Sets[i].Name,
+                                            ContentWidth = 40,
+                                            AlwaysOpen = true,
+                                            Content = new ColorPicker(Sets[i].Get() as SolidColorBrush, Sets[i].Set)
+                                            {
+                                                CornerRadius = 10
+                                            }
+                                        });
+                                        Slidings.Add(fe as Sliding);
+                                        break;
+                                    case SetType.DoublePicker:
+                                        WP.Children.Add(fe = new Sliding
+                                        {
+                                            Background = Brushes.Teal,
+                                            Foreground = Brushes.White,
+                                            Title = Sets[i].Name,
+                                            ContentWidth = 100,
+                                            AlwaysOpen = true,
+                                            Content = new DoublePicker((double)Sets[i].Get(), Sets[i].Set, (double?)Sets[i].Param1, (double?)Sets[i].Param2)
+                                        });
+                                        Slidings.Add(fe as Sliding);
+                                        break;
+                                    case SetType.DoubleSlider:
+                                        WP.Children.Add(fe = new Sliding
+                                        {
+                                            Background = Brushes.Teal,
+                                            Foreground = Brushes.White,
+                                            Title = Sets[i].Name,
+                                            ContentWidth = 100,
+                                            AlwaysOpen = true,
+                                            Content = new DoubleSlider((double)Sets[i].Get(), Sets[i].Set, (double)Sets[i].Param1, (double)Sets[i].Param2)
+                                            { Foreground = Brushes.White }
+                                        });
+                                        Slidings.Add(fe as Sliding);
+                                        break;
+                                }
+                                if (fe != null)
+                                {
+                                    fe.Height = 40;
+                                    fe.VerticalAlignment = VerticalAlignment.Center;
+                                }
                             }
-                            fe.Height = 40;
-                            fe.VerticalAlignment = VerticalAlignment.Center;
                         }
+                        BWP.Children.Add(WP);
                     }
-                    BWP.Children.Add(WP);
-                }
-                OverlayMenu.Content = BWP;
+                    OverlayMenu.Content = BWP;
+                });
             }
             else
             {
-                OverlayMenu.Visibility = Visibility.Hidden;
-                TopPanel.Visibility = Visibility.Visible;
+                Dispatcher.Invoke(() => 
+                {
+                    OverlayMenu.Visibility = Visibility.Hidden;
+                    TopPanel.Visibility = Visibility.Visible;
+                });
             }
         }
         #endregion
@@ -331,15 +466,7 @@ namespace FlexTrader.MVVM.Views
         }
         #endregion
 
-        public abstract event Action<string> SetInstrument;
-        public abstract string CurrentInstrument { get; }
-
-        public abstract event Action<bool> SetMagnet;
-        public abstract bool CurrentMagnetState { get; }
-
         public event Action<KeyEventArgs> KeyPressed;
         public event Action<KeyEventArgs> KeyReleased;
-
-        public abstract void ResetPB(string Name);
     }
 }

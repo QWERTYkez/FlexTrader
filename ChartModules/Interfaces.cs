@@ -16,9 +16,11 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -28,6 +30,16 @@ namespace ChartModules
 {
     public interface IChart
     {
+        public Action<MouseButtonEventArgs> Interacion { get; set; }
+        public Action<MouseButtonEventArgs> Moving { get; set; }
+        public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
+        public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
+
+        public Action<MouseEventArgs> HookElement { get; set; }
+
+        public IChartWindow MWindow { get; }
+        public Grid ChartGrid { get; }
+        public List<Point> PaintingPoints { get; set; }
         Dispatcher Dispatcher { get; }
         double TickSize { get; }
         double PriceToHeight(double price);
@@ -61,13 +73,12 @@ namespace ChartModules
         event Action HorizontalСhanges;
         event Action<Point> CursorNewPosition;
         event Action CursorLeave;
-        bool Controlled { get; }
         Point CurrentCursorPosition { get; }
-        bool ControlUsed { get; set; }
     }
 
     public interface IDrawingCanvas
     {
+        public Visibility Visibility { get; set; }
         public List<Visual> Visuals { get; }
         public void AddVisual(Visual visual);
         public void DeleteVisual(Visual visual);
@@ -89,6 +100,17 @@ namespace ChartModules
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
 
-        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook, Action RemoveHook, IChart Chart);
+        public void SetMenu(string SetsName, List<Setting> Sets, IChart Chart, Action DrawHook = null, Action RemoveHook = null);
+        public void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu);
+        public void ResetInstrument(string Name);
+        public event Action ClearPrototypes;
+        public event Action<string> PrepareInstrument;
+        public event Action<CursorT> SetCursor;
+        public event Action<bool> SetMagnetState;
+        public event Action RemoveHooks;
+        public event Action NonInteraction;
+        public event Action<bool> ToggleMagnet;
+        public bool Controlled { get; }
+        public bool ControlUsed { get; set; }
     }
 }

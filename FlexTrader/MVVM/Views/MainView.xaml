@@ -223,7 +223,7 @@
                         Margin="0,4,0,4"
                         BorderBrush="#FF0B294D"
                         BorderThickness="1" />
-                    <res:PaletteButton x:Name="MagnetBtn" Click="SetMagnetState">
+                    <res:PaletteButton x:Name="MagnetBtn" Click="BTN_SetMagnetState">
                         <res:Magnet Foreground="White" />
                     </res:PaletteButton>
                 </StackPanel>
@@ -232,7 +232,11 @@
                     BorderBrush="Gray"
                     BorderThickness="1" />
             </Grid>
-            <Grid Grid.Column="1">
+            <Grid
+                x:Name="ChartsGrid"
+                Grid.Column="1"
+                MouseMove="ChartsGRD_MouseMove"
+                PreviewMouseLeftButtonDown="ChartsGRD_PreviewMouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />

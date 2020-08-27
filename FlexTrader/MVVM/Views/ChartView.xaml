@@ -49,7 +49,7 @@
         <Grid
             x:Name="ChartGRD"
             Cursor="None"
-            SizeChanged="ChartGRD_SizeChanged">
+            SizeChanged="ChartGrid_SizeChanged">
             <mvvm:DrawingCanvas x:Name="GridLayer" Background="{Binding ChartBackground}" />
             <mvvm:DrawingCanvas x:Name="BackChart" />
             <Grid Margin="2,0,0,0" ClipToBounds="True">
@@ -78,6 +78,7 @@
             <mvvm:DrawingCanvas x:Name="HooksLayer" />
             <Grid>
                 <mvvm:DrawingCanvas x:Name="CursorLinesLayer" />
+                <mvvm:DrawingCanvas x:Name="PrototypeLayer" />
                 <mvvm:DrawingCanvas x:Name="CursorLayer" />
                 <mvvm:DrawingCanvas x:Name="MagnetLayer" />
             </Grid>
@@ -101,6 +102,7 @@
             <mvvm:DrawingCanvas x:Name="PaintingMarksLayer" />
             <mvvm:DrawingCanvas x:Name="HookPriceLayer" />
             <mvvm:DrawingCanvas x:Name="CursorMarkLayer" />
+            <mvvm:DrawingCanvas x:Name="PrototypePriceLayer" />
         </Grid>
         <Grid
             Grid.Row="2"
@@ -109,6 +111,7 @@
             <mvvm:DrawingCanvas x:Name="TimeLine" />
             <mvvm:DrawingCanvas x:Name="PaintingTimeLayer" />
             <mvvm:DrawingCanvas x:Name="HookTimeLayer" />
+            <mvvm:DrawingCanvas x:Name="PrototypeTimeLayer" />
         </Grid>
 
         <Grid Grid.Row="2" Grid.Column="2">

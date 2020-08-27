@@ -45,28 +45,32 @@ namespace FlexTrader.MVVM.Views
         private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;
 
+        public IChartWindow MWindow { get; }
         public ChartView() { } //конструктор для intellisense
         public ChartView(ChartWindow mainView)
         {
             InitializeComponent();
+            this.MouseEnter += (s, e) => { mainView.Chart = this; };
 
-            ResetInstrument = mainView.ResetPB;
-            mainView.SetInstrument += SetInsrument;
-            mainView.SetMagnet += SetMagnetState;
-            this.ShowSettings += mainView.ShowSettings;
-            ChartGRD.MouseLeave += (s, e) => CursorLeave?.Invoke();
-            ChartGRD.MouseMove += (s, e) => CursorNewPosition?.Invoke(e.GetPosition(this));
-
-            mainView.KeyPressed += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) GetControl(); };
-            mainView.KeyReleased += e => { if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) LoseControl(); };
+            this.MWindow = mainView;
+            MWindow.PrepareInstrument += PrepareInstrument;
+            this.ShowSettings += MWindow.ShowSettings;
+            ChartGrid.MouseLeave += (s, e) => CursorLeave?.Invoke();
+            ChartGrid.MouseMove += (s, e) =>
+            {
+                var P = e.GetPosition(this);
+                Task.Run(() => CursorNewPosition?.Invoke(P));
+            };
 
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
-            PaintingModule = new PaintingModule(this, PaintingsLayer, PaintingMarksLayer, PaintingTimeLayer, ResetInstrument);
-            HooksModule = new HooksModule(this, mainView, HooksLayer, HookPriceLayer, HookTimeLayer,
+            PaintingModule = new PaintingModule(this, PaintingsLayer, PaintingMarksLayer, PaintingTimeLayer,
+                PrototypeLayer, PrototypePriceLayer, PrototypeTimeLayer);
+            MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
+
+            HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
                 () => CursorModule.MarksPen,
                 () => PaintingModule.VisibleHooks,
-                act => { Instrument = act; },
                 new List<FrameworkElement>
                 {
                     SubLayers,
@@ -79,19 +83,13 @@ namespace FlexTrader.MVVM.Views
             TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
             TimeLineModule.HorizontalСhanges += () => HorizontalСhanges.Invoke();
 
-            CursorModule = new CursorModule(this, ChartGRD, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, CursorMarkLayer, CursorLeave);
+            CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, CursorMarkLayer, CursorLeave);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
-                Translate, ScaleX, ScaleY, mainView, TimeLine, PriceLine,
+                Translate, ScaleX, ScaleY, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
-            
-            ChartGRD.PreviewMouseLeftButtonDown += (s, e) =>
-            {
-                e.Handled = true;
-                HooksModule.RemoveHook?.Invoke();
-                Instrument?.Invoke(e);
-            };
-            ChartGRD.PreviewMouseRightButtonDown += (s, e) =>
+
+            ChartGrid.PreviewMouseRightButtonDown += (s, e) =>
             {
                 var items = HooksModule.ShowContextMenu(s, e);
                 if (items == null)
@@ -103,10 +101,10 @@ namespace FlexTrader.MVVM.Views
                         ("Test 2", () => { Debug.WriteLine("Test 2"); }),
                         ("+++", null),
                         ("Test 3", () => { Debug.WriteLine("Test 3"); })
-                    }, 
+                    },
                     null, null);
                 }
-                mainView.ShowContextMenu(items.Value);
+                MWindow.ShowContextMenu(items.Value);
             };
 
             CandlesModule.WhellScalled += () => CursorModule.Redraw();
@@ -116,9 +114,6 @@ namespace FlexTrader.MVVM.Views
             DC.Inicialize();
 
             SetsDefinition();
-
-            SetInsrument(mainView.CurrentInstrument);
-            SetMagnetState(mainView.CurrentMagnetState);
         }
 
         public void Destroy()
@@ -166,115 +161,31 @@ namespace FlexTrader.MVVM.Views
             });
         }
 
-        #region Instrument
-        private Action<MouseButtonEventArgs> Instrument;
-        private bool MagnetInstrument = false;
-        private readonly Action<string> ResetInstrument;
-        private bool Interaction = false;
-        private bool Painting = false;
-        private void SetInsrument(string InstrumentName)
+        #region Instruments
+        //LBDInstrument
+        public Action<MouseButtonEventArgs> Interacion { get; set; }
+        public Action<MouseButtonEventArgs> Moving { get; set; }
+        public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
+        public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
+        private void PrepareInstrument(string Instrument)
         {
-            Task.Run(() =>
+            Task.Run(() => 
             {
-                CursorT t = CursorT.None;
-                switch (InstrumentName)
+                switch (Instrument)
                 {
-                    case "PaintingLevels":
-                        Instrument = PaintingModule.PaintingLevel; Painting = true;
-                        MagnetInstrument = true; t = CursorT.Paint; break;
-
-                    case "PaintingTrends":
-                        Instrument = PaintingModule.PaintingTrend; Painting = true;
-                        MagnetInstrument = true; t = CursorT.Paint; break;
-
-                    case "Interacion":
-                        Instrument = null; Painting = false;
-                        MagnetInstrument = true; t = CursorT.Hook; break;
-
-                    default:
-                        Instrument = CandlesModule.MovingChart; Painting = false;
-                        MagnetInstrument = false; t = CursorT.Standart; break;
+                    case "PaintingLevels": PaintingModule.PreparePaintingLevel(); return;
+                    case "PaintingTrends": PaintingModule.PreparePaintingTrend(); return;
                 }
-                if (InstrumentName == "Interacion")
-                {
-                    ChartGRD.MouseMove += HooksModule.HookElement;
-                    Interaction = true;
-                }
-                else
-                {
-                    ChartGRD.MouseMove -= HooksModule.HookElement;
-                    HooksModule.RemoveHook = HooksModule.RemoveLastHook;
-                    HooksModule.RestoreChart();
-                    Interaction = false;
-                }
-
-                CursorModule.SetCursor(t);
-                SetMagnetState(CurrentMagnetState);
             });
         }
+        //MMInstrument
+        public Action<MouseEventArgs> HookElement { get; set; }
         #endregion
-        #region Control
-        public bool Controlled { get; private set; } = false;
-        public bool ControlUsed { get; set; }
-        private void GetControl()
-        {
-            if (!Controlled)
-            {
-                Task.Run(() =>
-                {
-                    if (Instrument == CandlesModule.MovingChart)
-                    {
-                        ResetInstrument.Invoke("Interacion");
-                        Controlled = true;
-                    }
-                    if (Painting)
-                    {
-                        Controlled = true;
-                        ControlUsed = false;
-                    }
-                });
-            }
-            
-        }
-        private void LoseControl()
-        {
-            if (Controlled) Task.Run(() =>
-            {
-                if (Interaction || ControlUsed) ResetInstrument.Invoke(null);
-                Controlled = false;
-            });
-        }
-        #endregion
-        #region Magnet
-        private bool CurrentMagnetState;
-        private void SetMagnetState(bool st) => Task.Run(() =>
-        {
-            CurrentMagnetState = st;
-            if (MagnetInstrument && CurrentMagnetState)
-            {
-                CursorModule.MagnetAdd();
-                CandlesModule.MagnetStatus = true;
-                CandlesModule.UpdateMagnetData();
-            }
-            else
-            {
-                CursorModule.MagnetRemove();
-                CandlesModule.MagnetStatus = false;
-                CandlesModule.ResetMagnetData();
-            }
-        });
-        #endregion
-        #region
-        private void ShowContextMenu()
-        {
-            var cm = new ContextMenu();
 
-            
-        }
-        #endregion
+        public List<Point> PaintingPoints { get; set; }
 
         private int ChangesCounter = 0;
-        private void ChartGRD_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void ChartGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Task.Run(() =>
             {
@@ -283,10 +194,9 @@ namespace FlexTrader.MVVM.Views
                 Thread.Sleep(50);
                 if (x != ChangesCounter) return;
 
-                ChHeight = ChartGRD.ActualHeight;
-                ChWidth = ChartGRD.ActualWidth;
+                ChHeight = ChartGrid.ActualHeight;
+                ChWidth = ChartGrid.ActualWidth;
                 CandlesModule.HorizontalReset(e.HeightChanged);
-                if (CurrentMagnetState) CandlesModule.ResetMagnetData();
             });
         }
         private void MouseWheelSpinning(object sender, MouseWheelEventArgs e) => CandlesModule.WhellScalling(e);
@@ -308,6 +218,7 @@ namespace FlexTrader.MVVM.Views
         public DateTime TimeA { get => TimeLineModule.TimeA; }
         public DateTime TimeB { get => TimeLineModule.TimeB; }
         public Point CurrentCursorPosition { get => CursorModule.CurrentPosition; }
+        public Grid ChartGrid { get => ChartGRD; }
 
         public event Action VerticalСhanges;
         public event Action HorizontalСhanges;
@@ -342,26 +253,33 @@ namespace FlexTrader.MVVM.Views
         }
         public double TimeToWidth(DateTime dt) =>
             ChWidth * ((dt - TimeA) / (TimeB - TimeA));
-        public DateTime WidthToTime(double width) =>
-            TimeA + ((width - 2) / ChWidth) * (TimeB - TimeA);
+        public DateTime WidthToTime(double width)
+        {
+            if(ChWidth == 0) return TimeA + (TimeB - TimeA) / 2;
+            return TimeA + ((width - 2) / ChWidth) * (TimeB - TimeA);
+        }
+            
 
         private event Action<List<(string SetsName, List<Setting> Sets)>, 
                              List<(string SetsName, List<Setting> Sets)>, 
                              List<(string SetsName, List<Setting> Sets)>> ShowSettings;
         private void ShowBaseSettings(object sender, RoutedEventArgs e)
         {
-            var basesets = new List<(string SetsName, List<Setting> Sets)>();
-            var normalsets = new List<(string SetsName, List<Setting> Sets)>();
-            var transsets = new List<(string SetsName, List<Setting> Sets)>();
+            Task.Run(() => 
+            {
+                var basesets = new List<(string SetsName, List<Setting> Sets)>();
+                var normalsets = new List<(string SetsName, List<Setting> Sets)>();
+                var transsets = new List<(string SetsName, List<Setting> Sets)>();
 
-            basesets.Add(("Настройки поля", SpaceSets));
-            basesets.Add(CandlesModule.GetSets());
-            basesets.Add(CursorModule.GetSets());
+                basesets.Add(("Настройки поля", SpaceSets));
+                basesets.Add(CandlesModule.GetSets());
+                basesets.Add(CursorModule.GetSets());
 
-            var s = PaintingModule.GetSets();
-            normalsets.Add(s);
+                var s = PaintingModule.GetSets();
+                normalsets.Add(s);
 
-            ShowSettings.Invoke(basesets, normalsets, transsets);
+                ShowSettings.Invoke(basesets, normalsets, transsets);
+            });
         }
 
         private readonly List<Setting> SpaceSets = new List<Setting>();

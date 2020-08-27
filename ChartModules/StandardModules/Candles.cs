@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,13 +43,11 @@ namespace ChartModules.StandardModules
         private readonly TranslateTransform Translate;
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
-        private readonly IChartWindow mainView;
         private readonly IDrawingCanvas TimeLine;
         private readonly Grid PriceLine;
         public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
             TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
-            ScaleTransform ScaleY, IChartWindow mainView, IDrawingCanvas TimeLine,
-            Grid PriceLine, Vector CurrentScale) : base(chart)
+            ScaleTransform ScaleY, IDrawingCanvas TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
         {
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
@@ -58,7 +55,6 @@ namespace ChartModules.StandardModules
             this.Translate = Translate;
             this.ScaleX = ScaleX;
             this.ScaleY = ScaleY;
-            this.mainView = mainView;
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
             this.CurrentScale = CurrentScale;
@@ -79,6 +75,17 @@ namespace ChartModules.StandardModules
                 });
                 Redraw();
             });
+
+            Chart.Moving = MovingChart;
+            Chart.MWindow.ToggleMagnet += b =>
+            {
+                Task.Run(() =>
+                {
+                    MagnetStatus = b;
+                    if (b) UpdateMagnetData();
+                    else ResetMagnetData();
+                });
+            };
 
             SetsName = "Настройки свечей";
 
@@ -187,7 +194,7 @@ namespace ChartModules.StandardModules
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                      select c;
 
-                if (currentCandles.Count() < 1) return;
+                if (currentCandles.Count() < 1) goto Return;
 
                 var mmm = Convert.ToDouble(currentCandles.Select(c => c.LowD).Min()) / Chart.TickSize;
                 var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
@@ -195,7 +202,7 @@ namespace ChartModules.StandardModules
                 max += delta * 0.05;
                 var nMin = mmm - delta * 0.05;
                 var nDelta = max - Min;
-                if (Min == nMin && Delta == nDelta && !HeightChanged) return;
+                if (Min == nMin && Delta == nDelta && !HeightChanged) goto Return;
                 Min = nMin;
                 Delta = nDelta;
 
@@ -208,6 +215,8 @@ namespace ChartModules.StandardModules
 
                 VerticalReset();
             }
+        Return:
+            if (MagnetStatus) ResetMagnetData();
         }
         #endregion
         #region скалирование по ценовой шкале
@@ -218,7 +227,7 @@ namespace ChartModules.StandardModules
             if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
             LastScaleY = CurrentScale.Y;
             VerticalLock = false;
-            mainView.MoveCursor(e, vec =>
+            Chart.MWindow.MoveCursor(e, vec =>
             {
                 if (vec == null) return;
                 Task.Run(async () =>
@@ -257,7 +266,7 @@ namespace ChartModules.StandardModules
                 return;
             }
             LastScaleX = CurrentScale.X;
-            mainView.MoveCursor(e, vec =>
+            Chart.MWindow.MoveCursor(e, vec =>
             {
                 if (vec == null) return;
 
@@ -295,7 +304,7 @@ namespace ChartModules.StandardModules
         public void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
-            mainView.MoveCursor(e, async vec => 
+            Chart.MWindow.MoveCursor(e, async vec => 
             {
                 if (vec == null) return;
 

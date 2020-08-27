@@ -18,6 +18,7 @@
 
 using FlexTrader.MVVM.Resources;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -41,14 +42,14 @@ namespace FlexTrader.MVVM.Views
             PaletteButtonNormal.IsActive = true;
 
             ((ViewModels.MainViewModel)DataContext).Initialize(this);
+
+            SetInsrument(CurrentInstrument); SetMagnet();
         }
 
         private Popup Pop1;
         private Popup Pop2;
 
-        public override event Action<string> SetInstrument;
-        
-        public override string CurrentInstrument { get => (string)(((PaletteButton)(Palette.Tag)).Tag); }
+        private string CurrentInstrument => (string)(((PaletteButton)(Palette.Tag)).Tag);
 
         private void PaletteButton_MouseEnter(object sender, MouseEventArgs e)
         {
@@ -113,9 +114,9 @@ namespace FlexTrader.MVVM.Views
             var btn = sender as PaletteButton;
             btn.IsActive = true;
             Palette.Tag = btn;
-            SetInstrument?.Invoke((string)btn.Tag);
+            SetInsrument((string)btn.Tag);
         }
-        public override void ResetPB(string Name)
+        public override void ResetInstrument(string Name)
         {
             Dispatcher.Invoke(() => 
             {
@@ -127,26 +128,30 @@ namespace FlexTrader.MVVM.Views
                 };
                 btn.IsActive = true;
                 Palette.Tag = btn;
-                SetInstrument?.Invoke((string)btn.Tag);
+                SetInsrument((string)btn.Tag);
             });
         }
         private void PBCmenu(object sender, RoutedEventArgs e)
         {
             var newbtn = sender as PaletteButton;
             var lastbtn = ((Grid)((Popup)((Border)((Grid)newbtn.Parent).Parent).Parent).Parent).Children[0] as PaletteButton;
-            if(CurrentInstrument == (string)lastbtn.Tag) SetInstrument?.Invoke((string)newbtn.Tag);
+            if(CurrentInstrument == (string)lastbtn.Tag)
+            {
+                SetInsrument((string)newbtn.Tag);
+            }  
             lastbtn.Tag = newbtn.Tag;
             lastbtn.Content = ((ICloneable)newbtn.Content).Clone();
             PBC(lastbtn, null);
         }
 
-        public override event Action<bool> SetMagnet;
-        public override bool CurrentMagnetState => MagnetBtn.IsActive;
+        private protected override bool CurrentMagnetState { get; set; }
+        private protected override Grid ChartsGRD { get => ChartsGrid;  }
 
-        private void SetMagnetState(object sender, RoutedEventArgs e)
+        private void BTN_SetMagnetState(object sender, RoutedEventArgs e)
         {
             MagnetBtn.IsActive = !MagnetBtn.IsActive;
-            SetMagnet?.Invoke(MagnetBtn.IsActive);
+            CurrentMagnetState = MagnetBtn.IsActive;
+            SetMagnet();
         }
 
         private void HidePalette(object sender, RoutedEventArgs e)

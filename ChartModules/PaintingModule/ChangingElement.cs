@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.DirectoryServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;

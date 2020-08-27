@@ -19,13 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
 namespace ChartModules.PaintingModule.Elements
 {
-    public class Level : ChangingElement
+    public class Trend : ChangingElement
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;
@@ -33,8 +32,8 @@ namespace ChartModules.PaintingModule.Elements
         private static double StLineThikness { get; set; } = 3;
         private static double StLineDash { get; set; } = 5;
         private static double StLineIndent { get; set; } = 0;
-        
-        static Level()
+
+        static Trend()
         {
             StTextBrush?.Freeze(); StMarkFill?.Freeze(); StLineBrush?.Freeze();
         }
@@ -52,88 +51,69 @@ namespace ChartModules.PaintingModule.Elements
             };
         }
 
-        public static void DrawPrototype(Point P, IChart Chart,
-            DrawingVisual ChartVisual, DrawingVisual PriceVisual, DrawingVisual TimeVisual)
+        public static void DrawFirstPoint(Point P, IChart C, DrawingVisual dv,
+            DrawingVisual p, DrawingVisual t)
         {
-            Task.Run(() => 
+            using (var dc = dv.RenderOpen())
             {
-                var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
-
-                double height = P.Y;
-                double price = Chart.HeightToPrice(height);
-                double width = Chart.ChWidth + 2;
-
-                var ft = new FormattedText
-                     (
-                         price.ToString(Chart.TickPriceFormat),
-                         CultureInfo.CurrentCulture,
-                         FlowDirection.LeftToRight,
-                         Chart.FontNumeric,
-                         Chart.BaseFontSize,
-                         StTextBrush,
-                         VisualTreeHelper.GetDpi(PriceVisual).PixelsPerDip
-                     );
-
-                var linpen = new Pen(StLineBrush, StLineThikness); linpen.Freeze();
-                var geopen = new Pen(StLineBrush, 2); geopen.Freeze();
-
-                var linps = new List<Point>();
-                if (StLineIndent == 0)
-                {
-                    linps.Add(new Point(0, height));
-                    linps.Add(new Point(width, height));
-                }
-                else
-                {
-                    double z = 0;
-                    while (z < width)
-                    {
-                        linps.Add(new Point(z, height)); z += StLineDash;
-                        linps.Add(new Point(z, height)); z += StLineIndent;
-                    }
-                }
-
-                var geo = new PathGeometry(new[] { new PathFigure(new Point(0, height),
-                                            new[]
-                                            {
-                                                new LineSegment(new Point(Chart.PriceShift, height + ft.Height / 2), true),
-                                                new LineSegment(new Point(Chart.PriceLineWidth - 2, height + ft.Height / 2), true),
-                                                new LineSegment(new Point(Chart.PriceLineWidth - 2, height - ft.Height / 2), true),
-                                                new LineSegment(new Point(Chart.PriceShift, height - ft.Height / 2), true)
-                                            },
-                                            true)}); geo.Freeze();
-
-                var pA = new Point(0, height);
-                var pB = new Point(width, height);
-
-                Chart.Dispatcher.Invoke(() =>
-                {
-                    using (var dc = ChartVisual.RenderOpen())
-                    {
-                        dc.DrawLine(new Pen(Chart.ChartBackground, StLineThikness + 2), pA, pB);
-                        for (int i = 0; i < linps.Count; i += 2)
-                            dc.DrawLine(linpen, linps[i], linps[i + 1]);
-                    }
-                    using (var dc = PriceVisual.RenderOpen())
-                    {
-                        dc.DrawGeometry(StMarkFill, geopen, geo);
-                        dc.DrawText(ft, new Point(Chart.PriceShift + 1, height - ft.Height / 2));
-                    }
-                });
-            });
+                dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 14, 14);
+                dc.DrawEllipse(Brushes.White, null, C.CurrentCursorPosition, 12, 12);
+                dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 10, 10);
+            }
         }
-
-        public Level(double Price)
+        public static void DrawSecondPoint(Point P, IChart C, DrawingVisual dv,
+            DrawingVisual p, DrawingVisual t)
         {
-            this.Price = Price;
-            this.TextBrush = StTextBrush;
-            this.MarkFill = StMarkFill;
-            this.LineBrush = StLineBrush;
-            this.LineDash = StLineDash;
-            this.LineIndent = StLineIndent;
-            this.LineThikness = StLineThikness;
+            var angle = Math.Atan((C.CurrentCursorPosition.Y - C.PaintingPoints[0].Y) /
+                (C.CurrentCursorPosition.X - C.PaintingPoints[0].X)) / (Math.PI / 180);
+
+            var F = C.PaintingPoints[0];
+            P = C.CurrentCursorPosition;
+
+            var A = (P.Y - F.Y) / (P.X - F.X);
+            var B = -A * F.X + F.Y;
+
+            var linpen = new Pen(StLineBrush, StLineThikness); linpen.Freeze();
+            var linps = new List<Point>();
+            if (StLineIndent == 0)
+            {
+                linps.Add(new Point(0, B)); 
+                linps.Add(new Point(C.ChWidth, A * C.ChWidth + B));
+            }
+            else
+            {
+                double z = 0, x = 0; 
+                double len = Math.Sqrt(Math.Pow(C.ChWidth, 2) + Math.Pow(B - A * C.ChWidth + B, 2));
+                double dx1 = StLineDash / Math.Sqrt(A + 1);
+                double dx2 = StLineIndent / Math.Sqrt(A + 1);
+                
+                while (z < len)
+                {
+                    linps.Add(new Point(x, A * x + B)); z += StLineDash; x += dx1;
+                    linps.Add(new Point(x, A * x + B)); z += StLineIndent; x += dx2;
+                }
+            }
+
+            using (var dc = dv.RenderOpen())
+            {
+                //dc.PushTransform(new RotateTransform(angle, C.PaintingPoints[0].X, C.PaintingPoints[0].Y));
+
+                for (int i = 0; i < linps.Count; i += 2)
+                    dc.DrawLine(linpen, linps[i], linps[i + 1]);
+
+                //dc.Pop();
+
+                dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 14, 14);
+                dc.DrawEllipse(Brushes.White, null, C.PaintingPoints[0], 12, 12);
+                dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 10, 10);
+                dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 14, 14);
+                dc.DrawEllipse(Brushes.White, null, C.CurrentCursorPosition, 12, 12);
+                dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 10, 10);
+            }
         }
-        public Level(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill, SolidColorBrush LineBrush, double LineThikness, double LineDash = 0, double LineIndent = 0)
+
+        public Trend(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill,
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
@@ -256,6 +236,13 @@ namespace ChartModules.PaintingModule.Elements
         }
         public override Action<DrawingContext>[] PrepareToDrawing(Point? point, double PixelsPerDip)
         {
+            var c = Dispatcher.Invoke(() => { return ((SolidColorBrush)Chart.ChartBackground).Color; });
+
+            var br = new SolidColorBrush(Color.FromArgb(255,
+                (byte)(255 - c.R),
+                (byte)(255 - c.G),
+                (byte)(255 - c.B)));
+
             var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
 
             double height, price, width;
