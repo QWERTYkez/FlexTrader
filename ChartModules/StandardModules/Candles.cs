@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,11 +44,9 @@ namespace ChartModules.StandardModules
         private readonly TranslateTransform Translate;
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
-        private readonly IDrawingCanvas TimeLine;
-        private readonly Grid PriceLine;
         public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
             TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
-            ScaleTransform ScaleY, IDrawingCanvas TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
+            ScaleTransform ScaleY, Grid TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
         {
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
@@ -55,12 +54,7 @@ namespace ChartModules.StandardModules
             this.Translate = Translate;
             this.ScaleX = ScaleX;
             this.ScaleY = ScaleY;
-            this.TimeLine = TimeLine;
-            this.PriceLine = PriceLine;
             this.CurrentScale = CurrentScale;
-
-            TimeLine.PreviewMouseDown += TimeLine_MouseDown;
-            PriceLine.PreviewMouseDown += PriceLine_MouseDown;
 
             var SetUpBrush = new Action<object>(b => { UpBrush = b as Brush; Redraw(); });
             var SetUpPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); });
@@ -76,7 +70,12 @@ namespace ChartModules.StandardModules
                 Redraw();
             });
 
-            Chart.Moving = MovingChart;
+            TimeLine.MouseEnter += (s, e) => Chart.Moving = TimeLine_MouseDown;
+            TimeLine.MouseLeave += (s, e) => { if (Chart.Moving == TimeLine_MouseDown) Chart.Moving = null; };
+            PriceLine.MouseEnter += (s, e) => Chart.Moving = PriceLine_MouseDown;
+            PriceLine.MouseLeave += (s, e) => { if (Chart.Moving == PriceLine_MouseDown) Chart.Moving = null; };
+            Chart.ChartGrid.MouseEnter += (s, e) => Chart.Moving = MovingChart;
+            Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Moving == MovingChart) Chart.Moving = null; };
             Chart.MWindow.ToggleMagnet += b =>
             {
                 Task.Run(() =>
@@ -221,7 +220,7 @@ namespace ChartModules.StandardModules
         #endregion
         #region скалирование по ценовой шкале
         private double LastScaleY;
-        private void PriceLine_MouseDown(object sender, MouseButtonEventArgs e)
+        private void PriceLine_MouseDown(MouseButtonEventArgs e)
         {
             e.Handled = true;
             if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
@@ -251,7 +250,7 @@ namespace ChartModules.StandardModules
         #region скалирование по временной шкале
         private double LastScaleX;
         private const double MaxCandleWidth = 175;
-        private async void TimeLine_MouseDown(object sender, MouseButtonEventArgs e)
+        private async void TimeLine_MouseDown(MouseButtonEventArgs e)
         {
             e.Handled = true;
             if (e.ClickCount == 2)
@@ -509,11 +508,7 @@ namespace ChartModules.StandardModules
                 }
             }); 
         }
-        private protected override void Destroy() 
-        {
-            TimeLine.PreviewMouseDown -= TimeLine_MouseDown;
-            PriceLine.PreviewMouseDown -= PriceLine_MouseDown;
-        }
+        private protected override void Destroy() { }
 
         private Brush UpBrush = Brushes.Lime;
         private Brush DownBrush = Brushes.Red;

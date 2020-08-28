@@ -101,14 +101,16 @@
             <mvvm:DrawingCanvas x:Name="PricesLayer" />
             <mvvm:DrawingCanvas x:Name="PaintingMarksLayer" />
             <mvvm:DrawingCanvas x:Name="HookPriceLayer" />
-            <mvvm:DrawingCanvas x:Name="CursorMarkLayer" />
+            <mvvm:DrawingCanvas x:Name="CursorPriceMarkLayer" />
             <mvvm:DrawingCanvas x:Name="PrototypePriceLayer" />
         </Grid>
         <Grid
+            x:Name="TimeLine"
             Grid.Row="2"
             Background="{Binding ChartBackground}"
             ClipToBounds="True">
-            <mvvm:DrawingCanvas x:Name="TimeLine" />
+            <mvvm:DrawingCanvas x:Name="TimesLayer" />
+            <mvvm:DrawingCanvas x:Name="CursorTimeMarkLayer" />
             <mvvm:DrawingCanvas x:Name="PaintingTimeLayer" />
             <mvvm:DrawingCanvas x:Name="HookTimeLayer" />
             <mvvm:DrawingCanvas x:Name="PrototypeTimeLayer" />

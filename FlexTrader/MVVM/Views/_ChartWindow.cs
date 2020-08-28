@@ -21,7 +21,6 @@ using ChartModules.StandardModules;
 using FlexTrader.MVVM.Resources;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -60,13 +59,13 @@ namespace FlexTrader.MVVM.Views
             { if (!OverMenu) { InvokeRemoveHook(); ContextMenuPopup.IsOpen = false; } };
 
             //PreviewMouseLeftButtonDown
-            Interacion = e => Chart?.Interacion?.Invoke(e);
-            Moving = e => Chart?.Moving.Invoke(e);
-            PaintingLevel = e => Chart?.PaintingLevel.Invoke(e);
-            PaintingTrend = e => Chart?.PaintingTrend.Invoke(e);
+            Interacion = e => InstrumentsHandler?.Interacion?.Invoke(e);
+            Moving = e => InstrumentsHandler?.Moving?.Invoke(e);
+            PaintingLevel = e => InstrumentsHandler?.PaintingLevel.Invoke(e);
+            PaintingTrend = e => InstrumentsHandler?.PaintingTrend.Invoke(e);
 
             //MouseMove
-            HookElement = e => Chart?.HookElement?.Invoke(e);
+            HookElement = e => InstrumentsHandler?.HookElement?.Invoke(e);
         }
 
         private protected void ChartsGRD_PreviewMouseLeftButtonDown(object s, MouseButtonEventArgs e)
@@ -77,7 +76,7 @@ namespace FlexTrader.MVVM.Views
         }
         private protected void ChartsGRD_MouseMove(object s, MouseEventArgs e) => MMInstrument?.Invoke(e);
 
-        public IChart Chart { get; set; }
+        public IHaveInstruments InstrumentsHandler { get; set; }
         private protected abstract Grid ChartsGRD { get; }
 
         public event Action<string> PrepareInstrument;

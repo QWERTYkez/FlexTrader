@@ -47,14 +47,17 @@ namespace FlexTrader.MVVM.Views
 
         public IChartWindow MWindow { get; }
         public ChartView() { } //конструктор для intellisense
-        public ChartView(ChartWindow mainView)
+        public ChartView(IChartWindow mainView)
         {
-            InitializeComponent();
-            this.MouseEnter += (s, e) => { mainView.Chart = this; };
-
             this.MWindow = mainView;
-            MWindow.PrepareInstrument += PrepareInstrument;
-            this.ShowSettings += MWindow.ShowSettings;
+
+            InitializeComponent();
+            this.MouseEnter += (s, e) => MWindow.InstrumentsHandler = this;
+            this.MouseLeave += (s, e) =>
+            {
+                if (MWindow.InstrumentsHandler == this)
+                    MWindow.InstrumentsHandler = null;
+            };
             ChartGrid.MouseLeave += (s, e) => CursorLeave?.Invoke();
             ChartGrid.MouseMove += (s, e) =>
             {
@@ -62,6 +65,9 @@ namespace FlexTrader.MVVM.Views
                 Task.Run(() => CursorNewPosition?.Invoke(P));
             };
 
+            MWindow.PrepareInstrument += PrepareInstrument;
+            this.ShowSettings += MWindow.ShowSettings;
+            
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
             PaintingModule = new PaintingModule(this, PaintingsLayer, PaintingMarksLayer, PaintingTimeLayer,
@@ -80,10 +86,11 @@ namespace FlexTrader.MVVM.Views
             PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
             PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
 
-            TimeLineModule = new TimeLineModule(this, GridLayer, TimeLine);
+            TimeLineModule = new TimeLineModule(this, GridLayer, TimesLayer);
             TimeLineModule.HorizontalСhanges += () => HorizontalСhanges.Invoke();
 
-            CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer, TimeLine, CursorMarkLayer, CursorLeave);
+            CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer, 
+                CursorTimeMarkLayer, CursorPriceMarkLayer, CursorLeave);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
                 Translate, ScaleX, ScaleY, TimeLine, PriceLine,
