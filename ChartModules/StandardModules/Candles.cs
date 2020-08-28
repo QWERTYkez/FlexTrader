@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -401,8 +400,8 @@ namespace ChartModules.StandardModules
 
             return Task.Run(() => 
             {
-                var tA = Chart.WidthToTime(0);
-                var tB = Chart.WidthToTime(Chart.ChWidth);
+                var tA = Chart.XWidthToTime(0);
+                var tB = Chart.XWidthToTime(Chart.ChWidth);
                 var max = Chart.HeightToPrice(0);
                 var min = Chart.HeightToPrice(Chart.ChHeight);
 

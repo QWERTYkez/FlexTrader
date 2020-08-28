@@ -18,12 +18,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -133,7 +131,7 @@ namespace ChartModules.StandardModules
         {
             return Task.Run(() =>
             {
-                var npos = CurrentPosition = Pos; DateTime dt = DateTime.Now; string price = "";
+                var npos = Pos; DateTime dt = DateTime.Now; string price = "";
                 if (Hide)
                 {
                     Dispatcher.Invoke(() =>
@@ -144,6 +142,7 @@ namespace ChartModules.StandardModules
                         CursorTransform.X = npos.X;
                         CursorTransform.Y = npos.Y;
                     });
+                    CurrentPosition = npos;
                     return;
                 }
 

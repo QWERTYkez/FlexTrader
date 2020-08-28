@@ -60,7 +60,7 @@ namespace ChartModules.PaintingModule
                 PrototypePriceCanvas.Visibility = Visibility.Hidden;
                 PrototypeTimeCanvas.Visibility = Visibility.Hidden;
             };
-            Chart.ChartGrid.MouseMove += (s, e) => DrawPrototype?.Invoke(e.GetPosition(Chart.ChartGrid), Chart,
+            Chart.ChartGrid.MouseMove += (s, e) => DrawPrototype?.Invoke(Chart,
                 PrototypeVisual, PrototypePriceVisual, PrototypeTimeVisual);
             this.SetMenuAct = chart.MWindow.SetMenu;
 
@@ -82,7 +82,7 @@ namespace ChartModules.PaintingModule
             });
         }
 
-        private Action<Point, IChart, DrawingVisual, DrawingVisual, DrawingVisual> DrawPrototype;
+        private Action<IChart, DrawingVisual, DrawingVisual, DrawingVisual> DrawPrototype;
         private readonly Action<string, List<Setting>, IChart, Action, Action> SetMenuAct;
         private readonly DrawingVisual ElementsVisual = new DrawingVisual();
         private readonly DrawingVisual PricesVisual = new DrawingVisual();

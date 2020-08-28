@@ -26,12 +26,10 @@ namespace ChartModules.PaintingModule
 {
     public abstract class ChangingElement
     {
-        public ChangingElement(List<Hook> Subhooks = null)
+        public ChangingElement()
         {
-            if (Subhooks != null)
-                Hook = new Hook(this, GetDistance, GetHookPoint, DrawElement, DrawShadow, AcceptNewCoordinates, Subhooks);
-            else
-                Hook = new Hook(this, GetDistance, GetHookPoint, DrawElement, DrawShadow, AcceptNewCoordinates);
+            Subhooks.AddRange(CreateSubhooks());
+            Hook = new Hook(this, GetDistance, GetHookPoint, GetMagnetRadius, ChangeMethod, DrawElement, DrawShadow, AcceptNewCoordinates, Subhooks);
         }
 
         private IChart chart;
@@ -88,16 +86,17 @@ namespace ChartModules.PaintingModule
 
         public Hook Hook { get; }
 
-        public void AcceptNewCoordinates(Vector Changes)
+        public void AcceptNewCoordinates()
         {
-            this.NewCoordinates(Changes);
+            this.NewCoordinates();
             this.ApplyChanges();
         }
         private protected abstract double GetDistance(Point P);
         private protected abstract Point GetHookPoint(Point P);
         public abstract Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip);
         private protected abstract void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual);
-        private protected abstract void NewCoordinates(Vector Changes);
+        private protected abstract void NewCoordinates();
+        private protected abstract void ChangeMethod(Vector? Changes);
 
         private protected void DrawElement(Vector? vec, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
         {
@@ -113,6 +112,10 @@ namespace ChartModules.PaintingModule
                     acts[2]?.Invoke(dc);
             });
         }
+
+        private readonly List<Hook> Subhooks = new List<Hook>();
+
+        private protected virtual List<Hook> CreateSubhooks() => new List<Hook>();
 
         public abstract List<(string Name, Action Act)> GetContextMenu();
     }

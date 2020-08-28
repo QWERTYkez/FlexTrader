@@ -70,6 +70,7 @@ namespace ChartModules
         double PriceToHeight(in double price);
         double HeightToPrice(in double height);
         double TimeToWidth(in DateTime dt);
+        DateTime XWidthToTime(in double width);
         DateTime WidthToTime(in double width);
         DateTime CorrectTimePosition(ref double X);
         DateTime CorrectTimePosition(ref Point pos);

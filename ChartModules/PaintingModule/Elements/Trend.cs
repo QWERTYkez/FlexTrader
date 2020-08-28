@@ -18,8 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 
@@ -52,7 +50,7 @@ namespace ChartModules.PaintingModule.Elements
             };
         }
 
-        public static void DrawFirstPoint(Point P, IChart C, DrawingVisual dv,
+        public static void DrawFirstPoint(IChart C, DrawingVisual dv,
             DrawingVisual p, DrawingVisual t)
         {
             using var dc = dv.RenderOpen();
@@ -60,7 +58,7 @@ namespace ChartModules.PaintingModule.Elements
             dc.DrawEllipse(Brushes.White, null, C.CurrentCursorPosition, 12, 12);
             dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 10, 10);
         }
-        public static void DrawSecondPoint(Point P, IChart C, DrawingVisual dv,
+        public static void DrawSecondPoint(IChart C, DrawingVisual dv,
             DrawingVisual p, DrawingVisual t)
         {
             var P1 = C.PaintingPoints[0];
@@ -161,6 +159,8 @@ namespace ChartModules.PaintingModule.Elements
 
         private ChartPoint Point1 { get; set; }
         private ChartPoint Point2 { get; set; }
+        private Point NP1 { get; set; }
+        private Point NP2 { get; set; }
         private SolidColorBrush TextBrush { get; set; }
         private SolidColorBrush MarkFill { get; set; }
         private SolidColorBrush LineBrush { get; set; }
@@ -194,8 +194,6 @@ namespace ChartModules.PaintingModule.Elements
             double x = z / Math.Sqrt(Math.Pow(a, 2) + 1);
             return new Point(P1.X + x, P1.Y + a*x);
         }
-
-        public double Price;
 
         private protected override void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
         {
@@ -237,14 +235,26 @@ namespace ChartModules.PaintingModule.Elements
                 dc.DrawEllipse(Brushes.Black, null, P2, 10, 10);
             });
         }
+        private protected override void ChangeMethod(Vector? Changes)
+        {
+            if (Changes.HasValue)
+            {
+                NP1 = Point1.ToPoint() + Changes.Value;
+                NP2 = Point2.ToPoint() + Changes.Value;
+            }
+        }
         public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip)
         {
-            var P1 = Point1.ToPoint();
-            var P2 = Point2.ToPoint();
+            Point P1, P2;
             if (vec.HasValue)
             {
-                P1 += vec.Value;
-                P2 += vec.Value;
+                P1 = NP1;
+                P2 = NP2;
+            }
+            else
+            {
+                P1 = Point1.ToPoint();
+                P2 = Point2.ToPoint();
             }
             P1.GetCoeffs(P2, out double A, out double B);
 
@@ -286,10 +296,49 @@ namespace ChartModules.PaintingModule.Elements
                     null
                 };
         }
-        private protected override void NewCoordinates(Vector Changes)
+        private protected override void NewCoordinates()
         {
-            Point1 = (Point1.ToPoint() + Changes).ToChartPoint(Chart);
-            Point2 = (Point2.ToPoint() + Changes).ToChartPoint(Chart);
+            Point1 = NP1.ToChartPoint(Chart);
+            Point2 = NP2.ToChartPoint(Chart);
+        }
+
+        private protected override List<Hook> CreateSubhooks()
+        {
+            return new List<Hook> 
+            {
+                new Hook
+                (
+                    this,
+                    P => P.GetDistance(Point1.ToPoint()),
+                    P => Point1.ToPoint(),
+                    () => 14,
+                    V => 
+                    {
+                        if (V.HasValue) NP1 = Point1.ToPoint() + V.Value;
+                        else NP1 = Point1.ToPoint();
+                        NP2 = Point2.ToPoint();
+                    },
+                    DrawElement,
+                    DrawShadow,
+                    AcceptNewCoordinates
+                ),
+                new Hook
+                (
+                    this,
+                    P => P.GetDistance(Point2.ToPoint()),
+                    P => Point2.ToPoint(),
+                    () => 14,
+                    V => 
+                    {
+                        if (V.HasValue) NP2 = Point2.ToPoint() + V.Value;
+                        else NP2 = Point2.ToPoint();
+                        NP1 = Point1.ToPoint();
+                    },
+                    DrawElement,
+                    DrawShadow,
+                    AcceptNewCoordinates
+                )
+            };
         }
 
         public override List<(string Name, Action Act)> GetContextMenu()

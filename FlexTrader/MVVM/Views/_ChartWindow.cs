@@ -68,6 +68,7 @@ namespace FlexTrader.MVVM.Views
             HookElement = e => InstrumentsHandler?.HookElement?.Invoke(e);
         }
 
+        #region Инструменты
         private protected void ChartsGRD_PreviewMouseLeftButtonDown(object s, MouseButtonEventArgs e)
         {
             e.Handled = true;
@@ -128,12 +129,12 @@ namespace FlexTrader.MVVM.Views
 
                     case "Interacion":
                         LBDInstrument = Interacion; Painting = false; Interaction = true;
-                        MagnetInstrument = true; t = CursorT.Hook;
+                        MagnetInstrument = false; t = CursorT.Hook;
                         MMInstrument = HookElement;
                         break;
 
                     default:
-                        LBDInstrument = Moving; Painting = false;
+                        LBDInstrument = Moving; Painting = false; SetMenu(null, null, null, null, null);
                         MagnetInstrument = false; t = CursorT.Standart; break;
                 }
                 if (InstrumentName != "Interacion" && Interaction)
@@ -183,6 +184,7 @@ namespace FlexTrader.MVVM.Views
                 Controlled = false;
             });
         }
+#endregion
 
         #region Обработка таскания мышью
         private Point StartPosition;

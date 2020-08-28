@@ -247,25 +247,29 @@ namespace FlexTrader.MVVM.Views
         public DateTime CorrectTimePosition(ref double X)
         {
             var dt = StartTime.Value -
-                Math.Round((StartTime.Value - WidthToTime(X)) / DeltaTime.Value) * DeltaTime.Value;
+                Math.Round((StartTime.Value - XWidthToTime(X)) / DeltaTime.Value) * DeltaTime.Value;
             X = TimeToWidth(dt);
             return dt;
         }
         public DateTime CorrectTimePosition(ref Point pos)
         {
             var dt = StartTime.Value -
-                Math.Round((StartTime.Value - WidthToTime(pos.X)) / DeltaTime.Value) * DeltaTime.Value;
+                Math.Round((StartTime.Value - XWidthToTime(pos.X)) / DeltaTime.Value) * DeltaTime.Value;
             pos.X = TimeToWidth(dt);
             return dt;
         }
         public double TimeToWidth(in DateTime dt) =>
             ChWidth * ((dt - TimeA) / (TimeB - TimeA));
-        public DateTime WidthToTime(in double width)
+        public DateTime XWidthToTime(in double width)
         {
             if(ChWidth == 0) return TimeA + (TimeB - TimeA) / 2;
             return TimeA + ((width - 2) / ChWidth) * (TimeB - TimeA);
         }
-            
+        public DateTime WidthToTime(in double width)
+        {
+            if (ChWidth == 0) return TimeA + (TimeB - TimeA) / 2;
+            return TimeA + ((width) / ChWidth) * (TimeB - TimeA);
+        }
 
         private event Action<List<(string SetsName, List<Setting> Sets)>, 
                              List<(string SetsName, List<Setting> Sets)>, 

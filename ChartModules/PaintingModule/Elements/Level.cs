@@ -52,14 +52,14 @@ namespace ChartModules.PaintingModule.Elements
             };
         }
 
-        public static void DrawPrototype(Point P, IChart Chart,
+        public static void DrawPrototype(IChart Chart,
             DrawingVisual ChartVisual, DrawingVisual PriceVisual, DrawingVisual TimeVisual)
         {
             Task.Run(() => 
             {
                 var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
 
-                double height = P.Y;
+                double height = Chart.CurrentCursorPosition.Y;
                 double price = Chart.HeightToPrice(height);
                 double width = Chart.ChWidth + 2;
 
@@ -170,6 +170,7 @@ namespace ChartModules.PaintingModule.Elements
         }
 
         private double Price { get; set; }
+        private double NPrice { get; set; }
         private SolidColorBrush TextBrush { get; set; }
         private SolidColorBrush MarkFill { get; set; }
         private SolidColorBrush LineBrush { get; set; }
@@ -255,23 +256,23 @@ namespace ChartModules.PaintingModule.Elements
                 }
             });
         }
+        private protected override void ChangeMethod(Vector? Changes)
+        {
+            if (Changes.HasValue)
+            {
+                this.NPrice = Chart.HeightToPrice(Chart.PriceToHeight(this.Price) + Changes.Value.Y);
+            }
+        }
         public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip)
         {
             var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
 
-            double height, price, width;
-            if (vec.HasValue)
-            {
-                height = Chart.PriceToHeight(this.Price) + vec.Value.Y;
-                price = Chart.HeightToPrice(height);
-                width = Chart.ChWidth + 2;
-            }
-            else
-            {
-                price = this.Price;
-                height = Chart.PriceToHeight(price);
-                width = 4096;
-            }
+            double price;
+            if (vec.HasValue) price = this.NPrice;
+            else price = this.Price;
+
+            double height = Chart.PriceToHeight(price);
+            double width = 4096;
 
             var ft = new FormattedText
                  (
@@ -328,9 +329,9 @@ namespace ChartModules.PaintingModule.Elements
                     null
                 };
         }
-        private protected override void NewCoordinates(Vector Changes)
+        private protected override void NewCoordinates()
         {
-            this.Price = Chart.HeightToPrice(Chart.PriceToHeight(this.Price) + Changes.Y);
+            this.Price = this.NPrice;
         }
 
         public override List<(string Name, Action Act)> GetContextMenu()
