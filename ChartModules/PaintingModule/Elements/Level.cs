@@ -59,7 +59,7 @@ namespace ChartModules.PaintingModule.Elements
             {
                 var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
 
-                double height = Chart.CurrentCursorPosition.Y;
+                double height = Chart.CursorPosition.Magnet_Current.Y;
                 double price = Chart.HeightToPrice(height);
                 double width = Chart.ChWidth + 2;
 
@@ -263,7 +263,7 @@ namespace ChartModules.PaintingModule.Elements
                 this.NPrice = Chart.HeightToPrice(Chart.PriceToHeight(this.Price) + Changes.Value.Y);
             }
         }
-        public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip)
+        public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip, bool DrawOver = false)
         {
             var pricesMax = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
 

@@ -400,8 +400,8 @@ namespace ChartModules.StandardModules
 
             return Task.Run(() => 
             {
-                var tA = Chart.XWidthToTime(0);
-                var tB = Chart.XWidthToTime(Chart.ChWidth);
+                var tA = Chart.WidthToTime(0);
+                var tB = Chart.WidthToTime(Chart.ChWidth);
                 var max = Chart.HeightToPrice(0);
                 var min = Chart.HeightToPrice(Chart.ChHeight);
 
@@ -443,6 +443,8 @@ namespace ChartModules.StandardModules
                 this.X = X; this.Y = Y;
                 this.Price = Price;
             }
+
+            public Point ToPoint() => new Point(X, Y);
 
             public double X;
             public double Y;

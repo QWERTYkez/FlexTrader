@@ -113,7 +113,7 @@ namespace ChartModules.StandardModules
         private Func<Task> RedrawAct;
         private void CursorRedraw(Point P)
         {
-            Pos = P; RedrawAct?.Invoke();
+            CursorPosition.Current = P; RedrawAct?.Invoke();
         }
         private protected override void Destroy()
         {
@@ -123,71 +123,64 @@ namespace ChartModules.StandardModules
         }
 
         public event Action CursorLeaveChart;
-        private Point Pos;
-        public Point CurrentPosition;
-        private CandlesModule.MagnetPoint? LastMP;
+        public CursorPosition CursorPosition { get; } = new CursorPosition();
         private bool Hide { get; set; } = false;
+        private bool Correcting { get; set; }
         public override Task Redraw()
         {
             return Task.Run(() =>
             {
-                var npos = Pos; DateTime dt = DateTime.Now; string price = "";
-                if (Hide)
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        using var dcP = CursorPriceVisual.RenderOpen();
-                        using var dcT = CursorTimeVisual.RenderOpen();
-                        using var dcCH = CursorLinesVisual.RenderOpen();
-                        CursorTransform.X = npos.X;
-                        CursorTransform.Y = npos.Y;
-                    });
-                    CurrentPosition = npos;
-                    return;
-                }
+                var npos = CursorPosition.Current; DateTime dt = DateTime.Now; string price = "";
 
-                Action act = () =>
+                if (Correcting)
                 {
-                    LastMP = null;
                     dt = Chart.CorrectTimePosition(ref npos);
                     price = Chart.HeightToPrice(npos.Y).ToString(Chart.TickPriceFormat);
                     npos.Y = Chart.PriceToHeight(Convert.ToDouble(price));
                     price = Chart.HeightToPrice(npos.Y).ToString(Chart.TickPriceFormat);
-                };
+                    CursorPosition.Corrected = npos;
+                }
+                else CursorPosition.Corrected = CursorPosition.Current;
 
                 if (MagnetState)
                 {
-                    if (Chart.MagnetPoints.Count > 0)
+                    if (CurrentCursor == CursorT.Hook && !Chart.Manipulating) 
+                        CursorPosition.NMP();
+                    else
                     {
-                        var mp = from c in Chart.MagnetPoints
-                                 let r = Math.Pow(c.X - Pos.X, 2) + Math.Pow(c.Y - Pos.Y, 2)
-                                 let R = Math.Pow(MagnetRadius, 2)
-                                 where r < R orderby r select c;
-                        if (mp.Count() > 0)
+                        if (Chart.MagnetPoints.Count > 0)
                         {
-                            var p = mp.First();
-                            if (LastMP != null)
-                                if (LastMP == p)
-                                {
-                                    Dispatcher.Invoke(() =>
-                                    {
-                                        MagnetTransform.X = Pos.X;
-                                        MagnetTransform.Y = Pos.Y;
-                                    });
-                                    return;
-                                }
-                            LastMP = p;
-                            npos.X = p.X; npos.Y = p.Y;
-                            dt = Chart.CorrectTimePosition(ref npos);
-                            price = p.Price.ToString(Chart.TickPriceFormat);
-                        }
-                        else act.Invoke();
-                    }
-                    else act.Invoke();
-                }
-                else act.Invoke();
+                            var mp = from c in Chart.MagnetPoints
+                                     let r = Math.Pow(c.X - CursorPosition.Current.X, 2) + Math.Pow(c.Y - CursorPosition.Current.Y, 2)
+                                     let R = Math.Pow(MagnetRadius, 2)
+                                     where r < R
+                                     orderby r
+                                     select c;
+                            if (mp.Count() > 0)
+                            {
+                                var p = mp.First();
+                                CursorPosition.Magnet = p.ToPoint();
+                                var cpm = CursorPosition.Magnet;
+                                dt = Chart.CorrectTimePosition(ref cpm);
+                                price = p.Price.ToString(Chart.TickPriceFormat);
 
-                CurrentPosition = npos;
+                            }
+                            else CursorPosition.NMP();
+                        } else CursorPosition.NMP();
+                    }
+                } else CursorPosition.NMP();
+
+                if (Hide)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        MagnetTransform.X = CursorPosition.Current.X;
+                        MagnetTransform.Y = CursorPosition.Current.Y;
+                        CursorTransform.X = CursorPosition.Magnet.X;
+                        CursorTransform.Y = CursorPosition.Magnet.Y;
+                    });
+                    return;
+                }
 
                 var ft = new FormattedText
                             (
@@ -199,14 +192,14 @@ namespace ChartModules.StandardModules
                                 FontBrush,
                                 VisualTreeHelper.GetDpi(CursorPriceVisual).PixelsPerDip
                             );
-                var Tpont = new Point(Chart.PriceShift + 1, npos.Y - ft.Height / 2);
-                var startPoint = new Point(0, npos.Y);
+                var Tpont = new Point(Chart.PriceShift + 1, CursorPosition.Magnet.Y - ft.Height / 2);
+                var startPoint = new Point(0, CursorPosition.Magnet.Y);
                 var Points = new Point[]
                 {
-                        new Point(Chart.PriceShift, npos.Y + ft.Height / 2),
-                        new Point(Chart.PriceLineWidth - 2, npos.Y + ft.Height / 2),
-                        new Point(Chart.PriceLineWidth - 2, npos.Y - ft.Height / 2),
-                        new Point(Chart.PriceShift, npos.Y - ft.Height / 2)
+                        new Point(Chart.PriceShift, CursorPosition.Magnet.Y + ft.Height / 2),
+                        new Point(Chart.PriceLineWidth - 2, CursorPosition.Magnet.Y + ft.Height / 2),
+                        new Point(Chart.PriceLineWidth - 2, CursorPosition.Magnet.Y - ft.Height / 2),
+                        new Point(Chart.PriceShift, CursorPosition.Magnet.Y - ft.Height / 2)
                 };
 
                 var ft2 = new FormattedText
@@ -219,16 +212,16 @@ namespace ChartModules.StandardModules
                             FontBrush,
                             VisualTreeHelper.GetDpi(CursorPriceVisual).PixelsPerDip
                         );
-                var Tpont2 = new Point(npos.X - ft2.Width / 2, Chart.PriceShift + 2);
-                var startPoint2 = new Point(npos.X, 0);
+                var Tpont2 = new Point(CursorPosition.Magnet.X - ft2.Width / 2, Chart.PriceShift + 2);
+                var startPoint2 = new Point(CursorPosition.Magnet.X, 0);
                 var Points2 = new Point[]
                 {
-                        new Point(npos.X + Chart.PriceShift, Chart.PriceShift),
-                        new Point(npos.X + ft2.Width / 2 + 4, Chart.PriceShift),
-                        new Point(npos.X + ft2.Width / 2 + 4, ft2.Height + 3 + Chart.PriceShift),
-                        new Point(npos.X - ft2.Width / 2 - 4, ft2.Height + 3 + Chart.PriceShift),
-                        new Point(npos.X - ft2.Width / 2 - 4, Chart.PriceShift),
-                        new Point(npos.X - Chart.PriceShift, Chart.PriceShift)
+                        new Point(CursorPosition.Magnet.X + Chart.PriceShift, Chart.PriceShift),
+                        new Point(CursorPosition.Magnet.X + ft2.Width / 2 + 4, Chart.PriceShift),
+                        new Point(CursorPosition.Magnet.X + ft2.Width / 2 + 4, ft2.Height + 3 + Chart.PriceShift),
+                        new Point(CursorPosition.Magnet.X - ft2.Width / 2 - 4, ft2.Height + 3 + Chart.PriceShift),
+                        new Point(CursorPosition.Magnet.X - ft2.Width / 2 - 4, Chart.PriceShift),
+                        new Point(CursorPosition.Magnet.X - Chart.PriceShift, Chart.PriceShift)
                 };
 
                 var geo = new PathGeometry(new[] { new PathFigure(startPoint,
@@ -259,12 +252,12 @@ namespace ChartModules.StandardModules
                     using var dcP = CursorPriceVisual.RenderOpen();
                     using var dcT = CursorTimeVisual.RenderOpen();
 
-                    MagnetTransform.X = Pos.X;
-                    MagnetTransform.Y = Pos.Y;
-                    CursorLinesTransform.X = npos.X;
-                    CursorLinesTransform.Y = npos.Y;
-                    CursorTransform.X = npos.X;
-                    CursorTransform.Y = npos.Y;
+                    MagnetTransform.X = CursorPosition.Current.X;
+                    MagnetTransform.Y = CursorPosition.Current.Y;
+                    CursorLinesTransform.X = CursorPosition.Magnet.X;
+                    CursorLinesTransform.Y = CursorPosition.Magnet.Y;
+                    CursorTransform.X = CursorPosition.Current.X;
+                    CursorTransform.Y = CursorPosition.Current.Y;
 
                     dcP.DrawGeometry(Chart.ChartBackground, MarksPen, geo);
                     dcP.DrawText(ft, Tpont);
@@ -334,22 +327,16 @@ namespace ChartModules.StandardModules
                 {
                     case CursorT.Paint:
                         {
+                            Correcting = true;
                             Dispatcher.Invoke(() =>
                             {
-                                var rt = new RotateTransform(45);
                                 using var dc = CursorVisual.RenderOpen();
-                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                                dc.PushTransform(rt);
-                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                                dc.PushTransform(rt);
-                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                                dc.PushTransform(rt);
-                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
                             });
                         }
                         break;
                     case CursorT.Standart:
                         {
+                            Correcting = true;
                             Dispatcher.Invoke(() =>
                             {
                                 using var dc = CursorVisual.RenderOpen();
@@ -360,6 +347,7 @@ namespace ChartModules.StandardModules
                         break;
                     case CursorT.Hook:
                         {
+                            Correcting = false;
                             var geo = new PathGeometry(new[] { new PathFigure(new Point(4, 0),
                             new[]
                             {
@@ -372,8 +360,7 @@ namespace ChartModules.StandardModules
                                 new LineSegment(new Point(2, 13), true),
                                 new LineSegment(new Point(0, 12), true)
                             },
-                            true)
-                        }); geo.Freeze();
+                            true)}); geo.Freeze();
 
                             Dispatcher.Invoke(() =>
                             {
@@ -388,6 +375,7 @@ namespace ChartModules.StandardModules
                         break;
                     case CursorT.None:
                         {
+                            Correcting = true;
                             Dispatcher.Invoke(() =>
                             {
                                 using var dc = CursorVisual.RenderOpen();
@@ -397,14 +385,24 @@ namespace ChartModules.StandardModules
                 }
                 if (MagnetState) MagnetAdd();
 
-                if (t == CursorT.Hook) Hide = true;
+                if (t == CursorT.Hook)
+                {
+                    Hide = true;
+                    Dispatcher.Invoke(() => 
+                    {
+                        CursorPriceVisual.RenderOpen().Close();
+                        CursorTimeVisual.RenderOpen().Close();
+                        CursorLinesVisual.RenderOpen().Close();
+                    });
+                }
+                    
                 else { Hide = false; SetCursorLines(); }
             });
         }
 
         private double MagnetRadius = 25;
         private bool MagnetState = false;
-        public void MagnetAdd()
+        private void MagnetAdd()
         {
             MagnetState = true;
             Dispatcher.InvokeAsync(() =>
@@ -413,10 +411,33 @@ namespace ChartModules.StandardModules
                 dc.DrawEllipse(null, new Pen(MarksPen.Brush, 2), new Point(0, 0), MagnetRadius, MagnetRadius);
             });
         }
-        public void MagnetRemove()
+        private void MagnetRemove()
         {
             MagnetState = false;
             Dispatcher.InvokeAsync(() => MagnetVisual.RenderOpen().Close());
+        }
+    }
+
+    public class CursorPosition
+    {
+        public Point Current { get; set; }
+        public Point Corrected { get; set; }
+        public Point Magnet_Current { get; set; }
+        private Point magnet;
+        public Point Magnet 
+        {
+            get => magnet;
+            set 
+            {
+                magnet = value;
+                Magnet_Current = value;
+            } 
+        }
+
+        public void NMP()
+        {
+            Magnet = Corrected;
+            Magnet_Current = Current;
         }
     }
 

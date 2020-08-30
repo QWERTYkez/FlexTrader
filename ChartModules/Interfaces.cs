@@ -62,6 +62,7 @@ namespace ChartModules
 
     public interface IChart: IHaveInstruments
     {
+        public bool Manipulating { get; }
         public IChartWindow MWindow { get; }
         public Grid ChartGrid { get; }
         public List<Point> PaintingPoints { get; set; }
@@ -70,7 +71,6 @@ namespace ChartModules
         double PriceToHeight(in double price);
         double HeightToPrice(in double height);
         double TimeToWidth(in DateTime dt);
-        DateTime XWidthToTime(in double width);
         DateTime WidthToTime(in double width);
         DateTime CorrectTimePosition(ref double X);
         DateTime CorrectTimePosition(ref Point pos);
@@ -99,7 +99,7 @@ namespace ChartModules
         event Action HorizontalСhanges;
         event Action<Point> CursorNewPosition;
         event Action CursorLeave;
-        Point CurrentCursorPosition { get; }
+        CursorPosition CursorPosition { get; }
     }
 
     public interface IDrawingCanvas

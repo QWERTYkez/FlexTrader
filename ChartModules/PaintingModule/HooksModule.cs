@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -181,18 +180,17 @@ namespace ChartModules.PaintingModule
             }
             return NewHook;
         }
-        private bool Manipulating = false;
+        public bool Manipulating = false;
         private Point LastValue;
         private double LastPointPrice;
         private DateTime LastPointTime;
-        private int iii = 0;
         public void HookElement(MouseEventArgs e)
         {
             if (Manipulating) return;
             Task.Run(() => 
             {
                 var pn = GetCursorPen.Invoke();
-                var P = Chart.CurrentCursorPosition;
+                var P = Chart.CursorPosition.Current;
 
                 var NewHook = ScanHooks(GetVisibleHooks.Invoke(), P);
                 if (NewHook != null)
@@ -220,7 +218,7 @@ namespace ChartModules.PaintingModule
                         {
                             if (!Manipulating)
                             {
-                                LastValue = NewHook.GetHookPoint(Chart.CurrentCursorPosition);
+                                LastValue = NewHook.GetHookPoint(Chart.CursorPosition.Current);
                                 LastPointPrice = Chart.HeightToPrice(LastValue.Y);
                                 LastPointTime = Chart.WidthToTime(LastValue.X);
 
@@ -295,6 +293,7 @@ namespace ChartModules.PaintingModule
                                 {
                                     if (vec.HasValue)
                                     {
+                                        vec = Chart.CursorPosition.Magnet_Current - LastValue;
                                         NewHook.DrawOver(vec, OverVisual, OverPriceVisual, OverTimeVisual);
                                         PointVisual.Transform = new TranslateTransform(vec.Value.X, vec.Value.Y);
                                     }
@@ -310,7 +309,7 @@ namespace ChartModules.PaintingModule
                                             dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                                         });
 
-                                        LastValue = NewHook.GetHookPoint(Chart.CurrentCursorPosition);
+                                        LastValue = NewHook.GetHookPoint(Chart.CursorPosition.Current);
                                         LastPointPrice = Chart.HeightToPrice(LastValue.Y);
                                         LastPointTime = Chart.WidthToTime(LastValue.X);
                                         NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
@@ -356,13 +355,6 @@ namespace ChartModules.PaintingModule
                 RemoveHook = null;
                 
                 SetMenuAct(null, null, null, null, null);
-                ShadowVisual.RenderOpen().Close();
-                ShadowPriceVisual.RenderOpen().Close();
-                ShadowTimeVisual.RenderOpen().Close();
-                OverVisual.RenderOpen().Close();
-                OverPriceVisual.RenderOpen().Close();
-                OverTimeVisual.RenderOpen().Close();
-                PointVisual.RenderOpen().Close();
 
                 RestoreChart();
             });
@@ -376,6 +368,13 @@ namespace ChartModules.PaintingModule
                 {
                     foreach (var l in OtherLayers)
                         l.Visibility = Visibility.Visible;
+
+                    ShadowVisual.RenderOpen().Close();
+                    ShadowPriceVisual.RenderOpen().Close();
+                    ShadowTimeVisual.RenderOpen().Close();
+                    OverVisual.RenderOpen().Close();
+                    OverPriceVisual.RenderOpen().Close();
+                    OverTimeVisual.RenderOpen().Close();
                 });
             } 
         }
@@ -402,7 +401,7 @@ namespace ChartModules.PaintingModule
             Func<Point, Point> GetHookPoint,
             Func<double> GetMagnetRadius,
             Action<Vector?> ChangeMethod,
-            Action<Vector?, DrawingVisual, DrawingVisual, DrawingVisual> DrawElement,
+            Action<Vector?, DrawingVisual, DrawingVisual, DrawingVisual, bool> DrawElement,
             Action<DrawingVisual, DrawingVisual, DrawingVisual> DrawShadow,
             Action AcceptNewCoordinates,
             List<Hook> SubHooks = null)
@@ -439,7 +438,7 @@ namespace ChartModules.PaintingModule
         private readonly Func<Point, double> GetDistanceXY;
         private readonly Func<Point, Point> GetVal;
         private readonly Action<Vector?> ChangeMethod;
-        private readonly Action<Vector?, DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawOver;
+        private readonly Action<Vector?, DrawingVisual, DrawingVisual, DrawingVisual, bool> ActionDrawOver;
         private readonly Action<DrawingVisual, DrawingVisual, DrawingVisual> ActionDrawShadow;
 
         public double GetMagnetRadius() => MagnetRadius();
@@ -457,7 +456,7 @@ namespace ChartModules.PaintingModule
         public void DrawOver(Vector? vec, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual)
         {
             ChangeMethod.Invoke(vec);
-            ActionDrawOver.Invoke(vec, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+            ActionDrawOver.Invoke(vec, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual, true);
         }  
 
         public List<(string Name, Action Act)> GetContextMenu() 

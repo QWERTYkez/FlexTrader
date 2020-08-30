@@ -163,7 +163,7 @@ namespace ChartModules.PaintingModule
         }
         public void PaintingLevel(MouseButtonEventArgs e) 
         {
-            AddElement(new Level(Chart.HeightToPrice(Chart.CurrentCursorPosition.Y)));
+            AddElement(new Level(Chart.HeightToPrice(Chart.CursorPosition.Magnet_Current.Y)));
 
             if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
             else Chart.MWindow.ControlUsed = true;
@@ -177,13 +177,13 @@ namespace ChartModules.PaintingModule
         }
         public void PaintingTrend(MouseButtonEventArgs e)
         {
-            Chart.PaintingPoints = new List<Point> { Chart.CurrentCursorPosition };
+            Chart.PaintingPoints = new List<Point> { Chart.CursorPosition.Magnet_Current };
             DrawPrototype = Trend.DrawSecondPoint;
 
             Chart.PaintingTrend = e => 
             {
                 AddElement(new Trend(Chart.PaintingPoints[0].ToChartPoint(Chart), 
-                    Chart.CurrentCursorPosition.ToChartPoint(Chart)));
+                    Chart.CursorPosition.Magnet_Current.ToChartPoint(Chart)));
 
                 if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
                 else Chart.MWindow.ControlUsed = true;

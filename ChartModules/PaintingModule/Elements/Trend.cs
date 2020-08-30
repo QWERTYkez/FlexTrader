@@ -54,15 +54,15 @@ namespace ChartModules.PaintingModule.Elements
             DrawingVisual p, DrawingVisual t)
         {
             using var dc = dv.RenderOpen();
-            dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 14, 14);
-            dc.DrawEllipse(Brushes.White, null, C.CurrentCursorPosition, 12, 12);
-            dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 10, 10);
+            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 14, 14);
+            dc.DrawEllipse(Brushes.White, null, C.CursorPosition.Magnet_Current, 12, 12);
+            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 10, 10);
         }
         public static void DrawSecondPoint(IChart C, DrawingVisual dv,
             DrawingVisual p, DrawingVisual t)
         {
             var P1 = C.PaintingPoints[0];
-            var P2 = C.CurrentCursorPosition;
+            var P2 = C.CursorPosition.Magnet_Current;
 
             P1.GetCoeffs(P2, out double A, out double B);
 
@@ -95,9 +95,9 @@ namespace ChartModules.PaintingModule.Elements
             dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 14, 14);
             dc.DrawEllipse(Brushes.White, null, C.PaintingPoints[0], 12, 12);
             dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 10, 10);
-            dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 14, 14);
-            dc.DrawEllipse(Brushes.White, null, C.CurrentCursorPosition, 12, 12);
-            dc.DrawEllipse(Brushes.Black, null, C.CurrentCursorPosition, 10, 10);
+            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 14, 14);
+            dc.DrawEllipse(Brushes.White, null, C.CursorPosition.Magnet_Current, 12, 12);
+            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 10, 10);
         }
 
         public Trend(ChartPoint Point1, ChartPoint Point2)
@@ -243,7 +243,7 @@ namespace ChartModules.PaintingModule.Elements
                 NP2 = Point2.ToPoint() + Changes.Value;
             }
         }
-        public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip)
+        public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip, bool DrawOver = false)
         {
             Point P1, P2;
             if (vec.HasValue)
@@ -278,20 +278,33 @@ namespace ChartModules.PaintingModule.Elements
                     linps.Add(new Point(x, A * x + B)); z += LineIndent; x += dx2;
                 }
             }
+            Action<DrawingContext> drawing;
+            if (DrawOver)
+            {
+                drawing = dc =>
+                {
+                    for (int i = 0; i < linps.Count; i += 2)
+                        dc.DrawLine(linpen, linps[i], linps[i + 1]);
+
+                    dc.DrawEllipse(Brushes.Black, null, P1, 14, 14);
+                    dc.DrawEllipse(Brushes.White, null, P1, 12, 12);
+                    dc.DrawEllipse(Brushes.Black, null, P1, 10, 10);
+                    dc.DrawEllipse(Brushes.Black, null, P2, 14, 14);
+                    dc.DrawEllipse(Brushes.White, null, P2, 12, 12);
+                    dc.DrawEllipse(Brushes.Black, null, P2, 10, 10);
+                };
+            }
+            else
+            {
+                drawing = dc =>
+                {
+                    for (int i = 0; i < linps.Count; i += 2)
+                        dc.DrawLine(linpen, linps[i], linps[i + 1]);
+                };
+            }
             return new Action<DrawingContext>[]
                 {
-                    dc =>
-                    {
-                        for (int i = 0; i < linps.Count; i += 2)
-                            dc.DrawLine(linpen, linps[i], linps[i + 1]);
-
-                        dc.DrawEllipse(Brushes.Black, null, P1, 14, 14);
-                        dc.DrawEllipse(Brushes.White, null, P1, 12, 12);
-                        dc.DrawEllipse(Brushes.Black, null, P1, 10, 10);
-                        dc.DrawEllipse(Brushes.Black, null, P2, 14, 14);
-                        dc.DrawEllipse(Brushes.White, null, P2, 12, 12);
-                        dc.DrawEllipse(Brushes.Black, null, P2, 10, 10);
-                    },
+                    drawing,
                     null,
                     null
                 };

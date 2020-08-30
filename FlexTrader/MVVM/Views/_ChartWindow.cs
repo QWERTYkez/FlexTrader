@@ -119,17 +119,17 @@ namespace FlexTrader.MVVM.Views
                 {
                     case "PaintingLevels":
                         LBDInstrument = PaintingLevel; PrepareInstrument.Invoke(InstrumentName);
-                        Painting = true; MagnetInstrument = true;
+                        Painting = true; MagnetInstrument = true; t = CursorT.Paint;
                         break;
 
                     case "PaintingTrends":
                         LBDInstrument = PaintingTrend; PrepareInstrument.Invoke(InstrumentName);
-                        Painting = true; MagnetInstrument = true;
+                        Painting = true; MagnetInstrument = true; t = CursorT.Paint;
                         break;
 
                     case "Interacion":
                         LBDInstrument = Interacion; Painting = false; Interaction = true;
-                        MagnetInstrument = false; t = CursorT.Hook;
+                        MagnetInstrument = true; t = CursorT.Hook;
                         MMInstrument = HookElement;
                         break;
 
