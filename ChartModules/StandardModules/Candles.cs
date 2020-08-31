@@ -457,9 +457,9 @@ namespace ChartModules.StandardModules
         }
         #endregion
 
-        public override Task Redraw() 
+        public void Redraw() 
         { 
-            return Task.Run(() => 
+            Task.Run(() => 
             {
                 DeltaTime = (AllCandles[1].TimeStamp - AllCandles[0].TimeStamp);
 

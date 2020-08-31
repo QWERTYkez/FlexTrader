@@ -17,7 +17,6 @@
 */
 
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace ChartModules
@@ -31,7 +30,6 @@ namespace ChartModules
             Chart = chart;
             Dispatcher = Chart.Dispatcher;
         }
-        public abstract Task Redraw();
         public void Restruct()
         {
             Chart = null;

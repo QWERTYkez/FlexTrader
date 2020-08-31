@@ -60,7 +60,8 @@ namespace ChartModules.PaintingModule
                 PrototypePriceCanvas.Visibility = Visibility.Hidden;
                 PrototypeTimeCanvas.Visibility = Visibility.Hidden;
             };
-            Chart.ChartGrid.MouseMove += (s, e) => DrawPrototype?.Invoke(Chart,
+            Chart.MWindow.PrepareInstrument += PrepareInstrument;
+            Chart.DrawPrototype = () => DrawPrototype?.Invoke(Chart,
                 PrototypeVisual, PrototypePriceVisual, PrototypeTimeVisual);
             this.SetMenuAct = chart.MWindow.SetMenu;
 
@@ -156,26 +157,36 @@ namespace ChartModules.PaintingModule
             });
         }
 
-        public void PreparePaintingLevel()
+        private void PrepareInstrument(PInstrument type)
         {
-            DrawPrototype = Level.DrawPrototype;
-            SetMenuAct.Invoke("New level", Level.StGetSets(), Chart, null, null);
+            Task.Run(() => 
+            {
+                switch (type)
+                {
+                    case PInstrument.Level:
+                        {
+                            DrawPrototype = Level.DrawPrototype;
+                            SetMenuAct.Invoke("New level", Level.StGetSets(), Chart, null, null);
+                        }
+                        return;
+                    case PInstrument.Trend:
+                        {
+                            DrawPrototype = Trend.DrawFirstPoint;
+                            SetMenuAct.Invoke("New trend", Trend.StGetSets(), Chart, null, null);
+                            Chart.PaintingTrend = PaintingTrend;
+                        }
+                        return;
+                }
+            });
         }
-        public void PaintingLevel(MouseButtonEventArgs e) 
+        private void PaintingLevel(MouseButtonEventArgs e) 
         {
             AddElement(new Level(Chart.HeightToPrice(Chart.CursorPosition.Magnet_Current.Y)));
 
             if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
             else Chart.MWindow.ControlUsed = true;
         }
-
-        public void PreparePaintingTrend()
-        {
-            DrawPrototype = Trend.DrawFirstPoint;
-            SetMenuAct.Invoke("New trend", Trend.StGetSets(), Chart, null, null);
-            Chart.PaintingTrend = PaintingTrend;
-        }
-        public void PaintingTrend(MouseButtonEventArgs e)
+        private void PaintingTrend(MouseButtonEventArgs e)
         {
             Chart.PaintingPoints = new List<Point> { Chart.CursorPosition.Magnet_Current };
             DrawPrototype = Trend.DrawSecondPoint;
@@ -196,7 +207,7 @@ namespace ChartModules.PaintingModule
         }
 
         private int ChangesCounter = 0;
-        public override Task Redraw()
+        public Task Redraw()
         {
             ChangesCounter += 1;
             var x = ChangesCounter;
@@ -243,6 +254,11 @@ namespace ChartModules.PaintingModule
         }
 
         public List<Hook> VisibleHooks { get; private set; }
-        
+    }
+
+    public enum PInstrument
+    {
+        Level,
+        Trend
     }
 }

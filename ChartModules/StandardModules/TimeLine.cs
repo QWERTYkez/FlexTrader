@@ -54,7 +54,7 @@ namespace ChartModules.StandardModules
         }
 
         public event Action HorizontalСhanges;
-        public override Task Redraw()
+        public Task Redraw()
         {
             if (Chart.ChWidth == 0) return null;
             return Task.Run(() =>

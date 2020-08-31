@@ -16,6 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;
@@ -40,12 +41,12 @@ namespace ChartModules
         public void ResetInstrument(string Name);
         public IHaveInstruments InstrumentsHandler { get; set; }
         public event Action ClearPrototypes;
-        public event Action<string> PrepareInstrument;
+        public event Action<PInstrument> PrepareInstrument;
         public event Action<CursorT> SetCursor;
-        public event Action<bool> SetMagnetState;
         public event Action RemoveHooks;
         public event Action NonInteraction;
         public event Action<bool> ToggleMagnet;
+        public Action MMInstrument { get; }
         public bool Controlled { get; }
         public bool ControlUsed { get; set; }
     }
@@ -57,7 +58,8 @@ namespace ChartModules
         public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
         public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
 
-        public Action<MouseEventArgs> HookElement { get; set; }
+        public Action HookElement { get; set; }
+        public Action DrawPrototype { get; set; }
     }
 
     public interface IChart: IHaveInstruments
@@ -97,8 +99,6 @@ namespace ChartModules
         event Action FontBrushChanged;
         event Action VerticalСhanges;
         event Action HorizontalСhanges;
-        event Action<Point> CursorNewPosition;
-        event Action CursorLeave;
         CursorPosition CursorPosition { get; }
     }
 

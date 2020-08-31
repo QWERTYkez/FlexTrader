@@ -17,6 +17,7 @@
 */
 
 using ChartModules;
+using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.Resources;
 using System;
@@ -65,7 +66,8 @@ namespace FlexTrader.MVVM.Views
             PaintingTrend = e => InstrumentsHandler?.PaintingTrend.Invoke(e);
 
             //MouseMove
-            HookElement = e => InstrumentsHandler?.HookElement?.Invoke(e);
+            HookElement = () => InstrumentsHandler?.HookElement?.Invoke();
+            DrawPrototype = () => InstrumentsHandler?.DrawPrototype?.Invoke();
         }
 
         #region Инструменты
@@ -75,14 +77,12 @@ namespace FlexTrader.MVVM.Views
             RemoveHooks?.Invoke();
             LBDInstrument.Invoke(e);
         }
-        private protected void ChartsGRD_MouseMove(object s, MouseEventArgs e) => MMInstrument?.Invoke(e);
 
         public IHaveInstruments InstrumentsHandler { get; set; }
         private protected abstract Grid ChartsGRD { get; }
 
-        public event Action<string> PrepareInstrument;
+        public event Action<PInstrument> PrepareInstrument;
         public event Action<CursorT> SetCursor; 
-        public event Action<bool> SetMagnetState;
         public event Action RemoveHooks;
         public event Action NonInteraction;
 
@@ -92,9 +92,9 @@ namespace FlexTrader.MVVM.Views
         private readonly Action<MouseButtonEventArgs> PaintingLevel;
         private readonly Action<MouseButtonEventArgs> PaintingTrend;
 
-        private Action<MouseEventArgs> MMInstrument { get; set; }
-        private readonly Action<MouseEventArgs> HookElement;
-
+        public Action MMInstrument { get; set; }
+        private readonly Action HookElement;
+        private readonly Action DrawPrototype;
 
         private bool MagnetInstrument = false;
         public abstract void ResetInstrument(string Name);
@@ -118,13 +118,15 @@ namespace FlexTrader.MVVM.Views
                 switch (InstrumentName)
                 {
                     case "PaintingLevels":
-                        LBDInstrument = PaintingLevel; PrepareInstrument.Invoke(InstrumentName);
+                        LBDInstrument = PaintingLevel; PrepareInstrument.Invoke(PInstrument.Level);
                         Painting = true; MagnetInstrument = true; t = CursorT.Paint;
+                        MMInstrument = DrawPrototype;
                         break;
 
                     case "PaintingTrends":
-                        LBDInstrument = PaintingTrend; PrepareInstrument.Invoke(InstrumentName);
+                        LBDInstrument = PaintingTrend; PrepareInstrument.Invoke(PInstrument.Trend);
                         Painting = true; MagnetInstrument = true; t = CursorT.Paint;
+                        MMInstrument = DrawPrototype;
                         break;
 
                     case "Interacion":
@@ -135,11 +137,12 @@ namespace FlexTrader.MVVM.Views
 
                     default:
                         LBDInstrument = Moving; Painting = false; SetMenu(null, null, null, null, null);
-                        MagnetInstrument = false; t = CursorT.Standart; break;
+                        MagnetInstrument = false; t = CursorT.Standart; 
+                        MMInstrument = null; 
+                        break; 
                 }
                 if (InstrumentName != "Interacion" && Interaction)
                 {
-                    MMInstrument = null;
                     NonInteraction.Invoke();
                     Interaction = false;
                 }
@@ -184,7 +187,7 @@ namespace FlexTrader.MVVM.Views
                 Controlled = false;
             });
         }
-#endregion
+        #endregion
 
         #region Обработка таскания мышью
         private Point StartPosition;

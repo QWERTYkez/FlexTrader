@@ -147,7 +147,7 @@ namespace ChartModules.StandardModules
                 });
             }
         }
-        public override Task Redraw()
+        public Task Redraw()
         {
             var tasks = new List<Task>();
             foreach (var ml in MarksLayers) tasks.Add(Task.Run(() => RedrawMarks(ml)));

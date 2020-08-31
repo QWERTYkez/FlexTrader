@@ -64,7 +64,7 @@ namespace ChartModules.StandardModules
         }
 
         public event Action VerticalСhanges;
-        public override Task Redraw()
+        public Task Redraw()
         {
             return Task.Run(() => 
             {

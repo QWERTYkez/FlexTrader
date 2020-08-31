@@ -235,7 +235,6 @@
             <Grid
                 x:Name="ChartsGrid"
                 Grid.Column="1"
-                MouseMove="ChartsGRD_MouseMove"
                 PreviewMouseLeftButtonDown="ChartsGRD_PreviewMouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />

@@ -34,32 +34,31 @@ namespace ChartModules.StandardModules
         private readonly IDrawingCanvas MagnetLayer;
         private readonly IDrawingCanvas TimeLine;
         private readonly IDrawingCanvas PriceLine;
-        public CursorModule(IChart chart, 
-            IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer, 
-            IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine, 
-            IDrawingCanvas PriceLine, Action CursorLeaveChart) : base(chart)
+        public CursorModule(IChart chart,
+            IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer,
+            IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine,
+            IDrawingCanvas PriceLine) : base(chart)
         {
             this.CursorLinesLayer = CursorLinesLayer;
             this.CursorLayer = CursorLayer;
             this.MagnetLayer = MagnetLayer;
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
-            this.CursorLeaveChart = CursorLeaveChart;
 
             FontBrush = Brushes.White;
             MarksPen = new Pen(Brushes.White, 2); MarksPen.Freeze();
 
             Chart.ChartGrid.MouseEnter += ShowCursor;
             Chart.ChartGrid.MouseLeave += CursorLeave;
-            Chart.CursorNewPosition += CursorRedraw;
+            Chart.ChartGrid.MouseMove += Redraw;
             Chart.MWindow.SetCursor += SetCursor;
-            Chart.MWindow.ToggleMagnet += b => 
+            Chart.MWindow.ToggleMagnet += b =>
             {
-                Task.Run(() => 
+                Task.Run(() =>
                 {
                     if (b) MagnetAdd();
                     else MagnetRemove();
-                }); 
+                });
             };
             SetCursorLines();
             CursorLinesLayer.RenderTransform = CursorLinesTransform;
@@ -94,7 +93,6 @@ namespace ChartModules.StandardModules
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
         private void ShowCursor(object sender, MouseEventArgs e)
         {
-            RedrawAct = Redraw;
             CursorLinesLayer.AddVisual(CursorLinesVisual);
             CursorLayer.AddVisual(CursorVisual);
             MagnetLayer.AddVisual(MagnetVisual);
@@ -103,34 +101,29 @@ namespace ChartModules.StandardModules
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            RedrawAct = null;
             CursorLinesLayer.DeleteVisual(CursorLinesVisual);
             CursorLayer.DeleteVisual(CursorVisual);
             MagnetLayer.DeleteVisual(MagnetVisual);
             TimeLine.DeleteVisual(CursorTimeVisual);
             PriceLine.DeleteVisual(CursorPriceVisual);
         }
-        private Func<Task> RedrawAct;
-        private void CursorRedraw(Point P)
-        {
-            CursorPosition.Current = P; RedrawAct?.Invoke();
-        }
         private protected override void Destroy()
         {
             Chart.ChartGrid.MouseEnter -= ShowCursor;
             Chart.ChartGrid.MouseLeave -= CursorLeave;
-            Chart.CursorNewPosition -= CursorRedraw;
+            Chart.ChartGrid.MouseMove -= Redraw;
         }
 
-        public event Action CursorLeaveChart;
         public CursorPosition CursorPosition { get; } = new CursorPosition();
         private bool Hide { get; set; } = false;
         private bool Correcting { get; set; }
-        public override Task Redraw()
+
+        public void Redraw(object s, MouseEventArgs e) => Redraw(e.GetPosition(Chart.ChartGrid));
+        public void Redraw(Point P)
         {
-            return Task.Run(() =>
+            Task.Run(() =>
             {
-                var npos = CursorPosition.Current; DateTime dt = DateTime.Now; string price = "";
+                var npos = CursorPosition.Current = P; DateTime dt = DateTime.Now; string price = "";
 
                 if (Correcting)
                 {
@@ -169,6 +162,9 @@ namespace ChartModules.StandardModules
                         } else CursorPosition.NMP();
                     }
                 } else CursorPosition.NMP();
+
+                ////////
+                Chart.MWindow.MMInstrument?.Invoke();
 
                 if (Hide)
                 {

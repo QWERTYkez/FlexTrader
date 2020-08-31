@@ -18,8 +18,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace ChartModules.PaintingModule.Elements
 {
@@ -53,51 +55,60 @@ namespace ChartModules.PaintingModule.Elements
         public static void DrawFirstPoint(IChart C, DrawingVisual dv,
             DrawingVisual p, DrawingVisual t)
         {
-            using var dc = dv.RenderOpen();
-            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 14, 14);
-            dc.DrawEllipse(Brushes.White, null, C.CursorPosition.Magnet_Current, 12, 12);
-            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 10, 10);
+            C.Dispatcher.Invoke(() =>
+            {
+                using var dc = dv.RenderOpen();
+                dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 14, 14);
+                dc.DrawEllipse(Brushes.White, null, C.CursorPosition.Magnet_Current, 12, 12);
+                dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 10, 10);
+            });
         }
         public static void DrawSecondPoint(IChart C, DrawingVisual dv,
             DrawingVisual p, DrawingVisual t)
         {
-            var P1 = C.PaintingPoints[0];
-            var P2 = C.CursorPosition.Magnet_Current;
-
-            P1.GetCoeffs(P2, out double A, out double B);
-
-            var linpen = new Pen(StLineBrush, StLineThikness); linpen.Freeze();
-            var linps = new List<Point>();
-            if (StLineIndent == 0)
+            Task.Run(() => 
             {
-                linps.Add(new Point(0, B)); 
-                linps.Add(new Point(C.ChWidth, A * C.ChWidth + B));
-            }
-            else
-            {
-                double z = 0, x = 0; 
-                double len = Math.Sqrt(Math.Pow(C.ChWidth, 2) + Math.Pow(B - A * C.ChWidth + B, 2));
-                double dx1 = StLineDash / Math.Sqrt(A + 1);
-                double dx2 = StLineIndent / Math.Sqrt(A + 1);
-                
-                while (z < len)
+                var P1 = C.PaintingPoints[0];
+                var P2 = C.CursorPosition.Magnet_Current;
+
+                P1.GetCoeffs(P2, out double A, out double B);
+
+                var linpen = new Pen(StLineBrush, StLineThikness); linpen.Freeze();
+                var linps = new List<Point>();
+                if (StLineIndent == 0)
                 {
-                    linps.Add(new Point(x, A * x + B)); z += StLineDash; x += dx1;
-                    linps.Add(new Point(x, A * x + B)); z += StLineIndent; x += dx2;
+                    linps.Add(new Point(0, B));
+                    linps.Add(new Point(C.ChWidth, A * C.ChWidth + B));
                 }
-            }
+                else
+                {
+                    double z = 0, x = 0;
+                    double len = Math.Sqrt(Math.Pow(C.ChWidth, 2) + Math.Pow(B - A * C.ChWidth + B, 2));
+                    double dx1 = StLineDash / Math.Sqrt(A + 1);
+                    double dx2 = StLineIndent / Math.Sqrt(A + 1);
 
-            using var dc = dv.RenderOpen();
+                    while (z < len)
+                    {
+                        linps.Add(new Point(x, A * x + B)); z += StLineDash; x += dx1;
+                        linps.Add(new Point(x, A * x + B)); z += StLineIndent; x += dx2;
+                    }
+                }
 
-            for (int i = 0; i < linps.Count; i += 2)
-                dc.DrawLine(linpen, linps[i], linps[i + 1]);
+                C.Dispatcher.Invoke(() =>
+                {
+                    using var dc = dv.RenderOpen();
 
-            dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 14, 14);
-            dc.DrawEllipse(Brushes.White, null, C.PaintingPoints[0], 12, 12);
-            dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 10, 10);
-            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 14, 14);
-            dc.DrawEllipse(Brushes.White, null, C.CursorPosition.Magnet_Current, 12, 12);
-            dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 10, 10);
+                    for (int i = 0; i < linps.Count; i += 2)
+                        dc.DrawLine(linpen, linps[i], linps[i + 1]);
+
+                    dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 14, 14);
+                    dc.DrawEllipse(Brushes.White, null, C.PaintingPoints[0], 12, 12);
+                    dc.DrawEllipse(Brushes.Black, null, C.PaintingPoints[0], 10, 10);
+                    dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 14, 14);
+                    dc.DrawEllipse(Brushes.White, null, C.CursorPosition.Magnet_Current, 12, 12);
+                    dc.DrawEllipse(Brushes.Black, null, C.CursorPosition.Magnet_Current, 10, 10);
+                });
+            });
         }
 
         public Trend(ChartPoint Point1, ChartPoint Point2)

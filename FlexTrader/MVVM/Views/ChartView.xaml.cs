@@ -58,14 +58,6 @@ namespace FlexTrader.MVVM.Views
                 if (MWindow.InstrumentsHandler == this)
                     MWindow.InstrumentsHandler = null;
             };
-            ChartGrid.MouseLeave += (s, e) => CursorLeave?.Invoke();
-            ChartGrid.MouseMove += (s, e) =>
-            {
-                var P = e.GetPosition(this);
-                Task.Run(() => CursorNewPosition?.Invoke(P));
-            };
-
-            MWindow.PrepareInstrument += PrepareInstrument;
             this.ShowSettings += MWindow.ShowSettings;
             
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
@@ -90,7 +82,7 @@ namespace FlexTrader.MVVM.Views
             TimeLineModule.HorizontalСhanges += () => HorizontalСhanges.Invoke();
 
             CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer, 
-                CursorTimeMarkLayer, CursorPriceMarkLayer, CursorLeave);
+                CursorTimeMarkLayer, CursorPriceMarkLayer);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
                 Translate, ScaleX, ScaleY, TimeLine, PriceLine,
@@ -114,7 +106,7 @@ namespace FlexTrader.MVVM.Views
                 MWindow.ShowContextMenu(items.Value);
             };
 
-            CandlesModule.WhellScalled += () => CursorModule.Redraw();
+            CandlesModule.WhellScalled += () => CursorModule.Redraw(CursorPosition.Current);
 
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged += DC_PropertyChanged;
@@ -174,19 +166,9 @@ namespace FlexTrader.MVVM.Views
         public Action<MouseButtonEventArgs> Moving { get; set; }
         public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
         public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
-        private void PrepareInstrument(string Instrument)
-        {
-            Task.Run(() => 
-            {
-                switch (Instrument)
-                {
-                    case "PaintingLevels": PaintingModule.PreparePaintingLevel(); return;
-                    case "PaintingTrends": PaintingModule.PreparePaintingTrend(); return;
-                }
-            });
-        }
         //MMInstrument
-        public Action<MouseEventArgs> HookElement { get; set; }
+        public Action HookElement { get; set; }
+        public Action DrawPrototype { get; set; }
         #endregion
 
         public List<Point> PaintingPoints { get; set; }
@@ -230,8 +212,6 @@ namespace FlexTrader.MVVM.Views
 
         public event Action VerticalСhanges;
         public event Action HorizontalСhanges;
-        public event Action<Point> CursorNewPosition;
-        public event Action CursorLeave;
 
         public double PriceShift { get => 6; }
 

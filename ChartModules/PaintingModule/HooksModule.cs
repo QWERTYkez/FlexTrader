@@ -77,7 +77,6 @@ namespace ChartModules.PaintingModule
             HookTimeLayer.DeleteVisual(OverTimeVisual);
             HookTimeLayer.DeleteVisual(ShadowTimeVisual);
         }
-        public override Task Redraw() => null;
 
         private readonly Func<Pen> GetCursorPen;
         private readonly Func<List<Hook>> GetVisibleHooks;
@@ -184,7 +183,7 @@ namespace ChartModules.PaintingModule
         private Point LastValue;
         private double LastPointPrice;
         private DateTime LastPointTime;
-        public void HookElement(MouseEventArgs e)
+        public void HookElement()
         {
             if (Manipulating) return;
             Task.Run(() => 
