@@ -30,9 +30,9 @@ namespace ChartModules.StandardModules
         public DateTime TimeA = DateTime.Now;
         public DateTime TimeB = DateTime.Now;
 
-        private readonly IDrawingCanvas GridLayer;
-        private readonly IDrawingCanvas TimeLine;
-        public TimeLineModule(IChart chart, IDrawingCanvas GridLayer, IDrawingCanvas TimeLine) : base(chart)
+        private readonly DrawingCanvas GridLayer;
+        private readonly DrawingCanvas TimeLine;
+        public TimeLineModule(IChart chart, DrawingCanvas GridLayer, DrawingCanvas TimeLine) : base(chart)
         {
             this.GridLayer = GridLayer;
             this.TimeLine = TimeLine;
@@ -59,8 +59,8 @@ namespace ChartModules.StandardModules
             if (Chart.ChWidth == 0) return null;
             return Task.Run(() =>
             {
-                TimeA = Chart.StartTime.Value - ((Chart.ChWidth / Chart.CurrentScale.X + Chart.CurrentTranslate.X - 7.5) / 15) * Chart.DeltaTime.Value;
-                TimeB = Chart.StartTime.Value - ((Chart.CurrentTranslate.X - 7.5) / 15) * Chart.DeltaTime.Value;
+                TimeA = Chart.StartTime - ((Chart.ChWidth / Chart.CurrentScale.X + Chart.CurrentTranslate.X - 7.5) / 15) * Chart.DeltaTime;
+                TimeB = Chart.StartTime - ((Chart.CurrentTranslate.X - 7.5) / 15) * Chart.DeltaTime;
 
                 double count = Math.Floor((Chart.ChWidth / (Chart.BaseFontSize * 10)));
                 if (count == 0) return;
@@ -111,7 +111,7 @@ namespace ChartModules.StandardModules
                     Point Tpoint, Point A, Point B, Point G, Point H)>();
 
                 var stTime = new DateTime(Chart.TimeA.Year, 1, 1);
-                var Y = Chart.StartTime.Value.Year;
+                var Y = Chart.StartTime.Year;
                 if (Ystep > 0)
                 {
                     var Yn = Y;
@@ -125,7 +125,7 @@ namespace ChartModules.StandardModules
                 }
                 else
                 {
-                    var M = Chart.StartTime.Value.Month;
+                    var M = Chart.StartTime.Month;
                     if (Mstep > 0)
                     {
                         var currentDT = new DateTime(Y, M, 1);
@@ -140,7 +140,7 @@ namespace ChartModules.StandardModules
                     else
                     {
                         DateTime ndt;
-                        var D = Chart.StartTime.Value.Day;
+                        var D = Chart.StartTime.Day;
                         if (Dstep > 0)
                         {
                             var currentDT = new DateTime(Chart.TimeA.Year, Chart.TimeA.Month, 1);
@@ -172,12 +172,12 @@ namespace ChartModules.StandardModules
                         }
                         else
                         {
-                            var H = Chart.StartTime.Value.Hour;
+                            var H = Chart.StartTime.Hour;
                             if (Hstep > 0)
                             {
                                 if (Hstep == 16)
                                 {
-                                    var currentDT = new DateTime(Chart.StartTime.Value.Year, Chart.StartTime.Value.Month, Chart.StartTime.Value.Day, 0, 0, 0);
+                                    var currentDT = new DateTime(Chart.StartTime.Year, Chart.StartTime.Month, Chart.StartTime.Day, 0, 0, 0);
                                     while (currentDT > Chart.TimeA) currentDT = currentDT.AddHours(-Hstep);
                                     currentDT = currentDT.AddHours(Hstep);
                                     while (currentDT <= Chart.TimeB)

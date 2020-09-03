@@ -29,15 +29,15 @@ namespace ChartModules.StandardModules
 {
     public class CursorModule : ChartModule
     {
-        private readonly IDrawingCanvas CursorLinesLayer;
-        private readonly IDrawingCanvas CursorLayer;
-        private readonly IDrawingCanvas MagnetLayer;
-        private readonly IDrawingCanvas TimeLine;
-        private readonly IDrawingCanvas PriceLine;
+        private readonly DrawingCanvas CursorLinesLayer;
+        private readonly DrawingCanvas CursorLayer;
+        private readonly DrawingCanvas MagnetLayer;
+        private readonly DrawingCanvas TimeLine;
+        private readonly DrawingCanvas PriceLine;
         public CursorModule(IChart chart,
-            IDrawingCanvas CursorLinesLayer, IDrawingCanvas CursorLayer,
-            IDrawingCanvas MagnetLayer, IDrawingCanvas TimeLine,
-            IDrawingCanvas PriceLine) : base(chart)
+            DrawingCanvas CursorLinesLayer, DrawingCanvas CursorLayer,
+            DrawingCanvas MagnetLayer, DrawingCanvas TimeLine,
+            DrawingCanvas PriceLine) : base(chart)
         {
             this.CursorLinesLayer = CursorLinesLayer;
             this.CursorLayer = CursorLayer;
@@ -83,8 +83,8 @@ namespace ChartModules.StandardModules
             Sets.Add(new Setting("Цвет текста", () => FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
         }
 
-        private readonly DrawingVisual CursorLinesVisual = new DrawingVisual();
-        private readonly DrawingVisual CursorVisual = new DrawingVisual();
+        public DrawingVisual CursorLinesVisual { get; private set; } = new DrawingVisual();
+        public DrawingVisual CursorVisual { get; private set; } = new DrawingVisual();
         private readonly DrawingVisual MagnetVisual = new DrawingVisual();
         private readonly TranslateTransform CursorLinesTransform = new TranslateTransform();
         private readonly TranslateTransform CursorTransform = new TranslateTransform();
@@ -264,8 +264,8 @@ namespace ChartModules.StandardModules
             });
         }
 
-        private Brush FontBrush;
-        public Pen MarksPen;
+        public Brush FontBrush { get; private set; }
+        public Pen MarksPen { get; private set; }
         private double CursorArea = 25;
         private double CursorDash = 5;
         private double CursorIndent = 2;

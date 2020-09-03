@@ -17,6 +17,7 @@
 */
 
 using ChartModules;
+using ChartModules.IndicatorModules;
 using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.ViewModels;
@@ -59,7 +60,7 @@ namespace FlexTrader.MVVM.Views
                     MWindow.InstrumentsHandler = null;
             };
             this.ShowSettings += MWindow.ShowSettings;
-            
+
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
             PaintingModule = new PaintingModule(this, PaintingsLayer, PaintingMarksLayer, PaintingTimeLayer,
@@ -75,18 +76,34 @@ namespace FlexTrader.MVVM.Views
                     PaintingMarksLayer
                 });
 
-            PriceLineModule = new PriceLineModule(this, PriceLineCD, GridLayer, PricesLayer, PriceMarksModule);
+            PriceLineModule = new PriceLineModule(this, GridLayerHorizontal, PricesLayer, PriceMarksModule);
             PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
+            PriceLineModule.ScaleWidthChanged += (w, fsf) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    PriceLineCD.Width = new GridLength(w);
+                    PriceLineCD2.Width = new GridLength(w);
+                });
 
-            TimeLineModule = new TimeLineModule(this, GridLayer, TimesLayer);
+                NewFSF?.Invoke(fsf);
+            };
+
+            TimeLineModule = new TimeLineModule(this, GridLayerVertical, TimesLayer);
             TimeLineModule.HorizontalСhanges += () => HorizontalСhanges.Invoke();
 
-            CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer, 
+            CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer,
                 CursorTimeMarkLayer, CursorPriceMarkLayer);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
                 Translate, ScaleX, ScaleY, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
+            CandlesModule.CandlesChanged += ac => CandlesChanged?.Invoke(ac);
+            CandlesModule.AllHorizontalReset += (b, cc) => AllHorizontalReset?.Invoke(b, cc);
+            CandlesModule.NewXScale += sc => NewXScale?.Invoke(sc);
+            CandlesModule.NewXTrans += tr => NewXTrans?.Invoke(tr);
+
+            var Vols = new Volumes(this, VolumesGrid, VolumesScale, CursorLinesLayer, TimesLayer);
 
             ChartGrid.PreviewMouseRightButtonDown += (s, e) =>
             {
@@ -199,8 +216,8 @@ namespace FlexTrader.MVVM.Views
         public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }
         public Vector CurrentTranslate { get => CandlesModule.CurrentTranslate; }
         public Vector CurrentScale { get => CandlesModule.CurrentScale; }
-        public DateTime? StartTime { get => CandlesModule.StartTime; }
-        public TimeSpan? DeltaTime { get => CandlesModule.DeltaTime; }
+        public DateTime StartTime { get => CandlesModule.StartTime; }
+        public TimeSpan DeltaTime { get => CandlesModule.DeltaTime; }
         public double PricesDelta { get => PriceLineModule.PricesDelta; }
         public double PricesMin { get => PriceLineModule.PricesMin; }
         public double PriceLineWidth { get => PriceLineModule.PriceLineWidth; }
@@ -209,6 +226,20 @@ namespace FlexTrader.MVVM.Views
         public CursorPosition CursorPosition { get => CursorModule.CursorPosition; }
         public Grid ChartGrid { get => ChartGRD; }
         public bool Manipulating { get => HooksModule.Manipulating; }
+        public List<ICandle> AllCandles { get => CandlesModule.AllCandles; }
+        public event Action<List<ICandle>> CandlesChanged;
+        public event Action<bool, IEnumerable<ICandle>> AllHorizontalReset;
+        public event Action<double> NewXScale;
+        public event Action<double> NewXTrans;
+        public string FSF { get => PriceLineModule.fsf; }
+        public event Action<string> NewFSF;
+        public Brush CandleBrushUp { get => CandlesModule.UpBrush; }
+        public Brush CandleBrushDown { get => CandlesModule.DownBrush; }
+        public Brush CursorFontBrush { get => CursorModule.FontBrush; }
+        public Pen CursorMarksPen { get => CursorModule.MarksPen; }
+        public DrawingVisual CursorLinesVisual { get => CursorModule.CursorLinesVisual; }
+        public DrawingVisual CursorVisual { get => CursorModule.CursorVisual; }
+        public Action<MouseButtonEventArgs> MovingChart { get => CandlesModule.MovingChart; }
 
         public event Action VerticalСhanges;
         public event Action HorizontalСhanges;
@@ -220,22 +251,22 @@ namespace FlexTrader.MVVM.Views
         public Typeface FontText { get; } = new Typeface(new FontFamily("Myriad Pro Cond"),
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
-        private int digits = 8;
+        public int digits { get; private set; } = 8;
         public double HeightToPrice(in double height) => 
             Math.Round(PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight, digits);
         public double PriceToHeight(in double price) =>
             (ChHeight * (PricesDelta * TickSize - price + PricesMin * TickSize)) / (PricesDelta * TickSize);
         public DateTime CorrectTimePosition(ref double X)
         {
-            var dt = StartTime.Value -
-                Math.Round((StartTime.Value - WidthToTime(X)) / DeltaTime.Value) * DeltaTime.Value;
+            var dt = StartTime -
+                Math.Round((StartTime - WidthToTime(X)) / DeltaTime) * DeltaTime;
             X = TimeToWidth(dt);
             return dt;
         }
         public DateTime CorrectTimePosition(ref Point pos)
         {
-            var dt = StartTime.Value -
-                Math.Round((StartTime.Value - WidthToTime(pos.X)) / DeltaTime.Value) * DeltaTime.Value;
+            var dt = StartTime -
+                Math.Round((StartTime - WidthToTime(pos.X)) / DeltaTime) * DeltaTime;
             pos.X = TimeToWidth(dt);
             return dt;
         }

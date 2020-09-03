@@ -30,20 +30,27 @@ namespace ChartModules.StandardModules
 {
     public class CandlesModule : ChartModule
     {
-        public List<ICandle> AllCandles = new List<ICandle>();
-        public TimeSpan? DeltaTime { get; private set; }
-        public DateTime? StartTime { get; private set; }
+        private List<ICandle> allCandles = new List<ICandle>();
+        public event Action<List<ICandle>> CandlesChanged;
+        public List<ICandle> AllCandles { get => allCandles; private set 
+            {
+                allCandles = value;
+                CandlesChanged.Invoke(value);
+            } }
+        
+        public TimeSpan DeltaTime { get; private set; }
+        public DateTime StartTime { get; private set; }
 
         public Vector CurrentTranslate;
         public Vector CurrentScale;
 
-        private readonly IDrawingCanvas CandlesLayer;
+        private readonly DrawingCanvas CandlesLayer;
         private readonly PriceLineModule PriceLineModule;
         private readonly TimeLineModule TimeLineModule;
         private readonly TranslateTransform Translate;
         private readonly ScaleTransform ScaleX;
         private readonly ScaleTransform ScaleY;
-        public CandlesModule(IChart chart, IDrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
+        public CandlesModule(IChart chart, DrawingCanvas CandlesLayer, PriceLineModule PriceLineModule,
             TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
             ScaleTransform ScaleY, Grid TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
         {
@@ -105,33 +112,26 @@ namespace ChartModules.StandardModules
         private double Delta;
         private double Min;
 
-        private readonly object parallelkey = new object();
         public void AddCandles(List<ICandle> NewCandles)
         {
-            if (!DeltaTime.HasValue)
-                DeltaTime = (NewCandles[1].TimeStamp - NewCandles[0].TimeStamp);
-            else
-            {
-                var ts = NewCandles[1].TimeStamp - NewCandles[0].TimeStamp;
-                if (DeltaTime.Value != ts) DeltaTime = ts;
-            }
+            DeltaTime = (NewCandles[1].TimeStamp - NewCandles[0].TimeStamp);
             AllCandles.AddRange(NewCandles);
             AllCandles = AllCandles.OrderBy(c => c.TimeStamp).ToList();
 
             //DrawCandles
             {
-                if (StartTime == null)
-                    StartTime = NewCandles.Last().TimeStamp;
+                StartTime = NewCandles.Last().TimeStamp;
 
-                var DrawTeplates = new List<(Pen ShadowPen, Point PointA,
-                    Point PointB, Brush BodyBrush, Rect Rect)>();
-                Parallel.ForEach(NewCandles, c =>
+                var DrawTeplates = new (Pen ShadowPen, Point PointA,
+                    Point PointB, Brush BodyBrush, Rect Rect)[NewCandles.Count];
+
+                Parallel.For(0, NewCandles.Count, i => 
                 {
-                    var open = c.OpenD / Chart.TickSize;
-                    var close = c.CloseD / Chart.TickSize;
-                    var low = c.LowD / Chart.TickSize;
-                    var high = c.HighD / Chart.TickSize;
-                    var x = 7.5 + (StartTime.Value - c.TimeStamp) * 15 / DeltaTime.Value;
+                    var open = NewCandles[i].OpenD / Chart.TickSize;
+                    var close = NewCandles[i].CloseD / Chart.TickSize;
+                    var low = NewCandles[i].LowD / Chart.TickSize;
+                    var high = NewCandles[i].HighD / Chart.TickSize;
+                    var x = 7.5 + (StartTime - NewCandles[i].TimeStamp) * 15 / DeltaTime;
                     var x1 = x + 6;
                     var x2 = x - 6;
 
@@ -139,11 +139,8 @@ namespace ChartModules.StandardModules
                     var PointB = new Point(x, high);
                     var Rect = new Rect(new Point(x1, open), new Point(x2, close));
 
-                    lock (parallelkey)
-                    {
-                        if (c.UP) DrawTeplates.Add((UpPen, PointA, PointB, UpBrush, Rect));
-                        else DrawTeplates.Add((DownPen, PointA, PointB, DownBrush, Rect));
-                    }
+                    if (NewCandles[i].UP) DrawTeplates[i] = (UpPen, PointA, PointB, UpBrush, Rect);
+                    else DrawTeplates[i] = (DownPen, PointA, PointB, DownBrush, Rect);
                 });
 
                 Dispatcher.Invoke(() =>
@@ -164,13 +161,13 @@ namespace ChartModules.StandardModules
         }
 
         #region Перерассчет шкал
+        public event Action<bool, IEnumerable<ICandle>> AllHorizontalReset;
         private bool VerticalLock = true;
         private async void VerticalReset()
         {
             if (VerticalLock)
             {
-                CurrentTranslate.Y = Min + Delta * 0.5 - Chart.ChHeight * 0.5;
-                PriceLineModule.LastY = CurrentTranslate.Y;
+                PriceLineModule.LastY = CurrentTranslate.Y = Min + Delta * 0.5 - Chart.ChHeight * 0.5;
                 CurrentScale.Y = Chart.ChHeight / Delta;
                 Dispatcher.Invoke(() =>
                 {
@@ -180,39 +177,41 @@ namespace ChartModules.StandardModules
             }
             await PriceLineModule.Redraw();
         }
-        public void HorizontalReset(bool HeightChanged = false)
+        public void HorizontalReset(bool HeightChanged = false, IEnumerable<ICandle> currentCandles = null)
         {
-            if (StartTime.HasValue && DeltaTime.HasValue)
+            TimeLineModule.Redraw();
+            if (currentCandles == null)
             {
-                TimeLineModule.Redraw();
-                var TimeA = StartTime.Value - Math.Ceiling(((Chart.ChWidth / CurrentScale.X + CurrentTranslate.X) / 15)) * DeltaTime.Value;
-                var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
+                var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / CurrentScale.X + CurrentTranslate.X) / 15)) * DeltaTime;
+                var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
 
-                var currentCandles = from c in AllCandles.AsParallel()
-                                     where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
-                                     select c;
-
-                if (currentCandles.Count() < 1) goto Return;
-
-                var mmm = Convert.ToDouble(currentCandles.Select(c => c.LowD).Min()) / Chart.TickSize;
-                var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
-                var delta = max - mmm;
-                max += delta * 0.05;
-                var nMin = mmm - delta * 0.05;
-                var nDelta = max - Min;
-                if (Min == nMin && Delta == nDelta && !HeightChanged) goto Return;
-                Min = nMin;
-                Delta = nDelta;
-
-                if (VerticalLock)
-                {
-                    PriceLineModule.LastMin = Min;
-                    PriceLineModule.LastY = CurrentTranslate.Y;
-                    PriceLineModule.LastDelta = Delta;
-                }
-
-                VerticalReset();
+                currentCandles = from c in AllCandles.AsParallel()
+                                 where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
+                                 select c;
             }
+
+            if (currentCandles.Count() < 1) goto Return;
+
+            AllHorizontalReset.Invoke(HeightChanged, currentCandles);
+
+            var mmm = Convert.ToDouble(currentCandles.Select(c => c.LowD).Min()) / Chart.TickSize;
+            var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
+            var delta = max - mmm;
+            max += delta * 0.05;
+            var nMin = mmm - delta * 0.05;
+            var nDelta = max - nMin;
+            if (Min == nMin && Delta == nDelta && !HeightChanged) goto Return;
+            Min = nMin;
+            Delta = nDelta;
+
+            if (VerticalLock)
+            {
+                PriceLineModule.LastMin = Min;
+                PriceLineModule.LastY = CurrentTranslate.Y;
+                PriceLineModule.LastDelta = Delta;
+            }
+
+            VerticalReset();
         Return:
             if (MagnetStatus) ResetMagnetData();
         }
@@ -256,8 +255,10 @@ namespace ChartModules.StandardModules
             {
                 CurrentScale.X = 1;
                 ScaleX.ScaleX = 1;
+                NewXScale.Invoke(1);
                 CurrentTranslate.X = 0;
                 Translate.X = 0;
+                NewXTrans.Invoke(1);
                 HorizontalReset();
 
                 await UpdateMagnetData();
@@ -271,26 +272,29 @@ namespace ChartModules.StandardModules
                 Task.Run(async () =>
                 {
                     var Y = -vec.Value.X / 50;
+                    IEnumerable<ICandle> currentCandles = null;
                     if (vec.Value.X > 0)
                     {
                         CurrentScale.X = LastScaleX / (1 - Y);
+                        NewXScale.Invoke(CurrentScale.X);
                         await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
                     else if (vec.Value.X < 0)
                     {
                         var nScale = LastScaleX * (1 + Y);
-                        var TimeA = StartTime.Value - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime.Value;
-                        var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
-                        var currentCandles = from c in AllCandles.AsParallel()
+                        var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
+                        var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
+                        currentCandles = from c in AllCandles.AsParallel()
                                              where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                              select c;
 
 
-                        if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime.Value) return;
+                        if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
                         CurrentScale.X = nScale;
+                        NewXScale.Invoke(CurrentScale.X);
                         await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
-                    HorizontalReset();
+                    HorizontalReset(false, currentCandles);
 
                     await UpdateMagnetData();
                 });
@@ -299,6 +303,7 @@ namespace ChartModules.StandardModules
         #endregion
         #region перемещение графика 
         private Vector LastTranslateVector;
+        public event Action<double> NewXTrans;
         public void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
@@ -308,8 +313,8 @@ namespace ChartModules.StandardModules
 
 
                 var X = LastTranslateVector.X + vec.Value.X / CurrentScale.X;
-                var TimeA = StartTime.Value - Math.Floor(((Chart.ChWidth / CurrentScale.X + X) / 15)) * DeltaTime.Value;
-                var TimeB = StartTime.Value - Math.Ceiling((X / 15)) * DeltaTime.Value;
+                var TimeA = StartTime - Math.Floor(((Chart.ChWidth / CurrentScale.X + X) / 15)) * DeltaTime;
+                var TimeB = StartTime - Math.Ceiling((X / 15)) * DeltaTime;
                 var currentCandles = from c in AllCandles.AsParallel()
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                      select c;
@@ -324,15 +329,18 @@ namespace ChartModules.StandardModules
                 CurrentTranslate.X = X;
                 if (VerticalLock)
                 {
+                    NewXTrans.Invoke(CurrentTranslate.X);
                     await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
                     });
-                    HorizontalReset();
+                    HorizontalReset(false, currentCandles);
                 } 
                 else
                 {
                     CurrentTranslate.Y = LastTranslateVector.Y + vec.Value.Y / CurrentScale.Y;
+                    NewXTrans.Invoke(CurrentTranslate.X);
+                    AllHorizontalReset.Invoke(false, currentCandles);
                     await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
@@ -346,38 +354,31 @@ namespace ChartModules.StandardModules
         #endregion
         #region Скалирование колесом 
         public event Action WhellScalled;
+        public event Action<double> NewXScale;
         public Task WhellScalling(MouseWheelEventArgs e)
         {
             e.Handled = true;
             return Task.Run(async () =>
             {
+                IEnumerable<ICandle> currentCandles = null;
                 if (e.Delta > 0)
                 {
                     var nScale = CurrentScale.X * 1.1;
-                    var TimeA = StartTime.Value - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime.Value;
-                    var TimeB = StartTime.Value - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime.Value;
-                    var currentCandles = from c in AllCandles.AsParallel()
+                    var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
+                    var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
+                    currentCandles = from c in AllCandles.AsParallel()
                                          where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                          select c;
 
 
-                    if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime.Value) return;
+                    if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
                     CurrentScale.X = nScale;
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        ScaleX.ScaleX = CurrentScale.X;
-                    });
-                    HorizontalReset();
                 }
-                else
-                {
-                    CurrentScale.X /= 1.1;
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        ScaleX.ScaleX = CurrentScale.X;
-                    });
-                    HorizontalReset();
-                }
+                else CurrentScale.X /= 1.1;
+
+                NewXScale.Invoke(CurrentScale.X);
+                await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
+                HorizontalReset(false, currentCandles);
 
                 await UpdateMagnetData();
                 WhellScalled?.Invoke();
@@ -461,21 +462,20 @@ namespace ChartModules.StandardModules
         { 
             Task.Run(() => 
             {
-                DeltaTime = (AllCandles[1].TimeStamp - AllCandles[0].TimeStamp);
-
                 //DrawCandles
                 {
                     StartTime = AllCandles.Last().TimeStamp;
 
-                    var DrawTeplates = new List<(Pen ShadowPen, Point PointA,
-                        Point PointB, Brush BodyBrush, Rect Rect)>();
-                    Parallel.ForEach(AllCandles, c =>
+                    var DrawTeplates = new (Pen ShadowPen, Point PointA,
+                        Point PointB, Brush BodyBrush, Rect Rect)[AllCandles.Count];
+
+                    Parallel.For(0, AllCandles.Count, i => 
                     {
-                        var open = c.OpenD / Chart.TickSize;
-                        var close = c.CloseD / Chart.TickSize;
-                        var low = c.LowD / Chart.TickSize;
-                        var high = c.HighD / Chart.TickSize;
-                        var x = 7.5 + (StartTime.Value - c.TimeStamp) * 15 / DeltaTime.Value;
+                        var open = AllCandles[i].OpenD / Chart.TickSize;
+                        var close = AllCandles[i].CloseD / Chart.TickSize;
+                        var low = AllCandles[i].LowD / Chart.TickSize;
+                        var high = AllCandles[i].HighD / Chart.TickSize;
+                        var x = 7.5 + (StartTime - AllCandles[i].TimeStamp) * 15 / DeltaTime;
                         var x1 = x + 6;
                         var x2 = x - 6;
 
@@ -483,11 +483,8 @@ namespace ChartModules.StandardModules
                         var PointB = new Point(x, high);
                         var Rect = new Rect(new Point(x1, open), new Point(x2, close));
 
-                        lock (parallelkey)
-                        {
-                            if (c.UP) DrawTeplates.Add((UpPen, PointA, PointB, UpBrush, Rect));
-                            else DrawTeplates.Add((DownPen, PointA, PointB, DownBrush, Rect));
-                        }
+                        if (AllCandles[i].UP) DrawTeplates[i] = (UpPen, PointA, PointB, UpBrush, Rect);
+                        else DrawTeplates[i] = (DownPen, PointA, PointB, DownBrush, Rect);
                     });
 
                     Dispatcher.Invoke(() =>
@@ -511,8 +508,8 @@ namespace ChartModules.StandardModules
         }
         private protected override void Destroy() { }
 
-        private Brush UpBrush = Brushes.Lime;
-        private Brush DownBrush = Brushes.Red;
+        public Brush UpBrush = Brushes.Lime;
+        public Brush DownBrush = Brushes.Red;
         private readonly Pen UpPen = new Pen(Brushes.Lime, 4);
         private readonly Pen DownPen = new Pen(Brushes.Red, 4);
     }

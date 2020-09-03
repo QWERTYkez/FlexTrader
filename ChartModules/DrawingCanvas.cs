@@ -16,14 +16,13 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartModules;
 using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM
+namespace ChartModules
 {
-    public class DrawingCanvas : Canvas, IDrawingCanvas
+    public class DrawingCanvas : Canvas
     {
         public List<Visual> Visuals { get; } = new List<Visual>();
         protected override int VisualChildrenCount => Visuals.Count;

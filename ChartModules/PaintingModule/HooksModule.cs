@@ -28,11 +28,11 @@ namespace ChartModules.PaintingModule
 {
     public class HooksModule : ChartModule
     {
-        private readonly IDrawingCanvas HooksLayer;
-        private readonly IDrawingCanvas HookPriceLayer;
-        private readonly IDrawingCanvas HookTimeLayer;
+        private readonly DrawingCanvas HooksLayer;
+        private readonly DrawingCanvas HookPriceLayer;
+        private readonly DrawingCanvas HookTimeLayer;
 
-        public HooksModule(IChart chart, IDrawingCanvas HooksLayer, IDrawingCanvas HookPriceLayer, IDrawingCanvas HookTimeLayer,
+        public HooksModule(IChart chart, DrawingCanvas HooksLayer, DrawingCanvas HookPriceLayer, DrawingCanvas HookTimeLayer,
             Func<Pen> GetCursorPen, Func<List<Hook>> GetVisibleHooks, List<FrameworkElement> OtherLayers) : base(chart)
         {
             this.OtherLayers = OtherLayers;

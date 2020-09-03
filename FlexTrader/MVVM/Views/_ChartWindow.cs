@@ -73,7 +73,6 @@ namespace FlexTrader.MVVM.Views
         #region Инструменты
         private protected void ChartsGRD_PreviewMouseLeftButtonDown(object s, MouseButtonEventArgs e)
         {
-            e.Handled = true;
             RemoveHooks?.Invoke();
             LBDInstrument.Invoke(e);
         }

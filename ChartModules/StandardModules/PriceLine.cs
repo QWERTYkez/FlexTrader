@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace ChartModules.StandardModules
@@ -35,15 +34,13 @@ namespace ChartModules.StandardModules
         public double LastDelta;
         public double LastMin;
 
-        private readonly ColumnDefinition PriceLineCD;
-        private readonly IDrawingCanvas GridLayer;
-        private readonly IDrawingCanvas PriceLine;
+        private readonly DrawingCanvas GridLayer;
+        private readonly DrawingCanvas PriceLine;
         private readonly PriceMarksModule PriceMarksModule;
-        public PriceLineModule(IChart chart, ColumnDefinition PriceLineCD, 
-            IDrawingCanvas GridLayer, IDrawingCanvas PriceLine, 
+        public PriceLineModule(IChart chart, 
+            DrawingCanvas GridLayer, DrawingCanvas PriceLine, 
             PriceMarksModule PriceMarksModule) : base (chart)
         {
-            this.PriceLineCD = PriceLineCD;
             this.GridLayer = GridLayer;
             this.PriceLine = PriceLine;
             this.PriceMarksModule = PriceMarksModule;
@@ -52,7 +49,6 @@ namespace ChartModules.StandardModules
             GridLayer.AddVisual(PriceGridVisual);
             PriceLine.AddVisual(PricesVisual);
         }
-        private Pen LinesPen => Chart.LinesPen;
 
         private readonly DrawingVisual PricesVisual = new DrawingVisual();
         private readonly DrawingVisual PriceGridVisual = new DrawingVisual();
@@ -64,6 +60,8 @@ namespace ChartModules.StandardModules
         }
 
         public event Action VerticalСhanges;
+        public event Action<double, string> ScaleWidthChanged;
+        public string fsf { get; private set; } = "00.00";
         public Task Redraw()
         {
             return Task.Run(() => 
@@ -74,7 +72,7 @@ namespace ChartModules.StandardModules
                 var pixelsPerDip = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
 
                 double count = Math.Floor((Chart.ChHeight / (Chart.BaseFontSize * 6)));
-                var step = (Chart.PricesDelta * Chart.TickSize) / count;
+                var step = (PricesDelta * Chart.TickSize) / count;
                 double n = 1;
                 int d = 0;
                 while (step > 10)
@@ -95,17 +93,22 @@ namespace ChartModules.StandardModules
                 else if (step > 2) step = 2 * n;
                 else if (step > 1) step = 1 * n;
 
-                var maxP = (Chart.PricesMin + Chart.PricesDelta) * Chart.TickSize;
+                double maxP;
+                if(PricesMin < 0 && (PricesMin + PricesDelta) < Math.Abs(PricesMin) * 10)
+                { maxP = Math.Abs(PricesMin) * 10 * Chart.TickSize; }
+                else { maxP = (PricesMin + PricesDelta) * Chart.TickSize; }
+
                 var raz = 1;
                 while (maxP > 10)
                 {
                     maxP /= 10;
                     raz *= 10;
                 }
-                var fsf = Chart.TickPriceFormat;
+                fsf = Chart.TickPriceFormat;
                 if (raz > 10)
                     for (int i = Convert.ToInt32(Math.Log10(raz)); i > 0; i--)
                         fsf = "0" + fsf;
+
                 var fsfFT = new FormattedText
                             (
                                 fsf,
@@ -117,7 +120,7 @@ namespace ChartModules.StandardModules
                                 pixelsPerDip
                             );
 
-                var price = Math.Round(step * Math.Ceiling((Chart.PricesMin * Chart.TickSize) / step), d);
+                var price = Math.Round(step * Math.Ceiling((PricesMin * Chart.TickSize) / step), d);
                 var coordiate = Chart.PriceToHeight(price);
                 var pricesToDraw = new List<(FormattedText price, Point coor,
                     Point A, Point B, Point G, Point H)>();
@@ -144,6 +147,7 @@ namespace ChartModules.StandardModules
                 while (coordiate > 0);
 
                 PriceLineWidth = fsfFT.Width + Chart.PriceShift + 4;
+                ScaleWidthChanged.Invoke(PriceLineWidth, fsf);
                 Dispatcher.Invoke(() =>
                 {
                     using var pvc = PricesVisual.RenderOpen();
@@ -151,11 +155,9 @@ namespace ChartModules.StandardModules
                     foreach (var pr in pricesToDraw)
                     {
                         pvc.DrawText(pr.price, pr.coor);
-                        pvc.DrawLine(LinesPen, pr.A, pr.B);
-                        pgvc.DrawLine(LinesPen, pr.G, pr.H);
+                        pvc.DrawLine(Chart.LinesPen, pr.A, pr.B);
+                        pgvc.DrawLine(Chart.LinesPen, pr.G, pr.H);
                     }
-                    PriceLine.Width = PriceLineWidth;
-                    PriceLineCD.Width = new GridLength(PriceLineWidth);
                 });
                 PriceMarksModule.Redraw();
                 VerticalСhanges?.Invoke();

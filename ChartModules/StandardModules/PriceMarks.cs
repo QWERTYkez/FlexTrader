@@ -32,7 +32,7 @@ namespace ChartModules.StandardModules
         private readonly List<MarksLayer> MarksLayers = new List<MarksLayer>();
         public MarksLayer Levels { get; }
 
-        public PriceMarksModule(IChart chart, IDrawingCanvas MarksCanvas, IDrawingCanvas PriceLine) : base(chart)
+        public PriceMarksModule(IChart chart, DrawingCanvas MarksCanvas, DrawingCanvas PriceLine) : base(chart)
         {
             this.MarksCanvas = MarksCanvas;
             this.PriceLine = PriceLine;
@@ -44,8 +44,8 @@ namespace ChartModules.StandardModules
             #endregion
         }
 
-        private readonly IDrawingCanvas MarksCanvas;
-        private readonly IDrawingCanvas PriceLine;
+        private readonly DrawingCanvas MarksCanvas;
+        private readonly DrawingCanvas PriceLine;
         private protected override void Destroy()
         {
             MarksCanvas.ClearVisuals();
@@ -179,7 +179,7 @@ namespace ChartModules.StandardModules
 
     public struct MarksLayer
     {
-        public MarksLayer(IDrawingCanvas MarksLayer, IDrawingCanvas PriceLine, Action<MarksLayer> act)
+        public MarksLayer(DrawingCanvas MarksLayer, DrawingCanvas PriceLine, Action<MarksLayer> act)
         {
             ChartVisual = new DrawingVisual(); MarksLayer.AddVisual(ChartVisual);
             PriceVisual = new DrawingVisual(); PriceLine.AddVisual(PriceVisual);

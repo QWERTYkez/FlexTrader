@@ -30,6 +30,9 @@
                 <ResourceDictionary Source="MVVM\Resources\Converters.xaml" />
                 <ResourceDictionary Source="MVVM\Resources\ScrollBar.xaml" />
                 <ResourceDictionary Source="MVVM\Resources\SlidingRes.xaml" />
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="CursorGrabber" Color="#00000000" />
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

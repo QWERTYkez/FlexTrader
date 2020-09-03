@@ -78,8 +78,8 @@ namespace ChartModules
         DateTime CorrectTimePosition(ref Point pos);
         DateTime TimeA { get; }
         DateTime TimeB { get; }
-        DateTime? StartTime { get; }
-        TimeSpan? DeltaTime { get; }
+        DateTime StartTime { get; }
+        TimeSpan DeltaTime { get; }
         Vector CurrentTranslate { get; }
         Vector CurrentScale { get; }
         public List<MagnetPoint> MagnetPoints { get; }
@@ -100,22 +100,20 @@ namespace ChartModules
         event Action VerticalСhanges;
         event Action HorizontalСhanges;
         CursorPosition CursorPosition { get; }
-    }
-
-    public interface IDrawingCanvas
-    {
-        public Visibility Visibility { get; set; }
-        public List<Visual> Visuals { get; }
-        public void AddVisual(Visual visual);
-        public void DeleteVisual(Visual visual);
-        public void AddVisualsRange(List<Visual> visuals);
-        public void ClearVisuals();
-
-        public int Index { get; }
-
-        public double Width { get; set; }
-        public double Height { get; set; }
-        Transform RenderTransform { get; set; }
-        public event MouseButtonEventHandler PreviewMouseDown;
+        public List<ICandle> AllCandles { get; }
+        public event Action<List<ICandle>> CandlesChanged;
+        public event Action<bool, IEnumerable<ICandle>> AllHorizontalReset;
+        public event Action<double> NewXScale;
+        public event Action<double> NewXTrans;
+        public string FSF { get; }
+        public event Action<string> NewFSF;
+        public Brush CandleBrushUp { get; }
+        public Brush CandleBrushDown { get; }
+        public Brush CursorFontBrush { get; }
+        public Pen CursorMarksPen { get; }
+        public DrawingVisual CursorLinesVisual { get; }
+        public DrawingVisual CursorVisual { get; }
+        public Action<MouseButtonEventArgs> MovingChart { get; }
+        public int digits { get; }
     }
 }

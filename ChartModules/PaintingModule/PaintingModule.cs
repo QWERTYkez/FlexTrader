@@ -30,16 +30,16 @@ namespace ChartModules.PaintingModule
 {
     public class PaintingModule : ChartModule
     {
-        private readonly IDrawingCanvas ElementsCanvas;
-        private readonly IDrawingCanvas PricesCanvas;
-        private readonly IDrawingCanvas TimesCanvas;
-        private readonly IDrawingCanvas PrototypeCanvas;
-        private readonly IDrawingCanvas PrototypePriceCanvas;
-        private readonly IDrawingCanvas PrototypeTimeCanvas;
+        private readonly DrawingCanvas ElementsCanvas;
+        private readonly DrawingCanvas PricesCanvas;
+        private readonly DrawingCanvas TimesCanvas;
+        private readonly DrawingCanvas PrototypeCanvas;
+        private readonly DrawingCanvas PrototypePriceCanvas;
+        private readonly DrawingCanvas PrototypeTimeCanvas;
         private readonly Action<string> ResetInstrument;
-        public PaintingModule(IChart chart, IDrawingCanvas ElementsCanvas, IDrawingCanvas PricesCanvas,
-            IDrawingCanvas TimesCanvas, IDrawingCanvas PrototypeCanvas, IDrawingCanvas PrototPCanvas,
-            IDrawingCanvas PrototTCanvas) : base(chart)
+        public PaintingModule(IChart chart, DrawingCanvas ElementsCanvas, DrawingCanvas PricesCanvas,
+            DrawingCanvas TimesCanvas, DrawingCanvas PrototypeCanvas, DrawingCanvas PrototPCanvas,
+            DrawingCanvas PrototTCanvas) : base(chart)
         {
             this.ElementsCanvas = ElementsCanvas;   ElementsCanvas.AddVisual(ElementsVisual);
             this.PricesCanvas = PricesCanvas;       PricesCanvas.AddVisual(PricesVisual);
