@@ -43,9 +43,8 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="4*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition x:Name="IndicatorsSplitterRD" Height="Auto" />
+            <RowDefinition x:Name="IndicatorsRowRD" Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition x:Name="TimeLineRD" Height="50" />
         </Grid.RowDefinitions>
@@ -103,7 +102,7 @@
         </Grid>
         <Grid
             x:Name="TimeLine"
-            Grid.Row="5"
+            Grid.Row="4"
             Background="{StaticResource CursorGrabber}"
             ClipToBounds="True">
             <CM:DrawingCanvas x:Name="TimesLayer" />
@@ -113,25 +112,15 @@
             <CM:DrawingCanvas x:Name="PrototypeTimeLayer" />
         </Grid>
         <Grid
-            x:Name="VolumesGrid"
+            x:Name="IndicatorsGrid"
             Grid.Row="2"
-            Grid.Column="0"
-            Background="{StaticResource CursorGrabber}"
-            Cursor="None" />
-        <Grid
-            x:Name="VolumesScale"
-            Grid.Row="2"
-            Grid.Column="2" />
-        <Grid
-            Grid.Row="3"
             Grid.ColumnSpan="3"
-            Height="0">
+            VerticalAlignment="Stretch">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition x:Name="PriceLineCD2" Width="70" />
             </Grid.ColumnDefinitions>
-
         </Grid>
         <GridSplitter
             Grid.Row="1"
@@ -142,7 +131,7 @@
             BorderThickness="2"
             ShowsPreview="False" />
         <Border
-            Grid.Row="4"
+            Grid.Row="3"
             Grid.ColumnSpan="3"
             BorderBrush="Gray"
             BorderThickness="2" />
@@ -152,7 +141,7 @@
             BorderBrush="Gray"
             BorderThickness="2" />
 
-        <Grid Grid.Row="5" Grid.Column="2">
+        <Grid Grid.Row="4" Grid.Column="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition />

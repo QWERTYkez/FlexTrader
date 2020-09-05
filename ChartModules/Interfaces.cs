@@ -102,7 +102,7 @@ namespace ChartModules
         CursorPosition CursorPosition { get; }
         public List<ICandle> AllCandles { get; }
         public event Action<List<ICandle>> CandlesChanged;
-        public event Action<bool, IEnumerable<ICandle>> AllHorizontalReset;
+        public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         public event Action<double> NewXScale;
         public event Action<double> NewXTrans;
         public string FSF { get; }

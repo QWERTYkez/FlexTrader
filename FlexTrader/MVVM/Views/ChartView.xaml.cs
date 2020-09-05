@@ -46,6 +46,8 @@ namespace FlexTrader.MVVM.Views
         private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;
 
+        private readonly IndicatorsManger IndicatorsManger;
+
         public IChartWindow MWindow { get; }
         public ChartView() { } //конструктор для intellisense
         public ChartView(IChartWindow mainView)
@@ -99,11 +101,11 @@ namespace FlexTrader.MVVM.Views
                 Translate, ScaleX, ScaleY, TimeLine, PriceLine,
                 new Vector(ScaleX.ScaleX, ScaleY.ScaleY));
             CandlesModule.CandlesChanged += ac => CandlesChanged?.Invoke(ac);
-            CandlesModule.AllHorizontalReset += (b, cc) => AllHorizontalReset?.Invoke(b, cc);
+            CandlesModule.AllHorizontalReset += cc => AllHorizontalReset?.Invoke(cc);
             CandlesModule.NewXScale += sc => NewXScale?.Invoke(sc);
             CandlesModule.NewXTrans += tr => NewXTrans?.Invoke(tr);
 
-            var Vols = new Volumes(this, VolumesGrid, VolumesScale, CursorLinesLayer, TimesLayer);
+            IndicatorsManger = new IndicatorsManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD, CursorLinesLayer, TimesLayer);
 
             ChartGrid.PreviewMouseRightButtonDown += (s, e) =>
             {
@@ -202,7 +204,12 @@ namespace FlexTrader.MVVM.Views
 
                 ChHeight = ChartGrid.ActualHeight;
                 ChWidth = ChartGrid.ActualWidth;
-                CandlesModule.HorizontalReset(e.HeightChanged);
+                if (e.WidthChanged)
+                {
+                    CandlesModule.HorizontalReset();
+                    return;
+                }
+                if (e.HeightChanged) CandlesModule.VerticalReset();
             });
         }
         private void MouseWheelSpinning(object sender, MouseWheelEventArgs e) => CandlesModule.WhellScalling(e);
@@ -228,7 +235,7 @@ namespace FlexTrader.MVVM.Views
         public bool Manipulating { get => HooksModule.Manipulating; }
         public List<ICandle> AllCandles { get => CandlesModule.AllCandles; }
         public event Action<List<ICandle>> CandlesChanged;
-        public event Action<bool, IEnumerable<ICandle>> AllHorizontalReset;
+        public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         public event Action<double> NewXScale;
         public event Action<double> NewXTrans;
         public string FSF { get => PriceLineModule.fsf; }

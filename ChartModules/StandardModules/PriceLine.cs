@@ -72,6 +72,7 @@ namespace ChartModules.StandardModules
                 var pixelsPerDip = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
 
                 double count = Math.Floor((Chart.ChHeight / (Chart.BaseFontSize * 6)));
+                if (count == 0) return;
                 var step = (PricesDelta * Chart.TickSize) / count;
                 double n = 1;
                 int d = 0;

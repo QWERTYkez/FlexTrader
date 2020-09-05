@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -156,14 +157,14 @@ namespace ChartModules.StandardModules
                     }
                 });
 
-                VerticalReset();
+                HorizontalReset();
             }
         }
 
         #region Перерассчет шкал
-        public event Action<bool, IEnumerable<ICandle>> AllHorizontalReset;
+        public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         private bool VerticalLock = true;
-        private async void VerticalReset()
+        public async void VerticalReset()
         {
             if (VerticalLock)
             {
@@ -177,7 +178,7 @@ namespace ChartModules.StandardModules
             }
             await PriceLineModule.Redraw();
         }
-        public void HorizontalReset(bool HeightChanged = false, IEnumerable<ICandle> currentCandles = null)
+        public void HorizontalReset(IEnumerable<ICandle> currentCandles = null)
         {
             TimeLineModule.Redraw();
             if (currentCandles == null)
@@ -192,7 +193,7 @@ namespace ChartModules.StandardModules
 
             if (currentCandles.Count() < 1) goto Return;
 
-            AllHorizontalReset.Invoke(HeightChanged, currentCandles);
+            AllHorizontalReset.Invoke(currentCandles);
 
             var mmm = Convert.ToDouble(currentCandles.Select(c => c.LowD).Min()) / Chart.TickSize;
             var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
@@ -200,7 +201,7 @@ namespace ChartModules.StandardModules
             max += delta * 0.05;
             var nMin = mmm - delta * 0.05;
             var nDelta = max - nMin;
-            if (Min == nMin && Delta == nDelta && !HeightChanged) goto Return;
+            if (Min == nMin && Delta == nDelta) goto Return;
             Min = nMin;
             Delta = nDelta;
 
@@ -294,7 +295,7 @@ namespace ChartModules.StandardModules
                         NewXScale.Invoke(CurrentScale.X);
                         await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
-                    HorizontalReset(false, currentCandles);
+                    HorizontalReset(currentCandles);
 
                     await UpdateMagnetData();
                 });
@@ -334,13 +335,13 @@ namespace ChartModules.StandardModules
                     {
                         Translate.X = CurrentTranslate.X;
                     });
-                    HorizontalReset(false, currentCandles);
+                    HorizontalReset(currentCandles);
                 } 
                 else
                 {
                     CurrentTranslate.Y = LastTranslateVector.Y + vec.Value.Y / CurrentScale.Y;
                     NewXTrans.Invoke(CurrentTranslate.X);
-                    AllHorizontalReset.Invoke(false, currentCandles);
+                    AllHorizontalReset.Invoke(currentCandles);
                     await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
@@ -378,7 +379,7 @@ namespace ChartModules.StandardModules
 
                 NewXScale.Invoke(CurrentScale.X);
                 await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
-                HorizontalReset(false, currentCandles);
+                HorizontalReset(currentCandles);
 
                 await UpdateMagnetData();
                 WhellScalled?.Invoke();
