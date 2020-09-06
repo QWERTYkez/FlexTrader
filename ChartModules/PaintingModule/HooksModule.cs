@@ -47,7 +47,8 @@ namespace ChartModules.PaintingModule
             Chart.VerticalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
             Chart.HorizontalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
 
-            Chart.Interacion = MoveHook;
+            Chart.ChartGrid.MouseEnter += (s, e) => Chart.Interacion = MoveHook;
+            Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Interacion == MoveHook) Chart.Interacion = null; };
             Chart.HookElement = HookElement;
             Chart.MWindow.RemoveHooks += () => Task.Run(() => RemoveHook?.Invoke());
             Chart.MWindow.NonInteraction += () =>
@@ -82,9 +83,9 @@ namespace ChartModules.PaintingModule
         private readonly Func<List<Hook>> GetVisibleHooks;
         private readonly List<FrameworkElement> OtherLayers;
 
-        private readonly Action<string, List<Setting>, IChart, Action, Action> SetMenuAct;
+        private readonly Action<string, List<Setting>, Action, Action> SetMenuAct;
         private void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook) => 
-            SetMenuAct.Invoke(SetsName, Sets, Chart, DrawHook, () => 
+            SetMenuAct.Invoke(SetsName, Sets, DrawHook, () => 
             {
                 ResizeHook = null;
                 Dispatcher.Invoke(() =>
@@ -113,7 +114,8 @@ namespace ChartModules.PaintingModule
         private readonly DrawingVisual OverPriceVisual = new DrawingVisual();
         private readonly DrawingVisual OverTimeVisual = new DrawingVisual();
 
-        public (List<(string Name, Action Act)> Menus, Action DrawHook, Action RemoveHook)? ShowContextMenu(object s, MouseEventArgs e)
+        public (List<(string Name, Action Act)> Menus, Action DrawHook, Action RemoveHook)? 
+            ShowContextMenu(object s, MouseEventArgs e)
         {
             var P = e.GetPosition((IInputElement)Chart);
             var Hook = ScanHooks(GetVisibleHooks.Invoke(), P);
@@ -353,14 +355,14 @@ namespace ChartModules.PaintingModule
             {
                 RemoveHook = null;
                 
-                SetMenuAct(null, null, null, null, null);
+                SetMenuAct(null, null, null, null);
 
                 RestoreChart();
             });
         }
         public void RestoreChart()
         {
-            if (CurrentHook != null)
+            //if (CurrentHook != null)
             {
                 CurrentHook = null;
                 Dispatcher.Invoke(() => 
@@ -446,8 +448,7 @@ namespace ChartModules.PaintingModule
         public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY.Invoke(CursorPoint));
         public Point GetHookPoint(Point P) => GetVal.Invoke(P);
 
-        public void AcceptNewCoordinates()
-        { AcceptChanges.Invoke(); Element.ApplyChanges(); }
+        public void AcceptNewCoordinates() => AcceptChanges.Invoke();
 
         public void DrawShadow(DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
             ActionDrawShadow.Invoke(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);

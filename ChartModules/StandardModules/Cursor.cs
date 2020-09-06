@@ -115,7 +115,7 @@ namespace ChartModules.StandardModules
         }
 
         public CursorPosition CursorPosition { get; } = new CursorPosition();
-        private bool Hide { get; set; } = false;
+        public bool Hide { get; private set; } = false;
         private bool Correcting { get; set; }
 
         public void Redraw(object s, MouseEventArgs e) => Redraw(e.GetPosition(Chart.ChartGrid));

@@ -84,7 +84,7 @@ namespace ChartModules.PaintingModule
         }
 
         private Action<IChart, DrawingVisual, DrawingVisual, DrawingVisual> DrawPrototype;
-        private readonly Action<string, List<Setting>, IChart, Action, Action> SetMenuAct;
+        private readonly Action<string, List<Setting>, Action, Action> SetMenuAct;
         private readonly DrawingVisual ElementsVisual = new DrawingVisual();
         private readonly DrawingVisual PricesVisual = new DrawingVisual();
         private readonly DrawingVisual TimesVisual = new DrawingVisual();
@@ -166,13 +166,13 @@ namespace ChartModules.PaintingModule
                     case PInstrument.Level:
                         {
                             DrawPrototype = Level.DrawPrototype;
-                            SetMenuAct.Invoke("New level", Level.StGetSets(), Chart, null, null);
+                            SetMenuAct.Invoke("New level", Level.StGetSets(), null, null);
                         }
                         return;
                     case PInstrument.Trend:
                         {
                             DrawPrototype = Trend.DrawFirstPoint;
-                            SetMenuAct.Invoke("New trend", Trend.StGetSets(), Chart, null, null);
+                            SetMenuAct.Invoke("New trend", Trend.StGetSets(), null, null);
                             Chart.PaintingTrend = PaintingTrend;
                         }
                         return;

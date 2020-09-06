@@ -253,6 +253,11 @@ namespace ChartModules.PaintingModule.Elements
                 NP1 = Point1.ToPoint() + Changes.Value;
                 NP2 = Point2.ToPoint() + Changes.Value;
             }
+            else
+            {
+                NP1 = Point1.ToPoint();
+                NP2 = Point2.ToPoint();
+            }
         }
         public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip, bool DrawOver = false)
         {

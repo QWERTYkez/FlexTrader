@@ -41,6 +41,9 @@ namespace FlexTrader.MVVM.Views
             Palette.Tag = PaletteButtonNormal;
             PaletteButtonNormal.IsActive = true;
 
+            OverlayMenu.MouseEnter += (s, e) => this.PreviewMouseLeftButtonDown -= CW_PreviewMouseLeftButtonDown;
+            OverlayMenu.MouseLeave += (s, e) => this.PreviewMouseLeftButtonDown += CW_PreviewMouseLeftButtonDown;
+
             ((ViewModels.MainViewModel)DataContext).Initialize(this);
 
             SetInsrument(CurrentInstrument); SetMagnet();

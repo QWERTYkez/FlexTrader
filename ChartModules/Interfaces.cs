@@ -36,7 +36,7 @@ namespace ChartModules
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
 
-        public void SetMenu(string SetsName, List<Setting> Sets, IChart Chart, Action DrawHook = null, Action RemoveHook = null);
+        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook = null, Action RemoveHook = null);
         public void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu);
         public void ResetInstrument(string Name);
         public IHaveInstruments InstrumentsHandler { get; set; }
@@ -111,6 +111,7 @@ namespace ChartModules
         public Brush CandleBrushDown { get; }
         public Brush CursorFontBrush { get; }
         public Pen CursorMarksPen { get; }
+        public bool CursorHide { get; }
         public DrawingVisual CursorLinesVisual { get; }
         public DrawingVisual CursorVisual { get; }
         public Action<MouseButtonEventArgs> MovingChart { get; }

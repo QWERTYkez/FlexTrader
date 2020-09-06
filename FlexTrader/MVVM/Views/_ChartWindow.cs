@@ -59,6 +59,8 @@ namespace FlexTrader.MVVM.Views
             this.PreviewMouseLeftButtonDown += (s, e) =>
             { if (!OverMenu) { InvokeRemoveHook(); ContextMenuPopup.IsOpen = false; } };
 
+            this.PreviewMouseLeftButtonDown += CW_PreviewMouseLeftButtonDown;
+
             //PreviewMouseLeftButtonDown
             Interacion = e => InstrumentsHandler?.Interacion?.Invoke(e);
             Moving = e => InstrumentsHandler?.Moving?.Invoke(e);
@@ -135,7 +137,7 @@ namespace FlexTrader.MVVM.Views
                         break;
 
                     default:
-                        LBDInstrument = Moving; Painting = false; SetMenu(null, null, null, null, null);
+                        LBDInstrument = Moving; Painting = false; //SetMenu(null, null, null, null, null);
                         MagnetInstrument = false; t = CursorT.Standart; 
                         MMInstrument = null; 
                         break; 
@@ -257,26 +259,21 @@ namespace FlexTrader.MVVM.Views
                     s.AlwaysOpen = b;
             }
         }
+        private protected void CW_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            SetMenu(null, null, null, null);
+        }
 
         private protected ScrollViewer TopPanel { get; set; }
         private protected ScrollViewer OverlayMenu { get; set; }
         private WrapPanel BWP { get; set; }
         private Action RemoveTopMenuHook;
-        private IChart LastChart;
         private List<Sliding> Slidings { get; set; }
-        public void SetMenu(string SetsName, List<Setting> Sets, IChart Chart, Action DrawHook, Action RemoveHook)
+        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook, Action RemoveHook)
         {
-            if (LastChart != null)
-            {
-                if (LastChart != Chart)
-                {
-                    RemoveTopMenuHook?.Invoke();
-                    LastChart = Chart;
-                }
-            }
-            else { LastChart = Chart; }
             if (Sets != null)
             {
+                //RemoveTopMenuHook?.Invoke();
                 DrawHook?.Invoke();
                 RemoveTopMenuHook = RemoveHook;
                 Dispatcher.Invoke(() => 
@@ -307,16 +304,16 @@ namespace FlexTrader.MVVM.Views
 
                         var WP = new WrapPanel { Margin = new Thickness(5), Height = 42, HorizontalAlignment = HorizontalAlignment.Left };
                         {
-                            for (int i = 0; i < Sets.Count; i++)
+                            foreach (var set in Sets)
                             {
                                 FrameworkElement fe = null;
-                                switch (Sets[i].Type)
+                                switch (set.Type)
                                 {
                                     case SetType.Lock:
                                         var L = new Lock
                                         {
                                             Foreground = Brushes.White,
-                                            Locked = (bool)(Sets[0].Get())
+                                            Locked = (bool)(set.Get())
                                         };
                                         var lpb = new PaletteButton()
                                         {
@@ -328,7 +325,7 @@ namespace FlexTrader.MVVM.Views
                                         lpb.Click += (s, e) =>
                                         {
                                             L.Locked = !L.Locked;
-                                            Sets[0].Set(L.Locked);
+                                            set.Set(L.Locked);
                                             lpb.IsActive = L.Locked;
                                         };
                                         BWP.Children.Add(lpb);
@@ -349,7 +346,7 @@ namespace FlexTrader.MVVM.Views
                                         {
                                             OverlayMenu.Visibility = Visibility.Hidden;
                                             TopPanel.Visibility = Visibility.Visible;
-                                            Sets[1].Set(null);
+                                            set.Set(null);
                                             RemoveHook.Invoke();
                                         };
                                         BWP.Children.Add(dpb);
@@ -359,10 +356,10 @@ namespace FlexTrader.MVVM.Views
                                         {
                                             Background = Brushes.Teal,
                                             Foreground = Brushes.White,
-                                            Title = Sets[i].Name,
+                                            Title = set.Name,
                                             ContentWidth = 40,
                                             AlwaysOpen = true,
-                                            Content = new ColorPicker(Sets[i].Get() as SolidColorBrush, Sets[i].Set)
+                                            Content = new ColorPicker(set.Get() as SolidColorBrush, set.Set)
                                             {
                                                 CornerRadius = 10
                                             }
@@ -374,10 +371,10 @@ namespace FlexTrader.MVVM.Views
                                         {
                                             Background = Brushes.Teal,
                                             Foreground = Brushes.White,
-                                            Title = Sets[i].Name,
+                                            Title = set.Name,
                                             ContentWidth = 100,
                                             AlwaysOpen = true,
-                                            Content = new DoublePicker((double)Sets[i].Get(), Sets[i].Set, (double?)Sets[i].Param1, (double?)Sets[i].Param2)
+                                            Content = new DoublePicker((double)set.Get(), set.Set, (double?)set.Param1, (double?)set.Param2)
                                         });
                                         Slidings.Add(fe as Sliding);
                                         break;
@@ -386,10 +383,10 @@ namespace FlexTrader.MVVM.Views
                                         {
                                             Background = Brushes.Teal,
                                             Foreground = Brushes.White,
-                                            Title = Sets[i].Name,
+                                            Title = set.Name,
                                             ContentWidth = 100,
                                             AlwaysOpen = true,
-                                            Content = new DoubleSlider((double)Sets[i].Get(), Sets[i].Set, (double)Sets[i].Param1, (double)Sets[i].Param2)
+                                            Content = new DoubleSlider((double)set.Get(), set.Set, (double)set.Param1, (double)set.Param2)
                                             { Foreground = Brushes.White }
                                         });
                                         Slidings.Add(fe as Sliding);
@@ -409,6 +406,7 @@ namespace FlexTrader.MVVM.Views
             }
             else
             {
+                RemoveTopMenuHook?.Invoke(); RemoveTopMenuHook = null;
                 Dispatcher.Invoke(() => 
                 {
                     OverlayMenu.Visibility = Visibility.Hidden;

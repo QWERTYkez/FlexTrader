@@ -30,9 +30,14 @@ namespace ChartModules.IndicatorModules
     public class Volumes : IndicatorBase
     {
         public Volumes(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine) 
-            : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine) { }
+            : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine) 
+        {
+        }
 
         private protected override void DestroyThis() { }
+
+        private protected override string SetsName { get => "Volume"; }
+        private protected override List<Setting> Sets { get; } = new List<Setting>();
 
         private protected override double gmin(IEnumerable<ICandle> currentCandles) => 0;
         private protected override double gmax(IEnumerable<ICandle> currentCandles) => Convert.ToDouble(currentCandles.Max(c => c.Volume));

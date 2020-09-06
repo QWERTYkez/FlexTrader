@@ -45,13 +45,10 @@ namespace ChartModules.IndicatorModules
             this.CursorLinesLayer = CursorLinesLayer;
             this.TimeLine = TimeLine;
 
-
             IndicatorsRow.Height = new GridLength(0);
             IndicatorsSplitter.Height = new GridLength(0);
 
             ///////////Test
-            AddIndicator(IndicatorType.Volumes);
-            AddIndicator(IndicatorType.Volumes);
             AddIndicator(IndicatorType.Volumes);
         }
 
@@ -104,12 +101,13 @@ namespace ChartModules.IndicatorModules
             Grid.SetColumn(ScaleGrd, 2);
             IndicatorsGrid.Children.Add(ScaleGrd); ScaleGrds.Add(ScaleGrd);
 
-            switch (type)
+            IndicatorBase Indicator = type switch
             {
-                case IndicatorType.Volumes:
-                    Indicators.Add(new Volumes(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine));
-                    break;
-            }
+                IndicatorType.Volumes => new Volumes(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
+                _ => throw new NotImplementedException()
+            };
+            Indicator.Delete += DeleteIndicator;
+            Indicators.Add(Indicator);
         }
         private void DeleteIndicator(IndicatorBase Indicator) 
         {

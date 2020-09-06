@@ -262,6 +262,10 @@ namespace ChartModules.PaintingModule.Elements
             {
                 this.NPrice = Chart.HeightToPrice(Chart.PriceToHeight(this.Price) + Changes.Value.Y);
             }
+            else
+            {
+                this.NPrice = this.Price;
+            }
         }
         public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip, bool DrawOver = false)
         {

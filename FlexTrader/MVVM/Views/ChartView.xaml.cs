@@ -244,6 +244,7 @@ namespace FlexTrader.MVVM.Views
         public Brush CandleBrushDown { get => CandlesModule.DownBrush; }
         public Brush CursorFontBrush { get => CursorModule.FontBrush; }
         public Pen CursorMarksPen { get => CursorModule.MarksPen; }
+        public bool CursorHide { get => CursorModule.Hide; }
         public DrawingVisual CursorLinesVisual { get => CursorModule.CursorLinesVisual; }
         public DrawingVisual CursorVisual { get => CursorModule.CursorVisual; }
         public Action<MouseButtonEventArgs> MovingChart { get => CandlesModule.MovingChart; }

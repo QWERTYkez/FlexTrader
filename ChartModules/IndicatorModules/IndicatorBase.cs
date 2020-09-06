@@ -43,6 +43,8 @@ namespace ChartModules.IndicatorModules
             GridCanvas.AddVisual(GridVisual);
             ScaleCanvas.AddVisual(ScaleVisual);
 
+            BaseGrd.MouseEnter += (s, e) => Chart.Interacion = ShoWMenu;
+            BaseGrd.MouseLeave += (s, e) => { if (Chart.Interacion == ShoWMenu) Chart.Interacion = null; };
             BaseGrd.MouseEnter += CursorShow;
             BaseGrd.MouseLeave += CursorLeave;
             BaseGrd.MouseMove += CursorRedraw;
@@ -50,6 +52,7 @@ namespace ChartModules.IndicatorModules
             BaseGrd.MouseLeave += (s, e) => { if (Chart.Moving == Chart.MovingChart) Chart.Moving = null; };
             BaseGrd.SizeChanged += BaseGrd_SizeChanged;
 
+            BaseGrd.Children.Add(Selector);
             BaseGrd.Children.Add(GridCanvas);
             BaseGrd.ClipToBounds = true;
             BaseGrd.Background = CursorGrabber;
@@ -103,10 +106,28 @@ namespace ChartModules.IndicatorModules
             DestroyThis();
         }
 
+        private void ShoWMenu(MouseButtonEventArgs e)
+        {
+            var sets = new List<Setting> { new Setting(() => Delete.Invoke(this)) };
+            sets.AddRange(Sets);
+
+            Chart.MWindow.SetMenu(SetsName, sets,
+                () => Selector.Visibility = Visibility.Visible,
+                () => Dispatcher.Invoke(() => Selector.Visibility = Visibility.Collapsed));
+        }
+
+        public event Action<IndicatorBase> Delete;
+
+        private readonly Border Selector = new Border
+        {
+            Visibility = Visibility.Collapsed,
+            Margin = new Thickness(3),
+            BorderBrush = Brushes.Gray,
+            BorderThickness = new Thickness(7)
+        };
         private readonly ScaleTransform ScX = new ScaleTransform();
         private readonly ScaleTransform ScY = new ScaleTransform();
         private readonly Grid BaseGrd;
-        private readonly Action DeleteAct;
         private readonly DrawingCanvas IndicatorCanvas = new DrawingCanvas();
         private readonly DrawingCanvas GridCanvas = new DrawingCanvas();
         private readonly DrawingCanvas ScaleCanvas = new DrawingCanvas();
@@ -154,6 +175,19 @@ namespace ChartModules.IndicatorModules
                 
                 CursorPosition.Corrected = npos;
                 CursorPosition.NMP();
+
+                if (Chart.CursorHide)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        CursorValueVisual.RenderOpen().Close();
+                        CursorTimeVisual.RenderOpen().Close();
+
+                        CursorTransform.X = CursorPosition.Current.X;
+                        CursorTransform.Y = CursorPosition.Current.Y;
+                    });
+                    return;
+                }
 
                 var ft = new FormattedText
                             (
@@ -245,6 +279,8 @@ namespace ChartModules.IndicatorModules
         private protected TimeSpan DeltaTime { get => Chart.DeltaTime; }
 
         private protected abstract void DestroyThis();
+        private protected abstract string SetsName { get; }
+        private protected abstract List<Setting> Sets { get; }
         private protected abstract double gmin(IEnumerable<ICandle> currentCandles);
         private protected abstract double gmax(IEnumerable<ICandle> currentCandles);
         private protected abstract void Redraw();

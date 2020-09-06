@@ -118,7 +118,7 @@
             VerticalAlignment="Stretch">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="4" />
                 <ColumnDefinition x:Name="PriceLineCD2" Width="70" />
             </Grid.ColumnDefinitions>
         </Grid>
