@@ -51,13 +51,17 @@ namespace ChartModules.PaintingModule
             Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Interacion == MoveHook) Chart.Interacion = null; };
             Chart.HookElement = HookElement;
             Chart.MWindow.RemoveHooks += () => Task.Run(() => RemoveHook?.Invoke());
-            Chart.MWindow.NonInteraction += () =>
+            Chart.MWindow.ToggleInteraction += b =>
             {
-                Task.Run(() => 
+                if (b) RemoveHook = null;
+                else
                 {
-                    RemoveHook = RemoveLastHook;
-                    RestoreChart();
-                });
+                    Task.Run(() =>
+                    {
+                        RemoveHook = RemoveLastHook;
+                        RestoreChart();
+                    });
+                }
             };
 
             HooksLayer.AddVisual(ShadowVisual);

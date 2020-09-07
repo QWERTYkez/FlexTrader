@@ -44,7 +44,7 @@ namespace ChartModules
         public event Action<PInstrument> PrepareInstrument;
         public event Action<CursorT> SetCursor;
         public event Action RemoveHooks;
-        public event Action NonInteraction;
+        public event Action<bool> ToggleInteraction;
         public event Action<bool> ToggleMagnet;
         public Action MMInstrument { get; }
         public bool Controlled { get; }

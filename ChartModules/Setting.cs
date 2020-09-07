@@ -76,6 +76,14 @@ namespace ChartModules
             this.Type = SetType.Delete;
             this.Set = o => Set();
         }
+        /// <summary>
+        /// New Move Setting
+        /// </summary>
+        public Setting(Action<int> Set)
+        {
+            this.Type = SetType.Move;
+            this.Set = o => Set((int)o);
+        }
 
         private static readonly object key = new object();
         public static void SetsLevel(List<Setting> Sets, string Name, Setting[] args)
@@ -105,6 +113,7 @@ namespace ChartModules
         DoublePicker,
         GoDown,
         GoUp,
-        Lock
+        Lock,
+        Move
     }
 }

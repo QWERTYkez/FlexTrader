@@ -108,7 +108,11 @@ namespace ChartModules.IndicatorModules
 
         private void ShoWMenu(MouseButtonEventArgs e)
         {
-            var sets = new List<Setting> { new Setting(() => Delete.Invoke(this)) };
+            var sets = new List<Setting>
+            {
+                new Setting((int i) => Moving.Invoke(this, i)),
+                new Setting(() => Delete.Invoke(this)) 
+            };
             sets.AddRange(Sets);
 
             Chart.MWindow.SetMenu(SetsName, sets,
@@ -116,6 +120,7 @@ namespace ChartModules.IndicatorModules
                 () => Dispatcher.Invoke(() => Selector.Visibility = Visibility.Collapsed));
         }
 
+        public event Action<IndicatorBase, int> Moving;
         public event Action<IndicatorBase> Delete;
 
         private readonly Border Selector = new Border

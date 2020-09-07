@@ -18,11 +18,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace ChartModules.IndicatorModules
@@ -49,6 +48,8 @@ namespace ChartModules.IndicatorModules
             IndicatorsSplitter.Height = new GridLength(0);
 
             ///////////Test
+            AddIndicator(IndicatorType.Volumes);
+            AddIndicator(IndicatorType.Volumes);
             AddIndicator(IndicatorType.Volumes);
         }
 
@@ -107,12 +108,14 @@ namespace ChartModules.IndicatorModules
                 _ => throw new NotImplementedException()
             };
             Indicator.Delete += DeleteIndicator;
+            Indicator.Moving += MoveIndicator;
             Indicators.Add(Indicator);
         }
-        private void DeleteIndicator(IndicatorBase Indicator) 
+
+        private void DeleteIndicator(IndicatorBase indicator) 
         {
-            if (Indicators.Contains(Indicator))
-                DeleteIndicatorT(Indicators.IndexOf(Indicator));
+            if (Indicators.Contains(indicator))
+                DeleteIndicatorT(Indicators.IndexOf(indicator));
         }
         private void DeleteIndicator(int index)
         {
@@ -141,14 +144,54 @@ namespace ChartModules.IndicatorModules
 
             var ir = IndicatorRows.Last();
             IndicatorsGrid.RowDefinitions.Remove(ir); IndicatorRows.Remove(ir);
-            IndicatorsGrid.Children.RemoveAt(i); BaseGrds.RemoveAt(i);
-            IndicatorsGrid.Children.RemoveAt(i); ScaleGrds.RemoveAt(i);
+            IndicatorsGrid.Children.Remove(BaseGrds[i]); BaseGrds.RemoveAt(i);
+            IndicatorsGrid.Children.Remove(ScaleGrds[i]); ScaleGrds.RemoveAt(i);
             Indicators.RemoveAt(i);
 
             if (Indicators.Count == 0)
             {
                 IndicatorsRow.Height = new GridLength(0);
                 IndicatorsSplitter.Height = new GridLength(0);
+            }
+        }
+
+        private void MoveIndicator(IndicatorBase indicator, int i)
+        {
+            if (i > 0)
+            {
+                i = Indicators.IndexOf(indicator); if (i == 0) return;
+
+                Grid.SetRow(BaseGrds[i], (i - 1) * 2); Grid.SetRow(ScaleGrds[i], (i - 1) * 2);
+                Grid.SetRow(BaseGrds[i - 1], i * 2); Grid.SetRow(ScaleGrds[i - 1], i * 2);
+
+                var bg = BaseGrds[i]; 
+                BaseGrds.Remove(bg);  
+                BaseGrds.Insert(i - 1, bg);  
+
+                var sg = ScaleGrds[i];
+                ScaleGrds.Remove(sg);
+                ScaleGrds.Insert(i - 1, sg);
+
+                Indicators.Remove(indicator);
+                Indicators.Insert(i - 1, indicator);
+            }
+            else
+            {
+                i = Indicators.IndexOf(indicator); if (i == Indicators.Count - 1) return;
+
+                Grid.SetRow(BaseGrds[i], (i + 1) * 2); Grid.SetRow(ScaleGrds[i], (i + 1) * 2);
+                Grid.SetRow(BaseGrds[i + 1], i * 2); Grid.SetRow(ScaleGrds[i + 1], i * 2);
+
+                var bg = BaseGrds[i];
+                BaseGrds.Remove(bg);
+                BaseGrds.Insert(i + 1, bg);
+
+                var sg = ScaleGrds[i];
+                ScaleGrds.Remove(sg);
+                ScaleGrds.Insert(i + 1, sg);
+
+                Indicators.Remove(indicator);
+                Indicators.Insert(i + 1, indicator);
             }
         }
     }

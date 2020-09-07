@@ -85,7 +85,7 @@ namespace FlexTrader.MVVM.Views
         public event Action<PInstrument> PrepareInstrument;
         public event Action<CursorT> SetCursor; 
         public event Action RemoveHooks;
-        public event Action NonInteraction;
+        public event Action<bool> ToggleInteraction;
 
         private Action<MouseButtonEventArgs> LBDInstrument { get; set; }
         private readonly Action<MouseButtonEventArgs> Interacion;
@@ -133,7 +133,7 @@ namespace FlexTrader.MVVM.Views
                     case "Interacion":
                         LBDInstrument = Interacion; Painting = false; Interaction = true;
                         MagnetInstrument = true; t = CursorT.Hook;
-                        MMInstrument = HookElement;
+                        MMInstrument = HookElement; ToggleInteraction.Invoke(true);
                         break;
 
                     default:
@@ -144,7 +144,7 @@ namespace FlexTrader.MVVM.Views
                 }
                 if (InstrumentName != "Interacion" && Interaction)
                 {
-                    NonInteraction.Invoke();
+                    ToggleInteraction.Invoke(false);
                     Interaction = false;
                 }
 
@@ -273,7 +273,6 @@ namespace FlexTrader.MVVM.Views
         {
             if (Sets != null)
             {
-                //RemoveTopMenuHook?.Invoke();
                 DrawHook?.Invoke();
                 RemoveTopMenuHook = RemoveHook;
                 Dispatcher.Invoke(() => 
@@ -329,6 +328,9 @@ namespace FlexTrader.MVVM.Views
                                             lpb.IsActive = L.Locked;
                                         };
                                         BWP.Children.Add(lpb);
+                                        break;
+                                    case SetType.Move:
+                                        BWP.Children.Add(new Mover(set.Set));
                                         break;
                                     case SetType.Delete:
                                         var dpb = new PaletteButton()
