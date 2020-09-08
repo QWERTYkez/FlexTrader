@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -48,8 +47,6 @@ namespace ChartModules.IndicatorModules
             IndicatorsSplitter.Height = new GridLength(0);
 
             ///////////Test
-            AddIndicator(IndicatorType.Volumes);
-            AddIndicator(IndicatorType.Volumes);
             AddIndicator(IndicatorType.Volumes);
         }
 
@@ -111,19 +108,9 @@ namespace ChartModules.IndicatorModules
             Indicator.Moving += MoveIndicator;
             Indicators.Add(Indicator);
         }
-
-        private void DeleteIndicator(IndicatorBase indicator) 
+        private void DeleteIndicator(IndicatorBase indicator)
         {
-            if (Indicators.Contains(indicator))
-                DeleteIndicatorT(Indicators.IndexOf(indicator));
-        }
-        private void DeleteIndicator(int index)
-        {
-            if (index > -1 && index < Indicators.Count)
-                DeleteIndicatorT(index);
-        }
-        private void DeleteIndicatorT(int i)
-        {
+            int i = Indicators.IndexOf(indicator);
             if (i + 1 < Indicators.Count)
             {
                 for (int n = i + 1; n < Indicators.Count; n++)
@@ -154,7 +141,6 @@ namespace ChartModules.IndicatorModules
                 IndicatorsSplitter.Height = new GridLength(0);
             }
         }
-
         private void MoveIndicator(IndicatorBase indicator, int i)
         {
             if (i > 0)

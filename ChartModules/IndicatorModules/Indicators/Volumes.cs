@@ -29,9 +29,16 @@ namespace ChartModules.IndicatorModules
 {
     public class Volumes : IndicatorBase
     {
-        public Volumes(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine) 
-            : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine) 
+        public Volumes(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
+            : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine)
         {
+            CandleBrushUp = Chart.CandleBrushUp;
+            CandleBrushDown = Chart.CandleBrushDown;
+
+            Sets.Add(new Setting("Bullish Volume", () => { return CandleBrushUp; }, 
+                Br => { this.CandleBrushUp = Br as SolidColorBrush; Redraw(); }));
+            Sets.Add(new Setting("Bearish Volume", () => { return CandleBrushDown; },
+                Br => { this.CandleBrushDown = Br as SolidColorBrush; Redraw(); }));
         }
 
         private protected override void DestroyThis() { }
@@ -42,6 +49,8 @@ namespace ChartModules.IndicatorModules
         private protected override double gmin(IEnumerable<ICandle> currentCandles) => 0;
         private protected override double gmax(IEnumerable<ICandle> currentCandles) => Convert.ToDouble(currentCandles.Max(c => c.Volume));
 
+        private Brush CandleBrushUp;
+        private Brush CandleBrushDown;
         private protected override void Redraw()
         {
             Task.Run(() => 
@@ -55,9 +64,9 @@ namespace ChartModules.IndicatorModules
                     var x2 = x - 6;
                     
                     if (AllCandles[i].UP) 
-                        DrawTeplates[i] = (new Rect(new Point(x1, 0), new Point(x2, AllCandles[i].VolumeD)), Chart.CandleBrushUp);
+                        DrawTeplates[i] = (new Rect(new Point(x1, 0), new Point(x2, AllCandles[i].VolumeD)), CandleBrushUp);
                     else 
-                        DrawTeplates[i] = (new Rect(new Point(x1, 0), new Point(x2, AllCandles[i].VolumeD)), Chart.CandleBrushDown);
+                        DrawTeplates[i] = (new Rect(new Point(x1, 0), new Point(x2, AllCandles[i].VolumeD)), CandleBrushDown);
                 });
 
                 Dispatcher.Invoke(() =>
