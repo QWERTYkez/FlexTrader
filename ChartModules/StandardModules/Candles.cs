@@ -304,14 +304,13 @@ namespace ChartModules.StandardModules
         #region перемещение графика 
         private Vector LastTranslateVector;
         public event Action<double> NewXTrans;
+        private int n = 0;
         public void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
             Chart.MWindow.MoveCursor(e, async vec => 
             {
                 if (vec == null) return;
-
-
                 var X = LastTranslateVector.X + vec.Value.X / CurrentScale.X;
                 var TimeA = StartTime - Math.Floor(((Chart.ChWidth / CurrentScale.X + X) / 15)) * DeltaTime;
                 var TimeB = StartTime - Math.Ceiling((X / 15)) * DeltaTime;
@@ -319,13 +318,13 @@ namespace ChartModules.StandardModules
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                      select c;
 
-                if (currentCandles.Count() < 0) 
+                if (currentCandles.Count() < 1) 
                 {
-                    var TSS = AllCandles.AsParallel().Select(c => c.TimeStamp);
-                    var MaxT = TSS.Max(); var MinT = TSS.Min();
-                    if (!(TimeB < MaxT && CurrentTranslate.X < X)) return;
-                    if (!(TimeA < MinT && CurrentTranslate.X > X)) return;
+                    if (!(TimeB < AllCandles.First().TimeStamp && CurrentTranslate.X < X)) return;
+                    if (!(TimeA < AllCandles.Last().TimeStamp && CurrentTranslate.X > X)) return;
                 }
+                n++;
+                Debug.WriteLine($"CurrentTranslate.X = X - {n}");
                 CurrentTranslate.X = X;
                 if (VerticalLock)
                 {

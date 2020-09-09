@@ -351,6 +351,7 @@ namespace ChartModules.IndicatorModules
                 var nMin = mmm - delta * 0.05;
                 var nDelta = max - nMin;
 
+                if (nDelta == 0) return;
                 if (Min == nMin && Delta == nDelta) return;
                 Min = nMin;
                 Delta = nDelta;
@@ -359,7 +360,6 @@ namespace ChartModules.IndicatorModules
                 LastDelta = Delta;
 
                 VerticalReset();
-                
             });
         }
         public void SecondReset()

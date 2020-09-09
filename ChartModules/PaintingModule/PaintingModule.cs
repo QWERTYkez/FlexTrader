@@ -204,6 +204,7 @@ namespace ChartModules.PaintingModule
 
         private void ResetHooks() 
         {
+            return;
             VisibleHooks = (from el in ElementsCollection.AsParallel() where el.VisibilityOnChart select el.Hook).ToList();
         }
 
