@@ -27,7 +27,7 @@ using System.Windows.Media;
 
 namespace ChartModules.IndicatorModules
 {
-    public class Volumes : IndicatorBase
+    public class Volumes : Indicator
     {
         public Volumes(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
             : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine)
@@ -43,11 +43,10 @@ namespace ChartModules.IndicatorModules
 
         private protected override void DestroyThis() { }
 
-        private protected override string SetsName { get => "Volume"; }
-        private protected override List<Setting> Sets { get; } = new List<Setting>();
+        private protected override string SetsName => "Volume";
 
-        private protected override double gmin(IEnumerable<ICandle> currentCandles) => 0;
-        private protected override double gmax(IEnumerable<ICandle> currentCandles) => Convert.ToDouble(currentCandles.Max(c => c.Volume));
+        private protected override void GetBaseMinMax(IEnumerable<ICandle> currentCandles, out double min, out double max)
+        { min = 0; max = Convert.ToDouble(currentCandles.Max(c => c.Volume)); }
 
         private Brush CandleBrushUp;
         private Brush CandleBrushDown;
@@ -71,7 +70,7 @@ namespace ChartModules.IndicatorModules
 
                 Dispatcher.Invoke(() =>
                 {
-                    using var dc = BaseIndicatorVisual.RenderOpen();
+                    using var dc = IndicatorVisualBase.RenderOpen();
                     foreach (var (rect, br) in DrawTeplates)
                         dc.DrawRectangle(br, null, rect);
                 });

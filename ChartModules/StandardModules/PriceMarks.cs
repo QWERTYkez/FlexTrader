@@ -44,6 +44,8 @@ namespace ChartModules.StandardModules
             #endregion
         }
 
+        private protected override string SetsName { get; }
+
         private readonly DrawingCanvas MarksCanvas;
         private readonly DrawingCanvas PriceLine;
         private protected override void Destroy()

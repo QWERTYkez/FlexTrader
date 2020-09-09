@@ -29,17 +29,20 @@ using System.Windows.Media;
 
 namespace ChartModules.IndicatorModules
 {
-    public abstract class IndicatorBase : ChartModule
+    public abstract class Indicator : ChartModule
     {
         public static readonly SolidColorBrush CursorGrabber = new SolidColorBrush(Color.FromArgb(0,0,0,0));
-        public IndicatorBase(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine) : base(Chart)
+        private readonly bool Twin;
+        public Indicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, 
+            DrawingCanvas TimeLine, bool Twin = false) : base(Chart)
         {
+            this.Twin = Twin;
             this.BaseGrd = BaseGrd;
             this.TimeMarkLayer = TimeLine;
             this.CursorLinesLayer = CursorLinesLayer;
 
             pixelsPerDip = VisualTreeHelper.GetDpi(ScaleVisual).PixelsPerDip;
-            IndicatorCanvas.AddVisual(BaseIndicatorVisual);
+            IndicatorCanvasBase.AddVisual(IndicatorVisualBase);
             GridCanvas.AddVisual(GridVisual);
             ScaleCanvas.AddVisual(ScaleVisual);
 
@@ -75,13 +78,20 @@ namespace ChartModules.IndicatorModules
                                 tgr.Children.Add(ScY);
                             }
                             L4grd.RenderTransform = tgr;
-                            L4grd.Children.Add(IndicatorCanvas);
+                            L4grd.Children.Add(IndicatorCanvasBase);
                         }
                         L3grd.Children.Add(L4grd);
                     }
                     L2grd.Children.Add(L3grd);
                 }
                 BaseGrd.Children.Add(L2grd);
+            }
+            if (Twin)
+            {
+                IndicatorCanvasSecond = new DrawingCanvas();
+                IndicatorVisualSecond = new DrawingVisual();
+                IndicatorCanvasSecond.AddVisual(IndicatorVisualSecond);
+                BaseGrd.Children.Add(IndicatorCanvasSecond);
             }
             BaseGrd.Children.Add(CursorLayer);
 
@@ -97,6 +107,12 @@ namespace ChartModules.IndicatorModules
             Chart.AllHorizontalReset += HorizontalReset;
             Chart.NewXScale += sc => Task.Run(() => Dispatcher.Invoke(() => ScaleX = sc));
             Chart.NewXTrans += tr => Task.Run(() => Dispatcher.Invoke(() => Translate.X = tr));
+            if (Twin)
+            {
+                Chart.AllHorizontalReset += ac => SecondReset();
+                Chart.NewXScale += sc => SecondReset();
+                Chart.NewXTrans += sc => SecondReset();
+            }
             Chart.NewFSF += fsf => RedrawScale();
         }
 
@@ -120,8 +136,8 @@ namespace ChartModules.IndicatorModules
                 () => Dispatcher.Invoke(() => Selector.Visibility = Visibility.Collapsed));
         }
 
-        public event Action<IndicatorBase, int> Moving;
-        public event Action<IndicatorBase> Delete;
+        public event Action<Indicator, int> Moving;
+        public event Action<Indicator> Delete;
 
         private readonly Border Selector = new Border
         {
@@ -133,12 +149,12 @@ namespace ChartModules.IndicatorModules
         private readonly ScaleTransform ScX = new ScaleTransform();
         private readonly ScaleTransform ScY = new ScaleTransform();
         private readonly Grid BaseGrd;
-        private readonly DrawingCanvas IndicatorCanvas = new DrawingCanvas();
+        private readonly DrawingCanvas IndicatorCanvasBase = new DrawingCanvas();
+        private readonly DrawingCanvas IndicatorCanvasSecond;
         private readonly DrawingCanvas GridCanvas = new DrawingCanvas();
         private readonly DrawingCanvas ScaleCanvas = new DrawingCanvas();
         private double ScaleX { set => ScX.ScaleX = value; }
         private double ScaleY { set => ScY.ScaleY = value; }
-        private double GrdWidth { get => BaseGrd.ActualWidth; }
         private readonly TranslateTransform Translate = new TranslateTransform();
         private readonly DrawingVisual GridVisual = new DrawingVisual();
         private readonly DrawingVisual ScaleVisual = new DrawingVisual();
@@ -277,18 +293,21 @@ namespace ChartModules.IndicatorModules
             });
         }
 
-        private protected readonly DrawingVisual BaseIndicatorVisual = new DrawingVisual();
+        private protected readonly DrawingVisual IndicatorVisualBase = new DrawingVisual();
+        private protected readonly DrawingVisual IndicatorVisualSecond;
         private protected List<ICandle> AllCandles { get => Chart.AllCandles; }
         private protected double GrdHeight { get => BaseGrd.ActualHeight; }
+        private protected double GrdWidth { get => BaseGrd.ActualWidth; }
         private protected DateTime StartTime { get => Chart.StartTime; }
         private protected TimeSpan DeltaTime { get => Chart.DeltaTime; }
 
         private protected abstract void DestroyThis();
-        private protected abstract string SetsName { get; }
-        private protected abstract List<Setting> Sets { get; }
-        private protected abstract double gmin(IEnumerable<ICandle> currentCandles);
-        private protected abstract double gmax(IEnumerable<ICandle> currentCandles);
+        private protected abstract void GetBaseMinMax(IEnumerable<ICandle> currentCandles, out double min, out double max);
         private protected abstract void Redraw();
+
+        private protected virtual void GetSecondMinMax(DateTime tA, DateTime tB, out double min, out double max) 
+        { min = 0; max = 1; }
+        private protected virtual void RedrawSecond(DateTime tA, DateTime tB) { }
 
         private int ChangesCounter = 0;
         private void BaseGrd_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -305,6 +324,8 @@ namespace ChartModules.IndicatorModules
         }
         private double Min;
         private double Delta = 1;
+        private protected double sMin;
+        private protected double sDelta = 1;
         private double CurrTrY;
         private double CurrScY;
         private protected async void VerticalReset()
@@ -324,23 +345,42 @@ namespace ChartModules.IndicatorModules
         {
             Task.Run(() => 
             {
-                var mmm = gmin(currentCandles);
-                var max = gmax(currentCandles);
+                GetBaseMinMax(currentCandles, out var mmm, out var max);
                 var delta = max - mmm;
                 max += delta * 0.05;
                 var nMin = mmm - delta * 0.05;
                 var nDelta = max - nMin;
+
                 if (Min == nMin && Delta == nDelta) return;
                 Min = nMin;
                 Delta = nDelta;
-
                 LastMin = Min;
                 LastY = CurrTrY;
                 LastDelta = Delta;
 
                 VerticalReset();
+                
             });
         }
+        public void SecondReset()
+        {
+            Task.Run(() =>
+            {
+                if (Chart.TimeA == DateTime.FromBinary(0)) return;
+                var tA = Chart.TimeA - DeltaTime;
+                var tB = Chart.TimeB + DeltaTime;
+                GetSecondMinMax(tA, tB, out var mmm, out var max);
+                var delta = max - mmm;
+                max += delta * 0.05;
+                var nMin = mmm - delta * 0.05;
+                var nDelta = max - nMin;
+                sMin = nMin;
+                sDelta = nDelta;
+
+                RedrawSecond(tA, tB);
+            });
+        }
+        private protected double sHeight(double val) => GrdHeight * (sMin + sDelta - val) / sDelta;
 
         private double LastMin;
         private double LastDelta;
@@ -359,7 +399,7 @@ namespace ChartModules.IndicatorModules
                 ValuesDelta = (GrdHeight / CurrScY);
                 ValuesMin = LastMin - (LastY - CurrTrY) + (LastDelta - ValuesDelta) / 2;
 
-                double count = Math.Floor((GrdHeight / (Chart.BaseFontSize * 6)));
+                double count = Math.Floor((GrdHeight / (Chart.BaseFontSize * 2)));
                 if (count == 0) count = 1;
                 var step = ValuesDelta / count;
 

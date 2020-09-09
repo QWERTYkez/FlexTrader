@@ -27,8 +27,8 @@ namespace ChartModules.StandardModules
 {
     public class TimeLineModule : ChartModule
     {
-        public DateTime TimeA = DateTime.Now;
-        public DateTime TimeB = DateTime.Now;
+        public DateTime TimeA = DateTime.FromBinary(0);
+        public DateTime TimeB = DateTime.FromBinary(0);
 
         private readonly DrawingCanvas GridLayer;
         private readonly DrawingCanvas TimeLine;
@@ -41,6 +41,7 @@ namespace ChartModules.StandardModules
             GridLayer.AddVisual(TimeGridVisual);
             TimeLine.AddVisual(TimesVisual);
         }
+        private protected override string SetsName { get; }
         private Pen LinesPen => Chart.LinesPen;
         private double YearFontSize => Math.Round(Chart.BaseFontSize * 1.4);
 

@@ -16,6 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using ChartModules.IndicatorModules.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,10 +48,10 @@ namespace ChartModules.IndicatorModules
             IndicatorsSplitter.Height = new GridLength(0);
 
             ///////////Test
-            AddIndicator(IndicatorType.Volumes);
+            AddIndicator(IndicatorType.MACD);
         }
 
-        private readonly List<IndicatorBase> Indicators = new List<IndicatorBase>();
+        private readonly List<Indicator> Indicators = new List<Indicator>();
 
         private readonly List<RowDefinition> SliderRows = new List<RowDefinition>();
         private readonly List<RowDefinition> IndicatorRows = new List<RowDefinition>();
@@ -99,16 +100,17 @@ namespace ChartModules.IndicatorModules
             Grid.SetColumn(ScaleGrd, 2);
             IndicatorsGrid.Children.Add(ScaleGrd); ScaleGrds.Add(ScaleGrd);
 
-            IndicatorBase Indicator = type switch
+            Indicator Indicator = type switch
             {
                 IndicatorType.Volumes => new Volumes(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
+                IndicatorType.MACD => new MACD(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
                 _ => throw new NotImplementedException()
             };
             Indicator.Delete += DeleteIndicator;
             Indicator.Moving += MoveIndicator;
             Indicators.Add(Indicator);
         }
-        private void DeleteIndicator(IndicatorBase indicator)
+        private void DeleteIndicator(Indicator indicator)
         {
             int i = Indicators.IndexOf(indicator);
             if (i + 1 < Indicators.Count)
@@ -141,7 +143,7 @@ namespace ChartModules.IndicatorModules
                 IndicatorsSplitter.Height = new GridLength(0);
             }
         }
-        private void MoveIndicator(IndicatorBase indicator, int i)
+        private void MoveIndicator(Indicator indicator, int i)
         {
             if (i > 0)
             {
@@ -184,6 +186,7 @@ namespace ChartModules.IndicatorModules
 
     public enum IndicatorType
     {
+        MACD,
         Volumes
     }
 }

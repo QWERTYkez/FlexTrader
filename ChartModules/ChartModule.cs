@@ -38,6 +38,6 @@ namespace ChartModules
         private protected abstract void Destroy();
         public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
         private protected List<Setting> Sets { get; } = new List<Setting>();
-        private protected string SetsName { get; set; }
+        private protected abstract string SetsName { get; }
     }
 }

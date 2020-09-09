@@ -83,6 +83,8 @@ namespace ChartModules.PaintingModule
             HookTimeLayer.DeleteVisual(ShadowTimeVisual);
         }
 
+        private protected override string SetsName { get; }
+
         private readonly Func<Pen> GetCursorPen;
         private readonly Func<List<Hook>> GetVisibleHooks;
         private readonly List<FrameworkElement> OtherLayers;

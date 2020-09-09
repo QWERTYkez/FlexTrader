@@ -71,7 +71,6 @@ namespace ChartModules.PaintingModule
             Chart.HorizontalСhanges += () => Redraw();
             this.ResetInstrument = Chart.MWindow.ResetInstrument;
 
-            SetsName = "Paintings";
             Chart.PaintingLevel = PaintingLevel;
 
             ////////////////////
@@ -82,6 +81,8 @@ namespace ChartModules.PaintingModule
                 AddElement(new Level(204.90, Brushes.Lime, Brushes.Black, Brushes.Lime, 3, 7, 4));
             });
         }
+
+        private protected override string SetsName => "Paintings";
 
         private Action<IChart, DrawingVisual, DrawingVisual, DrawingVisual> DrawPrototype;
         private readonly Action<string, List<Setting>, Action, Action> SetMenuAct;

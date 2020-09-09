@@ -93,8 +93,6 @@ namespace ChartModules.StandardModules
                 });
             };
 
-            SetsName = "Настройки свечей";
-
             Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
             {
                 new Setting("Цвет тела", () => this.UpBrush, SetUpBrush, Brushes.Lime),
@@ -110,7 +108,9 @@ namespace ChartModules.StandardModules
             Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 2d, 6d, 4d));
         }
 
-        private double Delta;
+        private protected override string SetsName => "Настройки свечей";
+
+        private double Delta = 1;
         private double Min;
 
         public void AddCandles(List<ICandle> NewCandles)
@@ -186,17 +186,17 @@ namespace ChartModules.StandardModules
                 var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / CurrentScale.X + CurrentTranslate.X) / 15)) * DeltaTime;
                 var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
 
-                currentCandles = from c in AllCandles.AsParallel()
+                currentCandles = from c in AllCandles
                                  where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                  select c;
             }
 
-            if (currentCandles.Count() < 1) goto Return;
+            if (currentCandles.Count() < 2) goto Return;
 
             AllHorizontalReset.Invoke(currentCandles);
 
-            var mmm = Convert.ToDouble(currentCandles.Select(c => c.LowD).Min()) / Chart.TickSize;
-            var max = Convert.ToDouble(currentCandles.Select(c => c.HighD).Max()) / Chart.TickSize;
+            var mmm = Convert.ToDouble(currentCandles.Select(c => c.Low).Min()) / Chart.TickSize;
+            var max = Convert.ToDouble(currentCandles.Select(c => c.High).Max()) / Chart.TickSize;
             var delta = max - mmm;
             max += delta * 0.05;
             var nMin = mmm - delta * 0.05;
@@ -256,11 +256,11 @@ namespace ChartModules.StandardModules
             {
                 CurrentScale.X = 1;
                 ScaleX.ScaleX = 1;
-                NewXScale.Invoke(1);
                 CurrentTranslate.X = 0;
                 Translate.X = 0;
-                NewXTrans.Invoke(1);
                 HorizontalReset();
+                NewXScale.Invoke(1);
+                NewXTrans.Invoke(0);
 
                 await UpdateMagnetData();
                 return;
@@ -277,7 +277,6 @@ namespace ChartModules.StandardModules
                     if (vec.Value.X > 0)
                     {
                         CurrentScale.X = LastScaleX / (1 - Y);
-                        NewXScale.Invoke(CurrentScale.X);
                         await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
                     else if (vec.Value.X < 0)
@@ -285,17 +284,17 @@ namespace ChartModules.StandardModules
                         var nScale = LastScaleX * (1 + Y);
                         var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
                         var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
-                        currentCandles = from c in AllCandles.AsParallel()
+                        currentCandles = from c in AllCandles
                                              where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                              select c;
 
 
-                        if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
+                        if (currentCandles.Count() < 2 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
                         CurrentScale.X = nScale;
-                        NewXScale.Invoke(CurrentScale.X);
                         await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                     }
                     HorizontalReset(currentCandles);
+                    NewXScale.Invoke(CurrentScale.X);
 
                     await UpdateMagnetData();
                 });
@@ -316,7 +315,7 @@ namespace ChartModules.StandardModules
                 var X = LastTranslateVector.X + vec.Value.X / CurrentScale.X;
                 var TimeA = StartTime - Math.Floor(((Chart.ChWidth / CurrentScale.X + X) / 15)) * DeltaTime;
                 var TimeB = StartTime - Math.Ceiling((X / 15)) * DeltaTime;
-                var currentCandles = from c in AllCandles.AsParallel()
+                var currentCandles = from c in AllCandles
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                      select c;
 
@@ -330,18 +329,16 @@ namespace ChartModules.StandardModules
                 CurrentTranslate.X = X;
                 if (VerticalLock)
                 {
-                    NewXTrans.Invoke(CurrentTranslate.X);
                     await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
                     });
                     HorizontalReset(currentCandles);
+                    NewXTrans.Invoke(CurrentTranslate.X);
                 } 
                 else
                 {
                     CurrentTranslate.Y = LastTranslateVector.Y + vec.Value.Y / CurrentScale.Y;
-                    NewXTrans.Invoke(CurrentTranslate.X);
-                    AllHorizontalReset.Invoke(currentCandles);
                     await Dispatcher.InvokeAsync(() =>
                     {
                         Translate.X = CurrentTranslate.X;
@@ -349,6 +346,8 @@ namespace ChartModules.StandardModules
                     });
                     _ = TimeLineModule.Redraw();
                     _ = PriceLineModule.Redraw();
+                    AllHorizontalReset.Invoke(currentCandles);
+                    NewXTrans.Invoke(CurrentTranslate.X);
                 }
             });
         }
@@ -367,19 +366,19 @@ namespace ChartModules.StandardModules
                     var nScale = CurrentScale.X * 1.1;
                     var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
                     var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
-                    currentCandles = from c in AllCandles.AsParallel()
+                    currentCandles = from c in AllCandles
                                          where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                          select c;
 
 
-                    if (currentCandles.Count() < 1 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
+                    if (currentCandles.Count() < 2 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
                     CurrentScale.X = nScale;
                 }
                 else CurrentScale.X /= 1.1;
 
-                NewXScale.Invoke(CurrentScale.X);
                 await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
                 HorizontalReset(currentCandles);
+                NewXScale.Invoke(CurrentScale.X);
 
                 await UpdateMagnetData();
                 WhellScalled?.Invoke();

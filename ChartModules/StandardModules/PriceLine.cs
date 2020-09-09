@@ -50,6 +50,8 @@ namespace ChartModules.StandardModules
             PriceLine.AddVisual(PricesVisual);
         }
 
+        private protected override string SetsName { get; }
+
         private readonly DrawingVisual PricesVisual = new DrawingVisual();
         private readonly DrawingVisual PriceGridVisual = new DrawingVisual();
         private protected override void Destroy()
