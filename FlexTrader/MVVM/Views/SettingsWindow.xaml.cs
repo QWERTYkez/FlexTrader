@@ -79,7 +79,7 @@ namespace FlexTrader.MVVM.Views
                             case SetType.DoublePicker:
 
                                 AddSetting(sp, bs.Sets[i], () =>
-                                        new DoublePicker(
+                                        new NumericPicker(
                                             (double)bs.Sets[i].Get(),
                                             bs.Sets[i].Set,
                                             (double?)bs.Sets[i].Param1,

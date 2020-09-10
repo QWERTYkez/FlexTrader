@@ -16,6 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using FlexTrader.MVVM.Resources;
 using FlexTrader.MVVM.Views;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;

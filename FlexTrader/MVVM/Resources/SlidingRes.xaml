@@ -5,15 +5,18 @@
 
     <Style TargetType="{x:Type local:Sliding}">
         <Setter Property="Background" Value="Lime" />
+        <Setter Property="Margin" Value="2.5,0,2.5,0" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:Sliding}">
                     <Border
-                        Height="40"
-                        Margin="2.5,0,2.5,0"
+                        Height="{TemplateBinding Height}"
+                        Margin="{TemplateBinding Margin}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="Black"
-                        BorderThickness="1"
+                        BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="10">
                         <Grid>
                             <Grid.ColumnDefinitions>

@@ -47,7 +47,8 @@ namespace ChartModules.IndicatorModules
             IndicatorsRow.Height = new GridLength(0);
             IndicatorsSplitter.Height = new GridLength(0);
 
-            ///////////Test
+            ///////////
+            AddIndicator(IndicatorType.Volumes);
             AddIndicator(IndicatorType.MACD);
         }
 

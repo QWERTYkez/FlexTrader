@@ -38,7 +38,7 @@ namespace ChartModules
 
         public DateTime Time;
         public double Price;
-        private IChart Chart;
+        private readonly IChart Chart;
 
         public Point ToPoint() =>
             new Point(Chart.TimeToWidth(this.Time), Chart.PriceToHeight(this.Price));

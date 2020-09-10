@@ -43,7 +43,8 @@ namespace FlexTrader.MVVM.Resources
             this.Width = Width;
             this.Height = Height;
 
-            if (set != null) BrushChanged += b => set.Invoke(b);
+            if (set != null) BrushChanged += b => 
+                set.Invoke(b);
 
             DataContext = DC = new ColorPickerDataContext();
             DC.PropertyChanged += DC_PropertyChanged;
@@ -479,8 +480,10 @@ namespace FlexTrader.MVVM.Resources
                 SetBottomSlider(x, true);
                 SetMiddleSlider(left, top, true);
 
-                DC.MiddleSliderBrush = new SolidColorBrush(Color.FromRgb(
+                var br = new SolidColorBrush(Color.FromRgb(
                     nbr.Color.R, nbr.Color.G, nbr.Color.B));
+                br.Freeze();
+                DC.MiddleSliderBrush = br;
             }
         }
 
@@ -535,7 +538,8 @@ namespace FlexTrader.MVVM.Resources
                 G = 0;
                 B = Convert.ToByte(255 * (1 - y / 86.5));
             }
-            DC.BottomSliderBrush = new SolidColorBrush(Color.FromRgb(R, G, B));
+            var br = new SolidColorBrush(Color.FromRgb(R, G, B)); br.Freeze();
+            DC.BottomSliderBrush = br;
 
             try
             {
@@ -562,7 +566,6 @@ namespace FlexTrader.MVVM.Resources
             var left = MiddleSlider.Margin.Left;
 
             byte A = DC.NewBrush.Color.A;
-            byte R = 0; byte G = 0; byte B = 0;
 
             var T = 1 - ((float)top / 388);
             var L = 1 - ((float)left / 539);
@@ -582,13 +585,13 @@ namespace FlexTrader.MVVM.Resources
                 r += L * (b - r);
                 g += L * (b - g);
             }
-            R = Convert.ToByte(r * T);
-            G = Convert.ToByte(g * T);
-            B = Convert.ToByte(b * T);
-
-            var scb = new SolidColorBrush(Color.FromArgb(A, R, G, B)); scb.Freeze();
-            DC.NewBrush = scb;
-            DC.MiddleSliderBrush = new SolidColorBrush(Color.FromRgb(R, G, B));
+            byte R = Convert.ToByte(r * T);
+            byte G = Convert.ToByte(g * T);
+            byte B = Convert.ToByte(b * T);
+            var br = new SolidColorBrush(Color.FromArgb(A, R, G, B)); br.Freeze();
+            DC.NewBrush = br;
+            br = new SolidColorBrush(Color.FromRgb(R, G, B)); br.Freeze();
+            DC.MiddleSliderBrush = br;
         }
 
         private void GetBackground(object sender, MouseButtonEventArgs e)

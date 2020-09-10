@@ -166,7 +166,7 @@ namespace FlexTrader.MVVM.Views
                         {
                             TickSize = DC.TickSize;
                             TickPriceFormat = TickSize.ToString().Replace('1', '0').Replace(',', '.');
-                            digits = TickPriceFormat.ToCharArray().Length - 2;
+                            Digits = TickPriceFormat.ToCharArray().Length - 2;
                         }
                         break;
                     case "NewCandles":
@@ -238,7 +238,7 @@ namespace FlexTrader.MVVM.Views
         public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         public event Action<double> NewXScale;
         public event Action<double> NewXTrans;
-        public string FSF { get => PriceLineModule.fsf; }
+        public string FSF { get => PriceLineModule.Fsf; }
         public event Action<string> NewFSF;
         public Brush CandleBrushUp { get => CandlesModule.UpBrush; }
         public Brush CandleBrushDown { get => CandlesModule.DownBrush; }
@@ -259,9 +259,9 @@ namespace FlexTrader.MVVM.Views
         public Typeface FontText { get; } = new Typeface(new FontFamily("Myriad Pro Cond"),
                 FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
-        public int digits { get; private set; } = 8;
+        public int Digits { get; private set; } = 8;
         public double HeightToPrice(in double height) => 
-            Math.Round(PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight, digits);
+            Math.Round(PricesMin * TickSize + PricesDelta * (ChHeight * TickSize - TickSize * height) / ChHeight, Digits);
         public double PriceToHeight(in double price) =>
             (ChHeight * (PricesDelta * TickSize - price + PricesMin * TickSize)) / (PricesDelta * TickSize);
         public DateTime CorrectTimePosition(ref double X)
@@ -340,9 +340,9 @@ namespace FlexTrader.MVVM.Views
 
         private void SetsDefinition()
         {
-            var SetGridThicknesses = new Action<object>(b =>
+            var SetGridThicknesses = new Action<double>(b =>
             {
-                Dispatcher.Invoke(() => { LinesPen.Thickness = (b as double?).Value / 10; });
+                Dispatcher.Invoke(() => { LinesPen.Thickness = b / 10; });
                 PriceLineModule.Redraw(); TimeLineModule.Redraw();
             });
             var SetGridBrush = new Action<object>(b =>
@@ -367,21 +367,21 @@ namespace FlexTrader.MVVM.Views
                 });
                 FontBrushChanged.Invoke(); 
             });
-            var SetBaseFontSize = new Action<object>(b => 
+            var SetBaseFontSize = new Action<double>(b => 
             { 
-                BaseFontSize = (b as double?).Value; 
+                BaseFontSize = b; 
             });
 
             SpaceSets.Add(new Setting("Фон", () => ChartBackground, SetChartBackground, new SolidColorBrush(Color.FromRgb(30, 30, 30))));
-            Setting.SetsLevel(SpaceSets, "Сетка", new Setting[] 
+            SpaceSets.AddLevel("Сетка", new Setting[] 
             {
                 new Setting("Цвет", () => LinesPen.Brush, SetGridBrush, Brushes.DarkGray),
-                new Setting(SetType.DoubleSlider, "Толщина", () => LinesPen.Thickness * 10, SetGridThicknesses, 1d, 20d, 10d)
+                new Setting(NumericType.Slider, "Толщина", () => LinesPen.Thickness * 10, SetGridThicknesses, 1d, 20d, 10d)
             });
-            Setting.SetsLevel(SpaceSets, "Текст", new Setting[]
+            SpaceSets.AddLevel("Текст", new Setting[]
             {
                 new Setting("Цвет", () => FontBrush, SetFontBrush, Brushes.White),
-                new Setting(SetType.DoubleSlider, "Размер", () => BaseFontSize, SetBaseFontSize, 10d, 40d, 18d)
+                new Setting(NumericType.Slider, "Размер", () => BaseFontSize, SetBaseFontSize, 10d, 40d, 18d)
             });
         }
     }

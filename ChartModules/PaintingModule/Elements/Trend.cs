@@ -46,9 +46,9 @@ namespace ChartModules.PaintingModule.Elements
                 new Setting("Line", () => StLineBrush, br => { StLineBrush = br as SolidColorBrush; }),
                 new Setting("Text", () => StTextBrush, br => { StTextBrush = br as SolidColorBrush; }),
                 new Setting("Mark", () => StMarkFill, br => { StMarkFill = br as SolidColorBrush; }),
-                new Setting(SetType.DoubleSlider, "Thickness", () => StLineThikness, pr => { StLineThikness = (double)pr; }, 1d, 5d),
-                new Setting(SetType.DoubleSlider, "Gap", () => StLineIndent, pr => { StLineIndent = (double)pr; }, 0d, 10d),
-                new Setting(SetType.DoubleSlider, "Dash", () => StLineDash, pr => { StLineDash = (double)pr; }, 1d, 10d)
+                new Setting(NumericType.Slider, "Thickness", () => StLineThikness, pr => { StLineThikness = pr; }, 1d, 5d),
+                new Setting(NumericType.Slider, "Gap", () => StLineIndent, pr => { StLineIndent = pr; }, 0d, 10d),
+                new Setting(NumericType.Slider, "Dash", () => StLineDash, pr => { StLineDash = pr; }, 1d, 10d)
             };
         }
 
@@ -162,9 +162,9 @@ namespace ChartModules.PaintingModule.Elements
                 new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
                 new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br as SolidColorBrush; ApplyChangesToAll(); }),
                 new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br as SolidColorBrush; ApplyChangesToAll(); }),
-                new Setting(SetType.DoubleSlider, "Thickness", () => this.LineThikness, pr => { this.LineThikness = (double)pr; ApplyChangesToAll(); }, 1d, 5d),
-                new Setting(SetType.DoubleSlider, "Gap", () => this.LineIndent, pr => { this.LineIndent = (double)pr; ApplyChangesToAll(); }, 0d, 10d),
-                new Setting(SetType.DoubleSlider, "Dash", () => this.LineDash, pr => { this.LineDash = (double)pr; ApplyChangesToAll(); }, 1d, 10d)
+                new Setting(NumericType.Slider, "Thickness", () => this.LineThikness, pr => { this.LineThikness = pr; ApplyChangesToAll(); }, 1d, 5d),
+                new Setting(NumericType.Slider, "Gap", () => this.LineIndent, pr => { this.LineIndent = pr; ApplyChangesToAll(); }, 0d, 10d),
+                new Setting(NumericType.Slider, "Dash", () => this.LineDash, pr => { this.LineDash = pr; ApplyChangesToAll(); }, 1d, 10d)
             };
         }
 
@@ -201,7 +201,7 @@ namespace ChartModules.PaintingModule.Elements
             double h = (2 * Math.Sqrt(pp * (pp - A) * (pp - B) * (pp - C))) / A;
 
             double z = Math.Sqrt(Math.Pow(C, 2) - Math.Pow(h, 2));
-            P1.GetCoeffs(P2, out double a, out double b);
+            P1.GetCoeffs(P2, out double a, out _);
             double x = z / Math.Sqrt(Math.Pow(a, 2) + 1);
             return new Point(P1.X + x, P1.Y + a*x);
         }

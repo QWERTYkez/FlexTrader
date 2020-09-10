@@ -20,16 +20,18 @@ using ChartModules;
 using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.Resources;
+using FlexTrader.MVVM.Views;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace FlexTrader.MVVM.Views
+namespace FlexTrader.MVVM.Resources
 {
     public abstract class ChartWindow : Window, IChartWindow
     {
@@ -268,6 +270,7 @@ namespace FlexTrader.MVVM.Views
         private protected ScrollViewer OverlayMenu { get; set; }
         private WrapPanel BWP { get; set; }
         private Action RemoveTopMenuHook;
+        private SolidColorBrush PanelBackground = new SolidColorBrush(Color.FromRgb(20, 43, 48));
         private List<Sliding> Slidings { get; set; }
         public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook, Action RemoveHook)
         {
@@ -301,6 +304,7 @@ namespace FlexTrader.MVVM.Views
 
                         Slidings = new List<Sliding>();
 
+                        WrapPanel wp;
                         var WP = new WrapPanel { Margin = new Thickness(5), Height = 42, HorizontalAlignment = HorizontalAlignment.Left };
                         {
                             foreach (var set in Sets)
@@ -354,6 +358,9 @@ namespace FlexTrader.MVVM.Views
                                         BWP.Children.Add(dpb);
                                         break;
                                     case SetType.Brush:
+                                        var cp = new ColorPicker(set.Get() as SolidColorBrush, set.Set) { CornerRadius = 10 };
+                                        cp.Picker.MouseEnter += (s, e) => this.PreviewMouseLeftButtonDown -= CW_PreviewMouseLeftButtonDown;
+                                        cp.Picker.MouseLeave += (s, e) => this.PreviewMouseLeftButtonDown += CW_PreviewMouseLeftButtonDown;
                                         WP.Children.Add(fe = new Sliding
                                         {
                                             Background = Brushes.Teal,
@@ -361,10 +368,7 @@ namespace FlexTrader.MVVM.Views
                                             Title = set.Name,
                                             ContentWidth = 40,
                                             AlwaysOpen = true,
-                                            Content = new ColorPicker(set.Get() as SolidColorBrush, set.Set)
-                                            {
-                                                CornerRadius = 10
-                                            }
+                                            Content = cp
                                         });
                                         Slidings.Add(fe as Sliding);
                                         break;
@@ -376,7 +380,7 @@ namespace FlexTrader.MVVM.Views
                                             Title = set.Name,
                                             ContentWidth = 100,
                                             AlwaysOpen = true,
-                                            Content = new DoublePicker((double)set.Get(), set.Set, (double?)set.Param1, (double?)set.Param2)
+                                            Content = new NumericPicker((double)set.Get(), set.Set, (double?)set.Param1, (double?)set.Param2)
                                         });
                                         Slidings.Add(fe as Sliding);
                                         break;
@@ -392,6 +396,67 @@ namespace FlexTrader.MVVM.Views
                                             { Foreground = Brushes.White }
                                         });
                                         Slidings.Add(fe as Sliding);
+                                        break;
+                                    case SetType.IntPicker:
+                                        WP.Children.Add(fe = new Sliding
+                                        {
+                                            Background = Brushes.Teal,
+                                            Foreground = Brushes.White,
+                                            Title = set.Name,
+                                            ContentWidth = 60,
+                                            AlwaysOpen = true,
+                                            Content = new NumericPicker((int)set.Get(), set.Set, (int?)set.Param1, (int?)set.Param2)
+                                        });
+                                        Slidings.Add(fe as Sliding);
+                                        break;
+                                    case SetType.IntSlider:
+                                        WP.Children.Add(fe = new Sliding
+                                        {
+                                            Background = Brushes.Teal,
+                                            Foreground = Brushes.White,
+                                            Title = set.Name,
+                                            ContentWidth = 60,
+                                            AlwaysOpen = true,
+                                            Content = new DoubleSlider((int)set.Get(), set.Set, (int)set.Param1, (int)set.Param2)
+                                            { Foreground = Brushes.White }
+                                        });
+                                        Slidings.Add(fe as Sliding);
+                                        break;
+                                    case SetType.GoDown:
+                                        wp = new WrapPanel { Tag = WP };
+                                        wp.Children.Add(new Border 
+                                        {
+                                            Margin = new Thickness(3, 0, 0, 0),
+                                            VerticalAlignment = VerticalAlignment.Center,
+                                            Background = PanelBackground,
+                                            CornerRadius = new CornerRadius(5),
+                                            Child = new Label
+                                            {
+                                                Content = set.Name,
+                                                Padding = new Thickness(2),
+                                                FontSize = 18,
+                                                Foreground = Brushes.White,
+                                                FontWeight = FontWeights.Bold,
+                                                FontFamily = new FontFamily("Consolas")
+                                            }
+                                        });
+                                        WP.Children.Add(new Border
+                                        {
+                                            Background = Brushes.Teal,
+                                            CornerRadius = new CornerRadius(5),
+                                            Child = wp
+                                        });
+                                        WP = wp;
+                                        break;
+                                    case SetType.GoUp:
+                                        foreach (var el in WP.Children)
+                                            if (el is Sliding)
+                                            {
+                                                ((Sliding)el).BorderThickness = new Thickness(0);
+                                                ((Sliding)el).Margin = new Thickness(0);
+
+                                            }
+                                        WP = (WrapPanel)WP.Tag;
                                         break;
                                 }
                                 if (fe != null)

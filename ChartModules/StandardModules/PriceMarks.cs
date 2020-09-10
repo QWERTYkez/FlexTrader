@@ -131,11 +131,11 @@ namespace ChartModules.StandardModules
 
                     foreach (var rd in marksData)
                     {
-                        for (int i = 0; i < rd.linPoints.Count; i += 2)
-                            dcCH.DrawLine(rd.linpen, rd.linPoints[i], rd.linPoints[i + 1]);
+                        for (int i = 0; i < rd.LinPoints.Count; i += 2)
+                            dcCH.DrawLine(rd.Linpen, rd.LinPoints[i], rd.LinPoints[i + 1]);
 
-                        dcP.DrawGeometry(rd.Fill, rd.geopen, rd.geo);
-                        dcP.DrawText(rd.ft, rd.T);
+                        dcP.DrawGeometry(rd.Fill, rd.Geopen, rd.Geo);
+                        dcP.DrawText(rd.Ft, rd.T);
                     }
                 });
             }
@@ -160,22 +160,22 @@ namespace ChartModules.StandardModules
         {
             public RedrawData(Point A, Point B, FormattedText ft, Brush Fill, Point T, Pen linpen, List<Point> linPoints, Pen geopen, PathGeometry geo)
             {
-                this.ft = ft;
+                this.Ft = ft;
                 this.Fill = Fill;
                 this.T = T;
-                this.linpen = linpen;
-                this.linPoints = linPoints;
-                this.geopen = geopen;
-                this.geo = geo;
+                this.Linpen = linpen;
+                this.LinPoints = linPoints;
+                this.Geopen = geopen;
+                this.Geo = geo;
             }
 
-            public FormattedText ft { get; }
+            public FormattedText Ft { get; }
             public Brush Fill { get; }
             public Point T { get; }
-            public Pen linpen { get; }
-            public List<Point> linPoints { get; }
-            public Pen geopen { get; }
-            public PathGeometry geo { get; }
+            public Pen Linpen { get; }
+            public List<Point> LinPoints { get; }
+            public Pen Geopen { get; }
+            public PathGeometry Geo { get; }
         }
     }
 
@@ -193,7 +193,7 @@ namespace ChartModules.StandardModules
             Act = () => act(x);
             lm.CollectionChanged += (s, e) => act(x);
         }
-        private Action Act;
+        private readonly Action Act;
 
         public void AddMark(PriceMark pm) => Marks.Add(pm);
         public void AddMark(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill, 

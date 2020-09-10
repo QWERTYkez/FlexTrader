@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +66,7 @@ namespace ChartModules.StandardModules
             var SetUpPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); });
             var SetDownBrush = new Action<object>(b => { DownBrush = b as Brush; Redraw(); });
             var SetDownPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); });
-            var SetThicknesses = new Action<object>(b =>
+            var SetThicknesses = new Action<double>(b =>
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -93,19 +92,19 @@ namespace ChartModules.StandardModules
                 });
             };
 
-            Setting.SetsLevel(Sets, "Бычья свеча", new Setting[]
+            Sets.AddLevel("Бычья свеча", new Setting[]
             {
                 new Setting("Цвет тела", () => this.UpBrush, SetUpBrush, Brushes.Lime),
                 new Setting("Цвет фитиля", () => this.UpPen.Brush, SetUpPenBrush, Brushes.Lime)
             });
 
-            Setting.SetsLevel(Sets, "Медвежья свеча", new Setting[]
+            Sets.AddLevel("Медвежья свеча", new Setting[]
             {
                 new Setting("Цвет тела", () => this.DownBrush, SetDownBrush, Brushes.Red),
                 new Setting("Цвет фитиля", () => this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
             });
 
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 2d, 6d, 4d));
+            Sets.Add(new Setting(NumericType.Slider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 2d, 6d, 4d));
         }
 
         private protected override string SetsName => "Настройки свечей";
@@ -304,7 +303,6 @@ namespace ChartModules.StandardModules
         #region перемещение графика 
         private Vector LastTranslateVector;
         public event Action<double> NewXTrans;
-        private int n = 0;
         public void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
@@ -323,8 +321,6 @@ namespace ChartModules.StandardModules
                     if (!(TimeB < AllCandles.First().TimeStamp && CurrentTranslate.X < X)) return;
                     if (!(TimeA < AllCandles.Last().TimeStamp && CurrentTranslate.X > X)) return;
                 }
-                n++;
-                Debug.WriteLine($"CurrentTranslate.X = X - {n}");
                 CurrentTranslate.X = X;
                 if (VerticalLock)
                 {

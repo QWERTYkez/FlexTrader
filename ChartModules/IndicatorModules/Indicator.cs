@@ -32,7 +32,7 @@ namespace ChartModules.IndicatorModules
     public abstract class Indicator : ChartModule
     {
         public static readonly SolidColorBrush CursorGrabber = new SolidColorBrush(Color.FromArgb(0,0,0,0));
-        private readonly bool Twin;
+        private bool Twin;
         public Indicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, 
             DrawingCanvas TimeLine, bool Twin = false) : base(Chart)
         {
@@ -302,11 +302,32 @@ namespace ChartModules.IndicatorModules
         private protected TimeSpan DeltaTime { get => Chart.DeltaTime; }
 
         private protected abstract void DestroyThis();
+        private protected abstract void GetBaseMinMax(DateTime tA, DateTime tB, out double min, out double max);
         private protected abstract void GetBaseMinMax(IEnumerable<ICandle> currentCandles, out double min, out double max);
-        private protected abstract void Redraw();
+        private protected abstract void Calculate();
+        private protected abstract void Rendering();
+        private protected void Redraw()
+        {
+            Task.Run(() =>
+            {
+                if (StartTime == DateTime.FromBinary(0)) return;
+                Calculate();
+                Rendering();
+                HorizontalReset();
+                if (Twin) SecondReset();
+            });
+        }
+
 
         private protected virtual void GetSecondMinMax(DateTime tA, DateTime tB, out double min, out double max) 
         { min = 0; max = 1; }
+        private protected void RedrawSecond()
+        {
+            if (Chart.TimeA == DateTime.FromBinary(0)) return;
+            var tA = Chart.TimeA - DeltaTime;
+            var tB = Chart.TimeB + DeltaTime;
+            RedrawSecond(tA, tB);
+        }
         private protected virtual void RedrawSecond(DateTime tA, DateTime tB) { }
 
         private int ChangesCounter = 0;
@@ -341,11 +362,22 @@ namespace ChartModules.IndicatorModules
 
             await RedrawScale();
         }
-        public void HorizontalReset(IEnumerable<ICandle> currentCandles)
+        public void HorizontalReset(IEnumerable<ICandle> currentCandles = null)
         {
             Task.Run(() => 
             {
-                GetBaseMinMax(currentCandles, out var mmm, out var max);
+                double mmm, max;
+                if (currentCandles != null)
+                {
+                    GetBaseMinMax(currentCandles, out mmm, out max);
+                }
+                else
+                {
+                    if (Chart.TimeA == DateTime.FromBinary(0)) return;
+                    var tA = Chart.TimeA - DeltaTime;
+                    var tB = Chart.TimeB + DeltaTime;
+                    GetBaseMinMax(tA, tB, out mmm, out max);
+                }
                 var delta = max - mmm;
                 max += delta * 0.05;
                 var nMin = mmm - delta * 0.05;
@@ -380,7 +412,7 @@ namespace ChartModules.IndicatorModules
                 RedrawSecond(tA, tB);
             });
         }
-        private protected double sHeight(double val) => GrdHeight * (sMin + sDelta - val) / sDelta;
+        private protected double ToHeight(double val) => GrdHeight * (sMin + sDelta - val) / sDelta;
 
         private double LastMin;
         private double LastDelta;

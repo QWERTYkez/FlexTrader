@@ -115,6 +115,6 @@ namespace ChartModules
         public DrawingVisual CursorLinesVisual { get; }
         public DrawingVisual CursorVisual { get; }
         public Action<MouseButtonEventArgs> MovingChart { get; }
-        public int digits { get; }
+        public int Digits { get; }
     }
 }

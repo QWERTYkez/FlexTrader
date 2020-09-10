@@ -109,19 +109,19 @@ namespace ChartModules.PaintingModule
             if (ElementsCollection.Count > 99)
             {
                 for (int i = 0; i < ElementsCollection.Count; i++)
-                    Setting.SetsLevel(Sets, $"{i + 1:000}. {ElementsCollection[i].ElementName}",
+                    Sets.AddLevel($"{i + 1:000}. {ElementsCollection[i].ElementName}",
                         ElementsCollection[i].GetSettings().ToArray());
             }
             else if (ElementsCollection.Count > 9)
             {
                 for (int i = 0; i < ElementsCollection.Count; i++)
-                    Setting.SetsLevel(Sets, $"{i + 1:00}. {ElementsCollection[i].ElementName}",
+                    Sets.AddLevel($"{i + 1:00}. {ElementsCollection[i].ElementName}",
                         ElementsCollection[i].GetSettings().ToArray());
             }
             else
             {
                 for (int i = 0; i < ElementsCollection.Count; i++)
-                    Setting.SetsLevel(Sets, $"{i + 1}. {ElementsCollection[i].ElementName}",
+                    Sets.AddLevel($"{i + 1}. {ElementsCollection[i].ElementName}",
                         ElementsCollection[i].GetSettings().ToArray());
             }
 
@@ -204,7 +204,6 @@ namespace ChartModules.PaintingModule
 
         private void ResetHooks() 
         {
-            return;
             VisibleHooks = (from el in ElementsCollection.AsParallel() where el.VisibilityOnChart select el.Hook).ToList();
         }
 

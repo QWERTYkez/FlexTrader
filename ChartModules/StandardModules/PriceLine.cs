@@ -63,7 +63,7 @@ namespace ChartModules.StandardModules
 
         public event Action VerticalСhanges;
         public event Action<double, string> ScaleWidthChanged;
-        public string fsf { get; private set; } = "00.00";
+        public string Fsf { get; private set; } = "00.00";
         public Task Redraw()
         {
             return Task.Run(() => 
@@ -107,14 +107,14 @@ namespace ChartModules.StandardModules
                     maxP /= 10;
                     raz *= 10;
                 }
-                fsf = Chart.TickPriceFormat;
+                Fsf = Chart.TickPriceFormat;
                 if (raz > 10)
                     for (int i = Convert.ToInt32(Math.Log10(raz)); i > 0; i--)
-                        fsf = "0" + fsf;
+                        Fsf = "0" + Fsf;
 
                 var fsfFT = new FormattedText
                             (
-                                fsf,
+                                Fsf,
                                 CultureInfo.CurrentCulture,
                                 FlowDirection.LeftToRight,
                                 Chart.FontNumeric,
@@ -150,7 +150,7 @@ namespace ChartModules.StandardModules
                 while (coordiate > 0);
 
                 PriceLineWidth = fsfFT.Width + Chart.PriceShift + 4;
-                ScaleWidthChanged.Invoke(PriceLineWidth, fsf);
+                ScaleWidthChanged.Invoke(PriceLineWidth, Fsf);
                 Dispatcher.Invoke(() =>
                 {
                     using var pvc = PricesVisual.RenderOpen();

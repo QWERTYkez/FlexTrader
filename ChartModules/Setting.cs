@@ -46,15 +46,36 @@ namespace ChartModules
             this.ResetObj = ResetObj;
         }
         /// <summary>
-        /// New Double Setting
+        /// New Numeric Setting
         /// </summary>
-        public Setting(SetType Type, string Name, Func<object> Get,
-                       Action<object> Set, double? Min = null, double? Max = null, double? Standart = null)
+        public Setting(NumericType Type, string Name, Func<double> Get,
+                       Action<double> Set, double? Min = null, double? Max = null, double? Standart = null)
         {
             this.Name = Name;
-            this.Type = Type;
-            this.Get = Get;
-            this.Set = Set;
+            this.Type = Type switch
+            {
+                NumericType.Picker => SetType.DoublePicker,
+                NumericType.Slider => SetType.DoubleSlider,
+                _ => throw new Exception()
+            };
+            this.Get = () => Get();
+            this.Set = o => Set((double)o);
+            this.ResetObj = Standart;
+            this.Param1 = Min;
+            this.Param2 = Max;
+        }
+        public Setting(NumericType Type, string Name, Func<int> Get,
+                       Action<int> Set, int? Min = null, int? Max = null, int? Standart = null)
+        {
+            this.Name = Name;
+            this.Type = Type switch
+            {
+                NumericType.Picker => SetType.IntPicker,
+                NumericType.Slider => SetType.IntSlider,
+                _ => throw new Exception()
+            };
+            this.Get = () => Get();
+            this.Set = o => Set((int)o);
             this.ResetObj = Standart;
             this.Param1 = Min;
             this.Param2 = Max;
@@ -105,6 +126,12 @@ namespace ChartModules
         public readonly object Param2;
     }
 
+    public static class SettingsExtension
+    {
+        public static void AddLevel(this List<Setting> Sets, string Name, Setting[] args) =>
+            Setting.SetsLevel(Sets, Name, args);
+    }
+
     public enum SetType
     {
         Brush,
@@ -113,7 +140,15 @@ namespace ChartModules
         DoublePicker,
         GoDown,
         GoUp,
+        IntSlider,
+        IntPicker,
         Lock,
         Move
+    }
+
+    public enum NumericType
+    {
+        Picker,
+        Slider
     }
 }

@@ -19,12 +19,10 @@
 using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace ChartModules.IndicatorModules.Indicators
@@ -34,14 +32,70 @@ namespace ChartModules.IndicatorModules.Indicators
         public MACD(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
             : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine, true)
         {
+            Sets.AddLevel("MA", new Setting[] 
+            {
+                new Setting(NumericType.Picker, "Fast", () => N1, x =>
+                {
+                    var d = (int)x;
+                    if (d > N2) N2 = d;
+                    else N1 = d;
+                    Redraw();
+                }),
+                new Setting(NumericType.Picker, "Slow", () => N2, x =>
+                {
+                    var d = (int)x;
+                    if (d < N1) N1 = d;
+                    else N2 = d;
+                    Redraw();
+                })
+            });
+            Sets.Add(new Setting("MACD", () => { return MACDbr; },
+                Br => { this.MACDbr = Br as SolidColorBrush; Rendering(); }));
 
+            Sets.AddLevel("fast", new Setting[] 
+            {
+                new Setting("color", () => { return Pn1.Brush; }, 
+                    Br => 
+                    {
+                        Dispatcher.Invoke(() => 
+                        {
+                            Pn1 = new Pen(Br as SolidColorBrush, Pn1.Thickness); 
+                            Pn1.Freeze();
+                        });
+                        RedrawSecond(); 
+                    }),
+                new Setting(NumericType.Slider, "weight", () => Pn1.Thickness * 10, 
+                    d => { Pn1 = new Pen(Pn1.Brush, d / 10); Pn1.Freeze(); RedrawSecond(); }, 10, 50)
+            });
+
+            Sets.AddLevel("slow", new Setting[]
+            {
+                new Setting("color", () => { return Pn2.Brush; },
+                    Br =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            Pn2 = new Pen(Br as SolidColorBrush, Pn2.Thickness);
+                            Pn2.Freeze();
+                        });
+                        RedrawSecond();
+                    }),
+                new Setting(NumericType.Slider, "weight", () => Pn2.Thickness * 10,
+                    d => { Pn2 = new Pen(Pn2.Brush, d / 10); Pn2.Freeze(); RedrawSecond(); }, 10, 50)
+            });
+
+            Pn1.Freeze(); Pn2.Freeze();
         }
 
         private protected override string SetsName => "MACD";
+        private SolidColorBrush MACDbr = Brushes.Teal;
+        private Pen Pn1 { get; set; } = new Pen(Brushes.Lime, 2);
+        private Pen Pn2 { get; set; } = new Pen(Brushes.White, 2);
 
         private protected override void DestroyThis() { }
 
-        private protected override void GetBaseMinMax(IEnumerable<ICandle> currentCandles, out double min, out double max)
+        private protected override void GetBaseMinMax(IEnumerable<ICandle> currentCandles, 
+            out double min, out double max)
         {
             var TimeA = currentCandles.First().TimeStamp;
             var TimeB = currentCandles.Last().TimeStamp;
@@ -50,6 +104,7 @@ namespace ChartModules.IndicatorModules.Indicators
             min = 0;
             max = 0;
 
+            if (Values.Count < 1) return;
             while (Values[n].TimeStamp != TimeA) n++;
             while (Values[n].TimeStamp < TimeB)
             {
@@ -59,6 +114,21 @@ namespace ChartModules.IndicatorModules.Indicators
             }
             if (Values[n].MACD < min) min = Values[n].MACD;
             if (Values[n].MACD > max) max = Values[n].MACD;
+        }
+        private protected override void GetBaseMinMax(DateTime tA, DateTime tB,
+            out double min, out double max)
+        {
+            int n = 0;
+            min = 0;
+            max = 0;
+
+            if (Values.Count == 0) return;
+            while (n < Values.Count && Values[n].TimeStamp < tA) n++;
+            for (int i = n; i < Values.Count && Values[i].TimeStamp < tB; i++)
+            {
+                if (Values[i].MACD < min) min = Values[i].MACD;
+                if (Values[i].MACD > max) max = Values[i].MACD;
+            }
         }
 
         private int N1 = 12; //FastLength
@@ -71,6 +141,8 @@ namespace ChartModules.IndicatorModules.Indicators
 
             Values.Clear();
 
+            if (N1 >= AllCandles.Count) return;
+
             double S = 0;
             for (int i = 0; i < N1; i++)
             {
@@ -79,53 +151,48 @@ namespace ChartModules.IndicatorModules.Indicators
             }
             Values.Add(new Data(AllCandles[N1].TimeStamp, S / N1));
             S += AllCandles[N1].CloseD;
-            for (int i = N1 + 1; i < N2; i++)
+            for (int i = N1 + 1; i < N2 && i < AllCandles.Count; i++)
             {
-
                 Values.Add(new Data(AllCandles[i].TimeStamp,
                     A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - 1].EMA_fast));
                 S += AllCandles[i].CloseD;
             }
+            if (N2 >= AllCandles.Count) return;
             Values.Add(new Data(AllCandles[N2].TimeStamp,
                     A1 * AllCandles[N2].CloseD + (1 - A1) * Values[N2 - 1].EMA_fast, S / N2));
             for (int i = N2 + 1; i < AllCandles.Count; i++)
             {
-
                 Values.Add(new Data(AllCandles[i].TimeStamp,
                     A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - 1].EMA_fast,
                     A2 * AllCandles[i].CloseD + (1 - A2) * Values[i - 1].EMA_Slow));
             }
         }
-        private protected override void Redraw()
+        private protected override void Calculate()
         {
-            Task.Run(() => 
+            CalculateValues();
+
+            Rects = new Rect[Values.Count];
+            Parallel.For(1, Values.Count, i =>
             {
-                if (StartTime == DateTime.FromBinary(0)) return;
-                CalculateValues();
-
-                var DrawTeplates = new (Rect rect, Brush br)[Values.Count];
-                Parallel.For(1, Values.Count, i =>
+                if (Values[i].Slow)
                 {
-                    if (Values[i].Slow)
-                    {
-                        var x = 7.5 + (StartTime - Values[i].TimeStamp) * 15 / DeltaTime;
-                        var x1 = x + 6;
-                        var x2 = x - 6;
+                    var x = 7.5 + (StartTime - Values[i].TimeStamp) * 15 / DeltaTime;
+                    var x1 = x + 6;
+                    var x2 = x - 6;
 
-                        DrawTeplates[i] = (new Rect(new Point(x1, 0), new Point(x2, Values[i].MACD)), Brushes.Teal);
-                    }
-                });
+                    Rects[i] = new Rect(new Point(x1, 0), new Point(x2, Values[i].MACD));
+                }
+            });
+        }
+        private Rect[] Rects;
+        private protected override void Rendering()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                using var dc = IndicatorVisualBase.RenderOpen();
 
-                
-                Dispatcher.Invoke(() =>
-                {
-                    using var dc = IndicatorVisualBase.RenderOpen();
-
-                    foreach (var (rect, br) in DrawTeplates)
-                        dc.DrawRectangle(br, null, rect);
-                });
-
-                VerticalReset();
+                foreach (var rect in Rects)
+                    dc.DrawRectangle(MACDbr, null, rect);
             });
         }
 
@@ -139,7 +206,7 @@ namespace ChartModules.IndicatorModules.Indicators
             while (n < Values.Count && Values[n].TimeStamp < tA) n++;
             for (int i = n; i < Values.Count && Values[i].TimeStamp < tB; i++)
             {
-                if (Values[i].fast)
+                if (Values[i].Fast)
                 {
                     if (Values[i].EMA_fast < min) min = Values[i].EMA_fast;
                     if (Values[i].EMA_fast > max) max = Values[i].EMA_fast;
@@ -154,13 +221,10 @@ namespace ChartModules.IndicatorModules.Indicators
         }
         private protected override void RedrawSecond(DateTime tA, DateTime tB)
         {
-            var Pn1 = new Pen(Brushes.Blue, 2); Pn1.Freeze();
-            var Pn2 = new Pen(Brushes.Red, 2); Pn2.Freeze();
-
             var dT = (Chart.TimeB - Chart.TimeA) / Chart.ChWidth;
 
             var fastValues = (from v in Values where v.TimeStamp > tA && 
-                             v.TimeStamp < tB && v.fast select v).ToList();
+                             v.TimeStamp < tB && v.Fast select v).ToList();
             var slowValues = (from v in fastValues where v.Slow select v).ToList();
 
             if(fastValues.Count < 2)
@@ -174,12 +238,12 @@ namespace ChartModules.IndicatorModules.Indicators
             {
                 LS[i - 1] = new LineSegment(new Point(
                     (fastValues[i].TimeStamp - Chart.TimeA) / dT,
-                     sHeight(fastValues[i].EMA_fast)), true);
+                     ToHeight(fastValues[i].EMA_fast)), true);
                 LS[i - 1].Freeze();
             });
             var geo1 = new PathGeometry(new[] { new PathFigure(
                 new Point((fastValues[0].TimeStamp - Chart.TimeA) / dT,
-                sHeight(fastValues[0].EMA_fast)), LS, false) }); geo1.Freeze();
+                ToHeight(fastValues[0].EMA_fast)), LS, false) }); geo1.Freeze();
 
             if (slowValues.Count < 2) 
             {
@@ -196,12 +260,12 @@ namespace ChartModules.IndicatorModules.Indicators
             {
                 LS[i - 1] = new LineSegment(new Point(
                     (slowValues[i].TimeStamp - Chart.TimeA) / dT,
-                    sHeight(slowValues[i].EMA_Slow)), true);
+                    ToHeight(slowValues[i].EMA_Slow)), true);
                 LS[i - 1].Freeze();
             });
             var geo2 = new PathGeometry(new[] { new PathFigure(
                 new Point((slowValues[0].TimeStamp - Chart.TimeA) / dT,
-                sHeight(slowValues[0].EMA_Slow)), LS, false) }); geo2.Freeze();
+                ToHeight(slowValues[0].EMA_Slow)), LS, false) }); geo2.Freeze();
 
             
             Dispatcher.Invoke(() =>
@@ -219,7 +283,7 @@ namespace ChartModules.IndicatorModules.Indicators
             {
                 this.TimeStamp = TimeStamp;
                 EMA_fast = 0;
-                fast = false;
+                Fast = false;
                 EMA_Slow = 0;
                 Slow = false;
                 MACD = 0;
@@ -229,7 +293,7 @@ namespace ChartModules.IndicatorModules.Indicators
             {
                 this.TimeStamp = TimeStamp;
                 EMA_fast = fastValue;
-                fast = true;
+                Fast = true;
                 EMA_Slow = 0;
                 Slow = false;
                 MACD = 0;
@@ -239,14 +303,14 @@ namespace ChartModules.IndicatorModules.Indicators
             {
                 this.TimeStamp = TimeStamp;
                 EMA_fast = fastValue;
-                fast = true;
+                Fast = true;
                 EMA_Slow = slowValue;
                 Slow = true;
                 MACD = fastValue - slowValue;
             }
 
             public DateTime TimeStamp { get; private set; }
-            public bool fast { get; private set; }
+            public bool Fast { get; private set; }
             public double EMA_fast { get; private set; }
             public bool Slow { get; private set; }
             public double EMA_Slow { get; private set; }
@@ -254,7 +318,7 @@ namespace ChartModules.IndicatorModules.Indicators
 
             public void Set_EMA_fast(double val)
             {
-                EMA_fast = val; fast = true;
+                EMA_fast = val; Fast = true;
                 if (Slow) MACD = val - EMA_Slow;
             }
             public void Set_EMA_Slow(double val)

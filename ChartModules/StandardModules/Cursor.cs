@@ -65,18 +65,18 @@ namespace ChartModules.StandardModules
             CursorLayer.RenderTransform = CursorTransform;
             MagnetLayer.RenderTransform = MagnetTransform;
 
-            var SetCursorArea = new Action<object>(b => { CursorArea = (b as double?).Value; SetCursorLines(); });
-            var SetMagnetRadius = new Action<object>(b => { MagnetRadius = (b as double?).Value; if (MagnetState) MagnetAdd(); });
-            var SetCursorDash = new Action<object>(b => { CursorDash = (b as double?).Value; SetCursorLines(); });
-            var SetCursorIndent = new Action<object>(b => { CursorIndent = (b as double?).Value; SetCursorLines(); });
-            var SetCursorThikness = new Action<object>(b => { CursorThikness = (b as double?).Value; SetCursorLines(); });
+            var SetCursorArea = new Action<double>(b => { CursorArea = b; SetCursorLines(); });
+            var SetMagnetRadius = new Action<double>(b => { MagnetRadius = b; if (MagnetState) MagnetAdd(); });
+            var SetCursorDash = new Action<double>(b => { CursorDash = b; SetCursorLines(); });
+            var SetCursorIndent = new Action<double>(b => { CursorIndent = b; SetCursorLines(); });
+            var SetCursorThikness = new Action<double>(b => { CursorThikness = b; SetCursorLines(); });
             var SetCursorColor = new Action<object>(b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, CursorThikness); MarksPen.Freeze(); }); SetCursorLines(); });
 
-            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус отступа", () => CursorArea, SetCursorArea, 20d, 50d, 25d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Радиус магнита", () => MagnetRadius, SetMagnetRadius, 20d, 50d, 25d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Штрих", () => CursorDash, SetCursorDash, 1d, 10d, 5d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Отступ", () => CursorIndent, SetCursorIndent, 0d, 10d, 2d));
-            Sets.Add(new Setting(SetType.DoubleSlider, "Толщина", () => CursorThikness, SetCursorThikness, 1d, 5d, 2d));
+            Sets.Add(new Setting(NumericType.Slider, "Радиус отступа", () => CursorArea, SetCursorArea, 20d, 50d, 25d));
+            Sets.Add(new Setting(NumericType.Slider, "Радиус магнита", () => MagnetRadius, SetMagnetRadius, 20d, 50d, 25d));
+            Sets.Add(new Setting(NumericType.Slider, "Штрих", () => CursorDash, SetCursorDash, 1d, 10d, 5d));
+            Sets.Add(new Setting(NumericType.Slider, "Отступ", () => CursorIndent, SetCursorIndent, 0d, 10d, 2d));
+            Sets.Add(new Setting(NumericType.Slider, "Толщина", () => CursorThikness, SetCursorThikness, 1d, 5d, 2d));
             Sets.Add(new Setting("Цвет курсора", () => MarksPen.Brush, SetCursorColor, Brushes.White));
             Sets.Add(new Setting("Цвет текста", () => FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
         }
