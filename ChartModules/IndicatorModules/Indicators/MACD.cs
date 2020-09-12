@@ -42,10 +42,15 @@ namespace ChartModules.IndicatorModules.Indicators
 
                 new Setting(IntType.Picker, "Slow", () => N2, i =>
                 {
-                    SetFastMax.Invoke(i - 1);
-                    N2 = i; Redraw();
+                    N2 = i;
+                    if (N1 >= i) SetFastMax.Invoke(i - 1);
+                    else
+                    {
+                        SetFastMax.Invoke(i - 1);
+                        Redraw();
+                    }
                 }, 
-                2)
+                2, 500)
             });
             Sets.Add(new Setting("MACD", () => { return MACDbr; },
                 Br => { this.MACDbr = Br; Rendering(); }));

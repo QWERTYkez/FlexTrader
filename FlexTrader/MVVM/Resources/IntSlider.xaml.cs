@@ -44,7 +44,7 @@ namespace FlexTrader.MVVM.Resources
 
         private void GetSetMin(int min)
         {
-            if (slider.Value > min)
+            if (slider.Value < min)
             {
                 slider.Value = min;
                 slider.Minimum = min;
@@ -57,7 +57,7 @@ namespace FlexTrader.MVVM.Resources
 
         private void GetSetMax(int max)
         {
-            if (slider.Value < max)
+            if (slider.Value > max)
             {
                 slider.Value = max;
                 slider.Maximum = max;

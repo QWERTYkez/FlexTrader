@@ -173,13 +173,12 @@ namespace FlexTrader.MVVM.Resources
             else
                 this.max = Double.MaxValue;
         }
-
         private void GetSetMin(double m)
         {
             try
             {
                 var val = Convert.ToDouble(Value);
-                if (val > m)
+                if (val < m)
                 {
                     Value = m.ToString();
                     min = m;
@@ -188,13 +187,12 @@ namespace FlexTrader.MVVM.Resources
             }
             catch { min = m; }
         }
-
         private void GetSetMax(double m)
         {
             try
             {
                 var val = Convert.ToDouble(Value);
-                if (val < m)
+                if (val > m)
                 {
                     Value = m.ToString();
                     max = m;
@@ -255,13 +253,12 @@ namespace FlexTrader.MVVM.Resources
             else
                 this.max = int.MaxValue;
         }
-
         private void GetSetMin(int m)
         {
             try
             {
                 var val = Convert.ToDouble(Value);
-                if (val > m)
+                if (val < m)
                 {
                     Value = m.ToString();
                     min = m;
@@ -270,13 +267,12 @@ namespace FlexTrader.MVVM.Resources
             }
             catch { min = m; }
         }
-
         private void GetSetMax(int m)
         {
             try
             {
                 var val = Convert.ToDouble(Value);
-                if (val < m)
+                if (val > m)
                 {
                     Value = m.ToString();
                     max = m;
@@ -295,7 +291,6 @@ namespace FlexTrader.MVVM.Resources
         {
             get
             {
-                string error = String.Empty;
                 int? val = null;
                 try
                 {
@@ -303,12 +298,16 @@ namespace FlexTrader.MVVM.Resources
                     if ((val < min) || (val > max))
                     {
                         Changed.Invoke(null);
-                        error = $"значение должно быть больше {min} и меньше {max}";
+                        return $"значение должно быть больше {min} и меньше {max}";
                     }
                 }
-                catch { }
+                catch 
+                {
+                    Changed.Invoke(null);
+                    return "Error";
+                }
                 Changed.Invoke(val);
-                return error;
+                return String.Empty;
             }
         }
         public string Error
