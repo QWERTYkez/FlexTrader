@@ -70,7 +70,7 @@ namespace FlexTrader.MVVM.Views
             MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
 
             HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
-                () => CursorModule.MarksPen,
+                () => CursorModule.LinesPen,
                 () => PaintingModule.VisibleHooks,
                 new List<FrameworkElement>
                 {
@@ -243,7 +243,7 @@ namespace FlexTrader.MVVM.Views
         public Brush CandleBrushUp { get => CandlesModule.UpBrush; }
         public Brush CandleBrushDown { get => CandlesModule.DownBrush; }
         public Brush CursorFontBrush { get => CursorModule.FontBrush; }
-        public Pen CursorMarksPen { get => CursorModule.MarksPen; }
+        public Pen CursorMarksPen { get => CursorModule.LinesPen; }
         public bool CursorHide { get => CursorModule.Hide; }
         public DrawingVisual CursorLinesVisual { get => CursorModule.CursorLinesVisual; }
         public DrawingVisual CursorVisual { get => CursorModule.CursorVisual; }
@@ -340,9 +340,9 @@ namespace FlexTrader.MVVM.Views
 
         private void SetsDefinition()
         {
-            var SetGridThicknesses = new Action<double>(b =>
+            var SetGridThicknesses = new Action<int>(b =>
             {
-                Dispatcher.Invoke(() => { LinesPen.Thickness = b / 10; });
+                Dispatcher.Invoke(() => { LinesPen.Thickness = (double)b / 10; });
                 PriceLineModule.Redraw(); TimeLineModule.Redraw();
             });
             var SetGridBrush = new Action<object>(b =>
@@ -358,16 +358,16 @@ namespace FlexTrader.MVVM.Views
                     (DataContext as ChartViewModel).ChartBackground = (SolidColorBrush)br;
                 }); 
             });
-            var SetFontBrush = new Action<object>(b => 
+            var SetFontBrush = new Action<SolidColorBrush>(b => 
             {
                 Dispatcher.Invoke(() => 
                 {
-                    var br = b as Brush; br.Freeze();
+                    var br = b; br.Freeze();
                     (DataContext as ChartViewModel).FontBrush = br;
                 });
                 FontBrushChanged.Invoke(); 
             });
-            var SetBaseFontSize = new Action<double>(b => 
+            var SetBaseFontSize = new Action<int>(b => 
             { 
                 BaseFontSize = b; 
             });
@@ -376,12 +376,12 @@ namespace FlexTrader.MVVM.Views
             SpaceSets.AddLevel("Сетка", new Setting[] 
             {
                 new Setting("Цвет", () => LinesPen.Brush, SetGridBrush, Brushes.DarkGray),
-                new Setting(NumericType.Slider, "Толщина", () => LinesPen.Thickness * 10, SetGridThicknesses, 1d, 20d, 10d)
+                new Setting(IntType.Slider, "Толщина", () => (int)(LinesPen.Thickness * 10), SetGridThicknesses, 1, 20, null, null, 10)
             });
             SpaceSets.AddLevel("Текст", new Setting[]
             {
                 new Setting("Цвет", () => FontBrush, SetFontBrush, Brushes.White),
-                new Setting(NumericType.Slider, "Размер", () => BaseFontSize, SetBaseFontSize, 10d, 40d, 18d)
+                new Setting(IntType.Slider, "Размер", () => (int)(BaseFontSize), SetBaseFontSize, 10, 40, null, null, 18)
             });
         }
     }

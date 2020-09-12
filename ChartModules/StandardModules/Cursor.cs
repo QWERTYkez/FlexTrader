@@ -29,6 +29,12 @@ namespace ChartModules.StandardModules
 {
     public class CursorModule : ChartModule
     {
+        private static readonly List<CursorModule> Cursors = new List<CursorModule>();
+        static CursorModule()
+        {
+            LinesPen.Freeze();
+        }
+
         private readonly DrawingCanvas CursorLinesLayer;
         private readonly DrawingCanvas CursorLayer;
         private readonly DrawingCanvas MagnetLayer;
@@ -39,14 +45,13 @@ namespace ChartModules.StandardModules
             DrawingCanvas MagnetLayer, DrawingCanvas TimeLine,
             DrawingCanvas PriceLine) : base(chart)
         {
+            Cursors.Add(this);
+
             this.CursorLinesLayer = CursorLinesLayer;
             this.CursorLayer = CursorLayer;
             this.MagnetLayer = MagnetLayer;
             this.TimeLine = TimeLine;
             this.PriceLine = PriceLine;
-
-            FontBrush = Brushes.White;
-            MarksPen = new Pen(Brushes.White, 2); MarksPen.Freeze();
 
             Chart.ChartGrid.MouseEnter += ShowCursor;
             Chart.ChartGrid.MouseLeave += CursorLeave;
@@ -65,20 +70,22 @@ namespace ChartModules.StandardModules
             CursorLayer.RenderTransform = CursorTransform;
             MagnetLayer.RenderTransform = MagnetTransform;
 
-            var SetCursorArea = new Action<double>(b => { CursorArea = b; SetCursorLines(); });
-            var SetMagnetRadius = new Action<double>(b => { MagnetRadius = b; if (MagnetState) MagnetAdd(); });
-            var SetCursorDash = new Action<double>(b => { CursorDash = b; SetCursorLines(); });
-            var SetCursorIndent = new Action<double>(b => { CursorIndent = b; SetCursorLines(); });
-            var SetCursorThikness = new Action<double>(b => { CursorThikness = b; SetCursorLines(); });
-            var SetCursorColor = new Action<object>(b => { Dispatcher.Invoke(() => { MarksPen = new Pen(b as Brush, CursorThikness); MarksPen.Freeze(); }); SetCursorLines(); });
+            var SetCursorArea = new Action<int>(b => { CursorArea = b; SetCursorLines(); });
+            var SetMagnetRadius = new Action<int>(b => { MagnetRadius = b; if (MagnetState) MagnetAdd(); });
+            var SetCursorDash = new Action<int>(b => { CursorDash = b; SetCursorLines(); });
+            var SetCursorIndent = new Action<int>(b => { CursorIndent = b; SetCursorLines(); });
+            var SetCursorThikness = new Action<int>(b => 
+            { Dispatcher.Invoke(() => { LinesPen = new Pen(LinesPen.Brush, b); LinesPen.Freeze(); }); SetCursorLines(); });
+            var SetCursorColor = new Action<SolidColorBrush>(b => 
+            { Dispatcher.Invoke(() => { LinesPen = new Pen(b, LinesPen.Thickness); LinesPen.Freeze(); }); SetCursorLines(); });
 
-            Sets.Add(new Setting(NumericType.Slider, "Радиус отступа", () => CursorArea, SetCursorArea, 20d, 50d, 25d));
-            Sets.Add(new Setting(NumericType.Slider, "Радиус магнита", () => MagnetRadius, SetMagnetRadius, 20d, 50d, 25d));
-            Sets.Add(new Setting(NumericType.Slider, "Штрих", () => CursorDash, SetCursorDash, 1d, 10d, 5d));
-            Sets.Add(new Setting(NumericType.Slider, "Отступ", () => CursorIndent, SetCursorIndent, 0d, 10d, 2d));
-            Sets.Add(new Setting(NumericType.Slider, "Толщина", () => CursorThikness, SetCursorThikness, 1d, 5d, 2d));
-            Sets.Add(new Setting("Цвет курсора", () => MarksPen.Brush, SetCursorColor, Brushes.White));
-            Sets.Add(new Setting("Цвет текста", () => FontBrush, b => { FontBrush = b as Brush; }, Brushes.White));
+            Sets.Add(new Setting(IntType.Slider, "Радиус отступа", () => (int)CursorArea, SetCursorArea, 20, 50, null, null, 25));
+            Sets.Add(new Setting(IntType.Slider, "Радиус магнита", () => (int)MagnetRadius, SetMagnetRadius, 20, 50, null, null, 25));
+            Sets.Add(new Setting(IntType.Slider, "Штрих", () => (int)CursorDash, SetCursorDash, 1, 10, null, null, 5));
+            Sets.Add(new Setting(IntType.Slider, "Отступ", () => (int)CursorIndent, SetCursorIndent, 0, 10, null, null, 2));
+            Sets.Add(new Setting(IntType.Slider, "Толщина", () => (int)LinesPen.Thickness, SetCursorThikness, 1, 5, null, null, 2));
+            Sets.Add(new Setting("Цвет курсора", () => LinesPen.Brush, SetCursorColor, Brushes.White));
+            Sets.Add(new Setting("Цвет текста", () => FontBrush, b => { FontBrush = b; }, Brushes.White));
         }
 
         private protected override string SetsName => "Настройки курсора";
@@ -109,6 +116,8 @@ namespace ChartModules.StandardModules
         }
         private protected override void Destroy()
         {
+            Cursors.Remove(this);
+
             Chart.ChartGrid.MouseEnter -= ShowCursor;
             Chart.ChartGrid.MouseLeave -= CursorLeave;
             Chart.ChartGrid.MouseMove -= Redraw;
@@ -255,22 +264,28 @@ namespace ChartModules.StandardModules
                     CursorTransform.X = CursorPosition.Current.X;
                     CursorTransform.Y = CursorPosition.Current.Y;
 
-                    dcP.DrawGeometry(Chart.ChartBackground, MarksPen, geo);
+                    dcP.DrawGeometry(Chart.ChartBackground, LinesPen, geo);
                     dcP.DrawText(ft, Tpont);
 
-                    dcT.DrawGeometry(Chart.ChartBackground, MarksPen, geo2);
+                    dcT.DrawGeometry(Chart.ChartBackground, LinesPen, geo2);
                     dcT.DrawText(ft2, Tpont2);
                 });
             });
         }
 
-        public Brush FontBrush { get; private set; }
-        public Pen MarksPen { get; private set; }
-        private double CursorArea = 25;
-        private double CursorDash = 5;
-        private double CursorIndent = 2;
-        private double CursorThikness = 2;
-        public Task SetCursorLines()
+        public static Brush FontBrush { get; private set; } = Brushes.White;
+        public static Pen LinesPen { get; private set; } = new Pen(Brushes.White, 2);
+        private static double CursorArea = 25;
+        private static double CursorDash = 5;
+        private static double CursorIndent = 2;
+        public static Task SetCursorLines()
+        {
+            var tasks = new Task[Cursors.Count];
+            for (int i = 0; i < Cursors.Count; i++)
+                tasks[i] = Cursors[i].SetCLines();
+            return Task.WhenAll(tasks);
+        }
+        private Task SetCLines()
         {
             return Task.Run(() =>
             {
@@ -297,16 +312,16 @@ namespace ChartModules.StandardModules
                     using var dcCH = CursorLinesVisual.RenderOpen();
 
                     for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                        dcCH.DrawLine(LinesPen, Points[i], Points[i + 1]);
                     dcCH.PushTransform(rt);
                     for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                        dcCH.DrawLine(LinesPen, Points[i], Points[i + 1]);
                     dcCH.PushTransform(rt);
                     for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                        dcCH.DrawLine(LinesPen, Points[i], Points[i + 1]);
                     dcCH.PushTransform(rt);
                     for (int i = 0; i < Points.Count; i += 2)
-                        dcCH.DrawLine(MarksPen, Points[i], Points[i + 1]);
+                        dcCH.DrawLine(LinesPen, Points[i], Points[i + 1]);
                 });
                 SetCursor(CurrentCursor);
             });
@@ -336,8 +351,8 @@ namespace ChartModules.StandardModules
                             Dispatcher.Invoke(() =>
                             {
                                 using var dc = CursorVisual.RenderOpen();
-                                dc.DrawLine(MarksPen, new Point(-15, 0), new Point(15, 0));
-                                dc.DrawLine(MarksPen, new Point(0, -15), new Point(0, 15));
+                                dc.DrawLine(LinesPen, new Point(-15, 0), new Point(15, 0));
+                                dc.DrawLine(LinesPen, new Point(0, -15), new Point(0, 15));
                             });
                         }
                         break;
@@ -365,7 +380,7 @@ namespace ChartModules.StandardModules
                                 dc.PushTransform(new RotateTransform(-30));
                                 dc.PushTransform(new ScaleTransform(1.5, 1.5));
 
-                                dc.DrawGeometry(MarksPen.Brush, null, geo);
+                                dc.DrawGeometry(LinesPen.Brush, null, geo);
                             });
                         }
                         break;
@@ -396,7 +411,7 @@ namespace ChartModules.StandardModules
             });
         }
 
-        private double MagnetRadius = 25;
+        private static double MagnetRadius = 25;
         private bool MagnetState = false;
         private void MagnetAdd()
         {
@@ -404,7 +419,7 @@ namespace ChartModules.StandardModules
             Dispatcher.InvokeAsync(() =>
             {
                 using var dc = MagnetVisual.RenderOpen();
-                dc.DrawEllipse(null, new Pen(MarksPen.Brush, 2), new Point(0, 0), MagnetRadius, MagnetRadius);
+                dc.DrawEllipse(null, new Pen(LinesPen.Brush, 2), new Point(0, 0), MagnetRadius, MagnetRadius);
             });
         }
         private void MagnetRemove()

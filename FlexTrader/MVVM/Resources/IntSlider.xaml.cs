@@ -22,20 +22,50 @@ using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Resources
 {
-    public partial class DoubleSlider : UserControl
+    public partial class IntSlider : UserControl
     {
-        public event Action<double> ValueChanged;
-        public DoubleSlider(double val, Action<object> set, double min, double max)
+        public event Action<int> ValueChanged;
+        public IntSlider(int val, Action<int> set, int min, int max, 
+            Action<Action<int>> GetSetMin = null, Action<Action<int>> GetSetMax = null)
         {
             InitializeComponent();
 
             if (set != null) ValueChanged += v => set.Invoke(v);
 
+            GetSetMin?.Invoke(this.GetSetMin);
+            GetSetMax?.Invoke(this.GetSetMax);
+
             slider.Minimum = min;
             slider.Maximum = max;
             slider.Value = val;
 
-            slider.ValueChanged += (s, e) => Task.Run(() => ValueChanged.Invoke(e.NewValue));
+            slider.ValueChanged += (s, e) => Task.Run(() => ValueChanged.Invoke((int)e.NewValue));
+        }
+
+        private void GetSetMin(int min)
+        {
+            if (slider.Value > min)
+            {
+                slider.Value = min;
+                slider.Minimum = min;
+            }
+            else
+            {
+                slider.Minimum = min;
+            }
+        }
+
+        private void GetSetMax(int max)
+        {
+            if (slider.Value < max)
+            {
+                slider.Value = max;
+                slider.Maximum = max;
+            }
+            else
+            {
+                slider.Maximum = max;
+            }
         }
     }
 }

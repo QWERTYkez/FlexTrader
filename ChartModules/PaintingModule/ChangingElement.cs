@@ -44,7 +44,7 @@ namespace ChartModules.PaintingModule
         {
             var sets = new List<Setting> 
             { 
-                new Setting(() => this.Locked, b => this.Locked = (bool)b),
+                new Setting(() => this.Locked, b => this.Locked = b),
                 new Setting(Delete)
             };
             sets.AddRange(this.GetSets());

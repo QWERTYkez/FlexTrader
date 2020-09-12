@@ -19,7 +19,6 @@
 using ChartModules;
 using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
-using FlexTrader.MVVM.Resources;
 using FlexTrader.MVVM.Views;
 using System;
 using System.Collections.Generic;
@@ -27,7 +26,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -316,7 +314,7 @@ namespace FlexTrader.MVVM.Resources
                                         var L = new Lock
                                         {
                                             Foreground = Brushes.White,
-                                            Locked = (bool)(set.Get())
+                                            Locked = set.GetBool()
                                         };
                                         var lpb = new PaletteButton()
                                         {
@@ -328,13 +326,13 @@ namespace FlexTrader.MVVM.Resources
                                         lpb.Click += (s, e) =>
                                         {
                                             L.Locked = !L.Locked;
-                                            set.Set(L.Locked);
+                                            set.SetBool(L.Locked);
                                             lpb.IsActive = L.Locked;
                                         };
                                         BWP.Children.Add(lpb);
                                         break;
                                     case SetType.Move:
-                                        BWP.Children.Add(new Mover(set.Set));
+                                        BWP.Children.Add(new Mover(set.SetInt));
                                         break;
                                     case SetType.Delete:
                                         var dpb = new PaletteButton()
@@ -352,13 +350,13 @@ namespace FlexTrader.MVVM.Resources
                                         {
                                             OverlayMenu.Visibility = Visibility.Hidden;
                                             TopPanel.Visibility = Visibility.Visible;
-                                            set.Set(null);
+                                            set.Delete();
                                             RemoveHook.Invoke();
                                         };
                                         BWP.Children.Add(dpb);
                                         break;
                                     case SetType.Brush:
-                                        var cp = new ColorPicker(set.Get() as SolidColorBrush, set.Set) { CornerRadius = 10 };
+                                        var cp = new ColorPicker(set.GetBrush(), set.SetBrush) { CornerRadius = 10 };
                                         cp.Picker.MouseEnter += (s, e) => this.PreviewMouseLeftButtonDown -= CW_PreviewMouseLeftButtonDown;
                                         cp.Picker.MouseLeave += (s, e) => this.PreviewMouseLeftButtonDown += CW_PreviewMouseLeftButtonDown;
                                         WP.Children.Add(fe = new Sliding
@@ -372,7 +370,7 @@ namespace FlexTrader.MVVM.Resources
                                         });
                                         Slidings.Add(fe as Sliding);
                                         break;
-                                    case SetType.DoublePicker:
+                                    case SetType.Double:
                                         WP.Children.Add(fe = new Sliding
                                         {
                                             Background = Brushes.Teal,
@@ -380,20 +378,7 @@ namespace FlexTrader.MVVM.Resources
                                             Title = set.Name,
                                             ContentWidth = 100,
                                             AlwaysOpen = true,
-                                            Content = new NumericPicker((double)set.Get(), set.Set, (double?)set.Param1, (double?)set.Param2)
-                                        });
-                                        Slidings.Add(fe as Sliding);
-                                        break;
-                                    case SetType.DoubleSlider:
-                                        WP.Children.Add(fe = new Sliding
-                                        {
-                                            Background = Brushes.Teal,
-                                            Foreground = Brushes.White,
-                                            Title = set.Name,
-                                            ContentWidth = 100,
-                                            AlwaysOpen = true,
-                                            Content = new DoubleSlider((double)set.Get(), set.Set, (double)set.Param1, (double)set.Param2)
-                                            { Foreground = Brushes.White }
+                                            Content = new NumericPicker(set.GetDouble(), set.SetDouble, (double?)set.Param1, (double?)set.Param2, set.GetSetMinDouble, set.GetSetMaxDouble)
                                         });
                                         Slidings.Add(fe as Sliding);
                                         break;
@@ -405,7 +390,7 @@ namespace FlexTrader.MVVM.Resources
                                             Title = set.Name,
                                             ContentWidth = 60,
                                             AlwaysOpen = true,
-                                            Content = new NumericPicker((int)set.Get(), set.Set, (int?)set.Param1, (int?)set.Param2)
+                                            Content = new NumericPicker(set.GetInt(), set.SetInt, (int?)set.Param1, (int?)set.Param2, set.GetSetMinInt, set.GetSetMaxInt)
                                         });
                                         Slidings.Add(fe as Sliding);
                                         break;
@@ -415,9 +400,9 @@ namespace FlexTrader.MVVM.Resources
                                             Background = Brushes.Teal,
                                             Foreground = Brushes.White,
                                             Title = set.Name,
-                                            ContentWidth = 60,
+                                            ContentWidth = 100,
                                             AlwaysOpen = true,
-                                            Content = new DoubleSlider((int)set.Get(), set.Set, (int)set.Param1, (int)set.Param2)
+                                            Content = new IntSlider(set.GetInt(), set.SetInt, (int)set.Param1, (int)set.Param2, set.GetSetMinInt, set.GetSetMaxInt)
                                             { Foreground = Brushes.White }
                                         });
                                         Slidings.Add(fe as Sliding);
@@ -442,6 +427,7 @@ namespace FlexTrader.MVVM.Resources
                                         });
                                         WP.Children.Add(new Border
                                         {
+                                            Margin = new Thickness(2.5, 0, 2.5, 0),
                                             Background = Brushes.Teal,
                                             CornerRadius = new CornerRadius(5),
                                             Child = wp

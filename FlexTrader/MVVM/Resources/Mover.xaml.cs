@@ -24,13 +24,13 @@ namespace FlexTrader.MVVM.Resources
 {
     public partial class Mover : UserControl
     {
-        public Mover(Action<object> Set)
+        public Mover(Action<int> Set)
         {
             this.Set = Set;
             InitializeComponent();
         }
 
-        private Action<object> Set;
+        private Action<int> Set;
         private void UP(object sender, RoutedEventArgs e) => Set.Invoke(1);
         private void Down(object sender, RoutedEventArgs e) => Set.Invoke(-1);
     }

@@ -67,23 +67,41 @@ namespace FlexTrader.MVVM.Views
                                 break;
                             case SetType.Brush:
 
-                                AddSetting(sp, bs.Sets[i], () => new ColorPicker(bs.Sets[i].Get() as SolidColorBrush, bs.Sets[i].Set));
+                                AddSetting(sp, bs.Sets[i], () => new ColorPicker(bs.Sets[i].GetBrush() as SolidColorBrush, bs.Sets[i].SetBrush));
 
                                 break;
-                            case SetType.DoubleSlider:
-
-                                AddSetting(sp, bs.Sets[i], () => new DoubleSlider((double)bs.Sets[i].Get(), bs.Sets[i].Set,
-                                    (double)bs.Sets[i].Param1, (double)bs.Sets[i].Param2));
-
-                                break;
-                            case SetType.DoublePicker:
+                            case SetType.Double:
 
                                 AddSetting(sp, bs.Sets[i], () =>
                                         new NumericPicker(
-                                            (double)bs.Sets[i].Get(),
-                                            bs.Sets[i].Set,
+                                            bs.Sets[i].GetDouble(),
+                                            bs.Sets[i].SetDouble,
                                             (double?)bs.Sets[i].Param1,
-                                            (double?)bs.Sets[i].Param2));
+                                            (double?)bs.Sets[i].Param2,
+                                            bs.Sets[i].GetSetMinDouble,
+                                            bs.Sets[i].GetSetMaxDouble));
+                                break;
+                            case SetType.IntPicker:
+
+                                AddSetting(sp, bs.Sets[i], () =>
+                                        new NumericPicker(
+                                            bs.Sets[i].GetInt(),
+                                            bs.Sets[i].SetInt,
+                                            (int?)bs.Sets[i].Param1,
+                                            (int?)bs.Sets[i].Param2,
+                                            bs.Sets[i].GetSetMinInt,
+                                            bs.Sets[i].GetSetMaxInt));
+                                break;
+                            case SetType.IntSlider:
+
+                                AddSetting(sp, bs.Sets[i], () => 
+                                        new IntSlider(
+                                            bs.Sets[i].GetInt(),
+                                            bs.Sets[i].SetInt,
+                                            (int)bs.Sets[i].Param1,
+                                            (int)bs.Sets[i].Param2,
+                                            bs.Sets[i].GetSetMinInt,
+                                            bs.Sets[i].GetSetMaxInt));
                                 break;
                         }
                     }
@@ -129,7 +147,7 @@ namespace FlexTrader.MVVM.Views
                         var L = new Lock
                         {
                             Foreground = Brushes.White,
-                            Locked = (bool)(LockSetting.Get())
+                            Locked = LockSetting.GetBool()
                         };
                         var lpb = new PaletteButton()
                         {
@@ -141,7 +159,7 @@ namespace FlexTrader.MVVM.Views
                         lpb.Click += (s, e) =>
                         {
                             L.Locked = !L.Locked;
-                            LockSetting.Set(L.Locked);
+                            LockSetting.SetBool(L.Locked);
                             lpb.IsActive = L.Locked;
                         };
                         wp.Children.Add(lpb);
@@ -163,7 +181,7 @@ namespace FlexTrader.MVVM.Views
                         lpb.Click += (s, e) =>
                         {
                             sp.Children.Remove(exp);
-                            DeleteSetting.Set(null);
+                            DeleteSetting.Delete();
                         };
                         wp.Children.Add(lpb);
                     }
@@ -200,7 +218,7 @@ namespace FlexTrader.MVVM.Views
                 Grid.SetColumn(El, 1);
                 grd.Children.Add(El);
 
-                if (s.ResetObj != null)
+                if (s.Reset != null)
                 {
                     var btn = new Button
                     {
@@ -213,7 +231,7 @@ namespace FlexTrader.MVVM.Views
                     btn.Margin = new Thickness(5, 0, 15, 0);
                     btn.Click += (st, e) =>
                     {
-                        s.Set.Invoke(s.ResetObj);
+                        s.Reset();
                         grd.Children.Remove(El);
 
                         El = GetEl();

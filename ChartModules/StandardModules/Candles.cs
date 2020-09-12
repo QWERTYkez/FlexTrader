@@ -62,16 +62,16 @@ namespace ChartModules.StandardModules
             this.ScaleY = ScaleY;
             this.CurrentScale = CurrentScale;
 
-            var SetUpBrush = new Action<object>(b => { UpBrush = b as Brush; Redraw(); });
-            var SetUpPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.UpPen.Brush = b as Brush; }); Redraw(); });
-            var SetDownBrush = new Action<object>(b => { DownBrush = b as Brush; Redraw(); });
-            var SetDownPenBrush = new Action<object>(b => { Dispatcher.Invoke(() => { this.DownPen.Brush = b as Brush; }); Redraw(); });
-            var SetThicknesses = new Action<double>(b =>
+            var SetUpBrush = new Action<SolidColorBrush>(b => { UpBrush = b; Redraw(); });
+            var SetUpPenBrush = new Action<SolidColorBrush>(b => { Dispatcher.Invoke(() => { UpPen.Brush = b; }); Redraw(); });
+            var SetDownBrush = new Action<SolidColorBrush>(b => { DownBrush = b; Redraw(); });
+            var SetDownPenBrush = new Action<SolidColorBrush>(b => { Dispatcher.Invoke(() => { DownPen.Brush = b; }); Redraw(); });
+            var SetThicknesses = new Action<int>(b =>
             {
                 Dispatcher.Invoke(() =>
                 {
-                    this.DownPen.Thickness = (b as double?).Value;
-                    this.UpPen.Thickness = (b as double?).Value;
+                    DownPen.Thickness = b;
+                    UpPen.Thickness = b;
                 });
                 Redraw();
             });
@@ -104,7 +104,7 @@ namespace ChartModules.StandardModules
                 new Setting("Цвет фитиля", () => this.DownPen.Brush, SetDownPenBrush, Brushes.Red)
             });
 
-            Sets.Add(new Setting(NumericType.Slider, "Толщина фитиля", () => this.DownPen.Thickness, SetThicknesses, 2d, 6d, 4d));
+            Sets.Add(new Setting(IntType.Slider, "Толщина фитиля", () => (int)this.DownPen.Thickness, SetThicknesses, 2, 6, null, null, 4));
         }
 
         private protected override string SetsName => "Настройки свечей";

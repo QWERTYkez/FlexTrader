@@ -20,7 +20,6 @@ using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -36,9 +35,9 @@ namespace ChartModules.IndicatorModules
             CandleBrushDown = Chart.CandleBrushDown;
 
             Sets.Add(new Setting("Bullish Volume", () => { return CandleBrushUp; }, 
-                Br => { this.CandleBrushUp = Br as SolidColorBrush; Rendering(); }));
+                Br => { this.CandleBrushUp = Br; Rendering(); }));
             Sets.Add(new Setting("Bearish Volume", () => { return CandleBrushDown; },
-                Br => { this.CandleBrushDown = Br as SolidColorBrush; Rendering(); }));
+                Br => { this.CandleBrushDown = Br; Rendering(); }));
         }
 
         private protected override void DestroyThis() { }

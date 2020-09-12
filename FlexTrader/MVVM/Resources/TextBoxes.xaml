@@ -22,13 +22,15 @@
                 <ControlTemplate TargetType="{x:Type TextBox}">
                     <Border
                         x:Name="border"
+                        Padding="0,5,0,0"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         SnapsToDevicePixels="True">
                         <ScrollViewer
                             x:Name="PART_ContentHost"
-                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Margin="0,-8,0,-8"
+                            VerticalAlignment="Center"
                             Focusable="false"
                             HorizontalScrollBarVisibility="Hidden"
                             VerticalScrollBarVisibility="Hidden" />
@@ -74,14 +76,15 @@
                 <ControlTemplate TargetType="{x:Type local:NumericPickerTextBox}">
                     <Border
                         x:Name="border"
+                        Padding="0,5,0,0"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         SnapsToDevicePixels="True">
                         <ScrollViewer
                             x:Name="PART_ContentHost"
+                            Margin="0,-8,0,-8"
                             VerticalAlignment="Center"
-                            VerticalContentAlignment="Center"
                             Focusable="false"
                             HorizontalScrollBarVisibility="Hidden"
                             VerticalScrollBarVisibility="Hidden" />

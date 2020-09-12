@@ -36,9 +36,11 @@ namespace FlexTrader.MVVM.Resources
         private readonly ColorPickerDataContext DC;
         public event Action<SolidColorBrush> BrushChanged;
         public ColorPicker() { new NotImplementedException(); }
-        public ColorPicker(SolidColorBrush br, Action<object> set = null)
+        public ColorPicker(Brush br, Action<SolidColorBrush> set = null)
         {
             InitializeComponent();
+
+            var scbr = (br as SolidColorBrush ?? throw new Exception());
 
             this.Width = Width;
             this.Height = Height;
@@ -48,8 +50,8 @@ namespace FlexTrader.MVVM.Resources
 
             DataContext = DC = new ColorPickerDataContext();
             DC.PropertyChanged += DC_PropertyChanged;
-            DC.Initialize(br, () => Dispatcher.Invoke(() => Apply(null, null)));
-            NewBrushChanged(br);
+            DC.Initialize(scbr, () => Dispatcher.Invoke(() => Apply(null, null)));
+            NewBrushChanged(scbr);
 
             AddChannelBinding(RedSlider, CChannels.Red);
             AddChannelBinding(GreenSlider, CChannels.Green);

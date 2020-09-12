@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Media;
 
 namespace ChartModules
@@ -34,76 +35,76 @@ namespace ChartModules
             this.Type = SetType.GoDown;
         }
         /// <summary>
-        /// New Brush Setting
+        /// Brush Setting
         /// </summary>
-        public Setting(string Name, Func<object> Get,
-                       Action<object> Set, SolidColorBrush ResetObj = null)
+        public Setting(string Name, Func<Brush> Get,
+                       Action<SolidColorBrush> Set, SolidColorBrush Standart = null)
         {
             this.Name = Name;
             this.Type = SetType.Brush;
-            this.Get = Get;
-            this.Set = Set;
-            this.ResetObj = ResetObj;
+            this.GetBrush = Get;
+            this.SetBrush = Set;
+            this.Reset = () => Set(Standart);
         }
         /// <summary>
-        /// New Numeric Setting
+        /// Double Setting
         /// </summary>
-        public Setting(NumericType Type, string Name, Func<double> Get,
-                       Action<double> Set, double? Min = null, double? Max = null, double? Standart = null)
+        public Setting(string Name, Func<double> Get, Action<double> Set, double? Min = null, double? Max = null,
+            Action<Action<double>> GetSetMin = null, Action<Action<double>> GetSetMax = null, double? Standart = null)
         {
             this.Name = Name;
-            this.Type = Type switch
-            {
-                NumericType.Picker => SetType.DoublePicker,
-                NumericType.Slider => SetType.DoubleSlider,
-                _ => throw new Exception()
-            };
-            this.Get = () => Get();
-            this.Set = o => Set((double)o);
-            this.ResetObj = Standart;
-            this.Param1 = Min;
-            this.Param2 = Max;
-        }
-        public Setting(NumericType Type, string Name, Func<int> Get,
-                       Action<int> Set, int? Min = null, int? Max = null, int? Standart = null)
-        {
-            this.Name = Name;
-            this.Type = Type switch
-            {
-                NumericType.Picker => SetType.IntPicker,
-                NumericType.Slider => SetType.IntSlider,
-                _ => throw new Exception()
-            };
-            this.Get = () => Get();
-            this.Set = o => Set((int)o);
-            this.ResetObj = Standart;
+            this.Type = SetType.Double;
+            this.GetDouble = Get;
+            this.SetDouble = Set;
+            if (Standart.HasValue) this.Reset = () => Set(Standart.Value);
             this.Param1 = Min;
             this.Param2 = Max;
         }
         /// <summary>
-        /// New Lock Setting
+        /// Int Setting
         /// </summary>
-        public Setting(Func<object> Get, Action<object> Set)
+        public Setting(IntType Type, string Name, Func<int> Get, Action<int> Set, int? Min = null, int? Max = null,
+            Action<Action<int>> GetSetMin = null, Action<Action<int>> GetSetMax = null, int? Standart = null)
+        {
+            this.Name = Name;
+            this.Type = Type switch
+            {
+                IntType.Picker => SetType.IntPicker,
+                IntType.Slider => SetType.IntSlider,
+                _ => throw new Exception()
+            };
+            this.GetInt = Get;
+            this.SetInt = Set;
+            if (Standart.HasValue) this.Reset = () => Set(Standart.Value);
+            this.Param1 = Min;
+            this.Param2 = Max;
+            this.GetSetMinInt = GetSetMin;
+            this.GetSetMaxInt = GetSetMax;
+        }
+        /// <summary>
+        /// Lock Setting
+        /// </summary>
+        public Setting(Func<bool> Get, Action<bool> Set)
         {
             this.Type = SetType.Lock;
-            this.Get = Get;
-            this.Set = Set;
+            this.GetBool = Get;
+            this.SetBool = Set;
         }
         /// <summary>
-        /// New Delete Setting
+        /// Delete Setting
         /// </summary>
-        public Setting(Action Set)
+        public Setting(Action Delete)
         {
             this.Type = SetType.Delete;
-            this.Set = o => Set();
+            this.Delete = Delete;
         }
         /// <summary>
-        /// New Move Setting
+        /// Move Setting
         /// </summary>
         public Setting(Action<int> Set)
         {
             this.Type = SetType.Move;
-            this.Set = o => Set((int)o);
+            this.SetInt = Set;
         }
 
         private static readonly object key = new object();
@@ -119,9 +120,24 @@ namespace ChartModules
 
         public readonly string Name;
         public readonly SetType Type;
-        public readonly Func<object> Get;
-        public readonly Action<object> Set;
-        public readonly object ResetObj;
+
+        public readonly Action Delete;
+        public readonly Func<bool> GetBool;
+        public readonly Action<bool> SetBool;
+        public readonly Func<Brush> GetBrush;
+        public readonly Action<SolidColorBrush> SetBrush;
+        public readonly Func<double> GetDouble;
+        public readonly Action<double> SetDouble;
+        public readonly Func<int> GetInt;
+        public readonly Action<int> SetInt;
+
+        public readonly Action Reset;
+
+        public readonly Action<Action<int>> GetSetMinInt;
+        public readonly Action<Action<int>> GetSetMaxInt;
+        public readonly Action<Action<double>> GetSetMinDouble;
+        public readonly Action<Action<double>> GetSetMaxDouble;
+
         public readonly object Param1;
         public readonly object Param2;
     }
@@ -136,8 +152,7 @@ namespace ChartModules
     {
         Brush,
         Delete,
-        DoubleSlider,
-        DoublePicker,
+        Double,
         GoDown,
         GoUp,
         IntSlider,
@@ -146,7 +161,7 @@ namespace ChartModules
         Move
     }
 
-    public enum NumericType
+    public enum IntType
     {
         Picker,
         Slider

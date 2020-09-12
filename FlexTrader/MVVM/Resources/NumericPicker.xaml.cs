@@ -22,19 +22,21 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace FlexTrader.MVVM.Resources
 {
     public partial class NumericPicker : UserControl
     {
-        public NumericPicker(double val, Action<object> act, double? min = null, double? max = null)
+        public NumericPicker(double val, Action<double> act, double? min = null, double? max = null,
+            Action<Action<double>> GetSetMin = null, Action<Action<double>> GetSetMax = null)
         {
             InitializeComponent();
-            AcceptButton.Click += (s, e) => act.Invoke(((Button)s).Tag);
+            AcceptButton.Click += (s, e) => act.Invoke((double)((Button)s).Tag);
             AcceptButton.Tag = val;
 
-            var dptb = new NumericPickerTextBox(val, min, max);
-            dptb.Enter += () => { if (AcceptButton.IsEnabled) act.Invoke(AcceptButton.Tag); };
+            var dptb = new NumericPickerTextBox(val, min, max, GetSetMin, GetSetMax);
+            dptb.Enter += () => { if (AcceptButton.IsEnabled) act.Invoke((double)AcceptButton.Tag); };
 
             this.contentPresenter.Content = dptb;
 
@@ -52,14 +54,15 @@ namespace FlexTrader.MVVM.Resources
             };
         }
 
-        public NumericPicker(int val, Action<object> act, int? min = null, int? max = null)
+        public NumericPicker(int val, Action<int> act, int? min = null, int? max = null,
+            Action<Action<int>> GetSetMin = null, Action<Action<int>> GetSetMax = null)
         {
             InitializeComponent();
-            AcceptButton.Click += (s, e) => act.Invoke(((Button)s).Tag);
+            AcceptButton.Click += (s, e) => act.Invoke((int)((Button)s).Tag);
             AcceptButton.Tag = val;
 
-            var dptb = new NumericPickerTextBox(val, min, max);
-            dptb.Enter += () => { if (AcceptButton.IsEnabled) act.Invoke(AcceptButton.Tag); };
+            var dptb = new NumericPickerTextBox(val, min, max, GetSetMin, GetSetMax);
+            dptb.Enter += () => { if (AcceptButton.IsEnabled) act.Invoke((int)AcceptButton.Tag); };
 
             this.contentPresenter.Content = dptb;
 
@@ -83,9 +86,10 @@ namespace FlexTrader.MVVM.Resources
         public event Action Enter;
         public event Action<object> Changed;
 
-        public NumericPickerTextBox(double val, double? min = null, double? max = null)
+        public NumericPickerTextBox(double val, double? min = null, double? max = null,
+            Action<Action<double>> GetSetMin = null, Action<Action<double>> GetSetMax = null)
         {
-            var dc = new DoublePickerContext(val, min, max);
+            var dc = new DoublePickerContext(val, min, max, GetSetMin, GetSetMax);
             DataContext = dc;
             dc.Changed += d => this.Changed?.Invoke(d);
 
@@ -100,9 +104,9 @@ namespace FlexTrader.MVVM.Resources
             b.ValidationRules.Add(new DataErrorValidationRule());
             SetBinding(TextBox.TextProperty, b);
 
-            FontSize = 14;
+            FontSize = 18;
             FontWeight = FontWeights.Bold;
-            FontFamily = new System.Windows.Media.FontFamily("consolas");
+            FontFamily = new FontFamily("consolas");
         }
 
         private void EKeyDown(object s, KeyEventArgs e)
@@ -125,9 +129,10 @@ namespace FlexTrader.MVVM.Resources
             }
         }
 
-        public NumericPickerTextBox(int val, int? min = null, int? max = null)
+        public NumericPickerTextBox(int val, int? min = null, int? max = null,
+            Action<Action<int>> GetSetMin = null, Action<Action<int>> GetSetMax = null)
         {
-            var dc = new IntPickerContext(val, min, max);
+            var dc = new IntPickerContext(val, min, max, GetSetMin, GetSetMax);
             DataContext = dc;
             dc.Changed += d => this.Changed?.Invoke(d);
 
@@ -142,17 +147,21 @@ namespace FlexTrader.MVVM.Resources
             b.ValidationRules.Add(new DataErrorValidationRule());
             SetBinding(TextBox.TextProperty, b);
 
-            FontSize = 14;
+            FontSize = 18;
             FontWeight = FontWeights.Bold;
-            FontFamily = new System.Windows.Media.FontFamily("consolas");
+            FontFamily = new FontFamily("consolas");
         }
     }
 
     public class DoublePickerContext : IDataErrorInfo
     {
-        public DoublePickerContext(double val, double? min = null, double? max = null)
+        public DoublePickerContext(double val, double? min = null, double? max = null,
+            Action<Action<double>> GetSetMin = null, Action<Action<double>> GetSetMax = null)
         {
             this.Value = val.ToString();
+
+            GetSetMin?.Invoke(this.GetSetMin);
+            GetSetMax?.Invoke(this.GetSetMax);
 
             if (min != null)
                 this.min = min.Value;
@@ -165,9 +174,39 @@ namespace FlexTrader.MVVM.Resources
                 this.max = Double.MaxValue;
         }
 
+        private void GetSetMin(double m)
+        {
+            try
+            {
+                var val = Convert.ToDouble(Value);
+                if (val > m)
+                {
+                    Value = m.ToString();
+                    min = m;
+                }
+                else min = m;
+            }
+            catch { min = m; }
+        }
+
+        private void GetSetMax(double m)
+        {
+            try
+            {
+                var val = Convert.ToDouble(Value);
+                if (val < m)
+                {
+                    Value = m.ToString();
+                    max = m;
+                }
+                else max = m;
+            }
+            catch { max = m; }
+        }
+
         public string Value { get; set; }
-        private readonly double min;
-        private readonly double max;
+        private double min;
+        private double max;
         public event Action<double?> Changed;
 
         public string this[string columnName]
@@ -198,9 +237,13 @@ namespace FlexTrader.MVVM.Resources
 
     public class IntPickerContext : IDataErrorInfo
     {
-        public IntPickerContext(int val, int? min = null, int? max = null)
+        public IntPickerContext(int val, int? min = null, int? max = null,
+            Action<Action<int>> GetSetMin = null, Action<Action<int>> GetSetMax = null)
         {
             this.Value = val.ToString();
+
+            GetSetMin?.Invoke(this.GetSetMin);
+            GetSetMax?.Invoke(this.GetSetMax);
 
             if (min != null)
                 this.min = min.Value;
@@ -213,9 +256,39 @@ namespace FlexTrader.MVVM.Resources
                 this.max = int.MaxValue;
         }
 
+        private void GetSetMin(int m)
+        {
+            try
+            {
+                var val = Convert.ToDouble(Value);
+                if (val > m)
+                {
+                    Value = m.ToString();
+                    min = m;
+                }
+                else min = m;
+            }
+            catch { min = m; }
+        }
+
+        private void GetSetMax(int m)
+        {
+            try
+            {
+                var val = Convert.ToDouble(Value);
+                if (val < m)
+                {
+                    Value = m.ToString();
+                    max = m;
+                }
+                else max = m;
+            }
+            catch { max = m; }
+        }
+
         public string Value { get; set; }
-        private readonly int min;
-        private readonly int max;
+        private int min;
+        private int max;
         public event Action<int?> Changed;
 
         public string this[string columnName]

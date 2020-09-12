@@ -34,63 +34,62 @@ namespace ChartModules.IndicatorModules.Indicators
         {
             Sets.AddLevel("MA", new Setting[] 
             {
-                new Setting(NumericType.Picker, "Fast", () => N1, x =>
+                new Setting(IntType.Slider, "Fast", () => N1, i =>
                 {
-                    var d = (int)x;
-                    if (d > N2) N2 = d;
-                    else N1 = d;
-                    Redraw();
-                }),
-                new Setting(NumericType.Picker, "Slow", () => N2, x =>
+                    N1 = i; Redraw();
+                }, 
+                1, N2 - 1, null, act => { SetFastMax = act; }),
+
+                new Setting(IntType.Picker, "Slow", () => N2, i =>
                 {
-                    var d = (int)x;
-                    if (d < N1) N1 = d;
-                    else N2 = d;
-                    Redraw();
-                })
+                    SetFastMax.Invoke(i - 1);
+                    N2 = i; Redraw();
+                }, 
+                2)
             });
             Sets.Add(new Setting("MACD", () => { return MACDbr; },
-                Br => { this.MACDbr = Br as SolidColorBrush; Rendering(); }));
+                Br => { this.MACDbr = Br; Rendering(); }));
 
             Sets.AddLevel("fast", new Setting[] 
             {
-                new Setting("color", () => { return Pn1.Brush; }, 
+                new Setting("color", () => { return FastPen.Brush; }, 
                     Br => 
                     {
                         Dispatcher.Invoke(() => 
                         {
-                            Pn1 = new Pen(Br as SolidColorBrush, Pn1.Thickness); 
-                            Pn1.Freeze();
+                            FastPen = new Pen(Br, FastPen.Thickness); 
+                            FastPen.Freeze();
                         });
                         RedrawSecond(); 
                     }),
-                new Setting(NumericType.Slider, "weight", () => Pn1.Thickness * 10, 
-                    d => { Pn1 = new Pen(Pn1.Brush, d / 10); Pn1.Freeze(); RedrawSecond(); }, 10, 50)
+                new Setting(IntType.Slider, "weight", () => (int)(FastPen.Thickness * 10), 
+                    d => { FastPen = new Pen(FastPen.Brush, (double)d / 10); FastPen.Freeze(); RedrawSecond(); }, 10, 50)
             });
 
             Sets.AddLevel("slow", new Setting[]
             {
-                new Setting("color", () => { return Pn2.Brush; },
+                new Setting("color", () => { return SlowPen.Brush; },
                     Br =>
                     {
                         Dispatcher.Invoke(() =>
                         {
-                            Pn2 = new Pen(Br as SolidColorBrush, Pn2.Thickness);
-                            Pn2.Freeze();
+                            SlowPen = new Pen(Br, SlowPen.Thickness);
+                            SlowPen.Freeze();
                         });
                         RedrawSecond();
                     }),
-                new Setting(NumericType.Slider, "weight", () => Pn2.Thickness * 10,
-                    d => { Pn2 = new Pen(Pn2.Brush, d / 10); Pn2.Freeze(); RedrawSecond(); }, 10, 50)
+                new Setting(IntType.Slider, "weight", () => (int)(SlowPen.Thickness * 10),
+                    d => { SlowPen = new Pen(SlowPen.Brush, (double)d / 10); SlowPen.Freeze(); RedrawSecond(); }, 10, 50)
             });
 
-            Pn1.Freeze(); Pn2.Freeze();
+            FastPen.Freeze(); SlowPen.Freeze();
         }
 
+        private Action<int> SetFastMax;
         private protected override string SetsName => "MACD";
         private SolidColorBrush MACDbr = Brushes.Teal;
-        private Pen Pn1 { get; set; } = new Pen(Brushes.Lime, 2);
-        private Pen Pn2 { get; set; } = new Pen(Brushes.White, 2);
+        private Pen FastPen { get; set; } = new Pen(Brushes.Lime, 2);
+        private Pen SlowPen { get; set; } = new Pen(Brushes.White, 2);
 
         private protected override void DestroyThis() { }
 
@@ -250,7 +249,7 @@ namespace ChartModules.IndicatorModules.Indicators
                 Dispatcher.Invoke(() =>
                 {
                     using var dc = IndicatorVisualSecond.RenderOpen();
-                    dc.DrawGeometry(null, Pn1, geo1);
+                    dc.DrawGeometry(null, FastPen, geo1);
                 });
                 return;
             }
@@ -272,8 +271,8 @@ namespace ChartModules.IndicatorModules.Indicators
             {
                 using var dc = IndicatorVisualSecond.RenderOpen();
 
-                dc.DrawGeometry(null, Pn1, geo1);
-                dc.DrawGeometry(null, Pn2, geo2);
+                dc.DrawGeometry(null, FastPen, geo1);
+                dc.DrawGeometry(null, SlowPen, geo2);
             });
         }
 
