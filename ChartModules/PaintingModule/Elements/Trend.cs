@@ -25,7 +25,7 @@ using System.Windows.Threading;
 
 namespace ChartModules.PaintingModule.Elements
 {
-    public class Trend : ChangingElement
+    public class Trend : HookElement
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;

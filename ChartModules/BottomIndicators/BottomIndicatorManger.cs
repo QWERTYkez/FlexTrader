@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartModules.IndicatorModules.Indicators;
+using ChartModules.BottomIndicators.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,9 +24,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace ChartModules.IndicatorModules
+namespace ChartModules.BottomIndicators
 {
-    public class IndicatorsManger
+    public class BottomIndicatorManger
     {
         private readonly IChart Chart;
         private readonly Grid IndicatorsGrid;
@@ -34,7 +34,7 @@ namespace ChartModules.IndicatorModules
         private readonly RowDefinition IndicatorsSplitter;
         private readonly DrawingCanvas CursorLinesLayer;
         private readonly DrawingCanvas TimeLine;
-        public IndicatorsManger(IChart Chart, Grid IndicatorsGrid, RowDefinition IndicatorsRowRD, 
+        public BottomIndicatorManger(IChart Chart, Grid IndicatorsGrid, RowDefinition IndicatorsRowRD, 
             RowDefinition IndicatorsSplitterRD, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
         {
             this.Chart = Chart;
@@ -52,7 +52,7 @@ namespace ChartModules.IndicatorModules
             AddIndicator(IndicatorType.MACD);
         }
 
-        private readonly List<Indicator> Indicators = new List<Indicator>();
+        private readonly List<BottomIndicator> Indicators = new List<BottomIndicator>();
 
         private readonly List<RowDefinition> SliderRows = new List<RowDefinition>();
         private readonly List<RowDefinition> IndicatorRows = new List<RowDefinition>();
@@ -101,7 +101,7 @@ namespace ChartModules.IndicatorModules
             Grid.SetColumn(ScaleGrd, 2);
             IndicatorsGrid.Children.Add(ScaleGrd); ScaleGrds.Add(ScaleGrd);
 
-            Indicator Indicator = type switch
+            BottomIndicator Indicator = type switch
             {
                 IndicatorType.Volumes => new Volumes(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
                 IndicatorType.MACD => new MACD(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
@@ -111,7 +111,7 @@ namespace ChartModules.IndicatorModules
             Indicator.Moving += MoveIndicator;
             Indicators.Add(Indicator);
         }
-        private void DeleteIndicator(Indicator indicator)
+        private void DeleteIndicator(BottomIndicator indicator)
         {
             int i = Indicators.IndexOf(indicator);
             if (i + 1 < Indicators.Count)
@@ -144,7 +144,7 @@ namespace ChartModules.IndicatorModules
                 IndicatorsSplitter.Height = new GridLength(0);
             }
         }
-        private void MoveIndicator(Indicator indicator, int i)
+        private void MoveIndicator(BottomIndicator indicator, int i)
         {
             if (i > 0)
             {

@@ -24,7 +24,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace ChartModules.PaintingModule
+namespace ChartModules
 {
     public class HooksModule : ChartModule
     {
@@ -403,7 +403,7 @@ namespace ChartModules.PaintingModule
         /// <param name="ChangeMethod">Метод передвижения</param>
         /// <param name="GetMagnetRadius">Радиус Зацепления</param>
         public Hook(
-            ChangingElement Element,
+            HookElement Element,
             Func<Point, double> GetDistanceXY,
             Func<Point, Point> GetHookPoint,
             Func<double> GetMagnetRadius,
@@ -434,7 +434,7 @@ namespace ChartModules.PaintingModule
         }
         public void ClearEvents() => ResetElement = null;
 
-        private readonly ChangingElement Element;
+        private readonly HookElement Element;
         public bool Locked { get => Element.Locked; }
 
         public List<Hook> SubHooks { get; }

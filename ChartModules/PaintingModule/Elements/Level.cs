@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 namespace ChartModules.PaintingModule.Elements
 {
-    public class Level : ChangingElement
+    public class Level : HookElement
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;

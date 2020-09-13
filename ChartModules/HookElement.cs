@@ -22,11 +22,11 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace ChartModules.PaintingModule
+namespace ChartModules
 {
-    public abstract class ChangingElement
+    public abstract class HookElement
     {
-        public ChangingElement()
+        public HookElement()
         {
             Subhooks.AddRange(CreateSubhooks());
             Hook = new Hook(this, GetDistance, GetHookPoint, GetMagnetRadius, ChangeMethod, DrawElement, DrawShadow, AcceptNewCoordinates, Subhooks);
@@ -42,12 +42,9 @@ namespace ChartModules.PaintingModule
         private protected abstract List<Setting> GetSets();
         public List<Setting> GetSettings()
         {
-            var sets = new List<Setting> 
-            { 
-                new Setting(() => this.Locked, b => this.Locked = b),
-                new Setting(Delete)
-            };
-            sets.AddRange(this.GetSets());
+            var sets = GetSets();
+            sets.Add(new Setting(() => this.Locked, b => this.Locked = b));
+            sets.Add(new Setting(Delete));
             return sets;
         }
 
@@ -60,8 +57,8 @@ namespace ChartModules.PaintingModule
             this.ApplyChangeAct = ApplyChangeAct;
         }
         public void ApplyChanges() => ApplyChangeAct.Invoke();
-        private Action<ChangingElement> DeleteAct;
-        public void SetDeleteAction(Action<ChangingElement> DeleteAct)
+        private Action<HookElement> DeleteAct;
+        public void SetDeleteAction(Action<HookElement> DeleteAct)
         {
             this.DeleteAct = DeleteAct;
         }

@@ -17,7 +17,7 @@
 */
 
 using ChartModules;
-using ChartModules.IndicatorModules;
+using ChartModules.BottomIndicators;
 using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.ViewModels;
@@ -46,7 +46,7 @@ namespace FlexTrader.MVVM.Views
         private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;
 
-        private readonly IndicatorsManger IndicatorsManger;
+        private readonly BottomIndicatorManger IndicatorsManger;
 
         public IChartWindow MWindow { get; }
         public ChartView() { } //конструктор для intellisense
@@ -105,7 +105,7 @@ namespace FlexTrader.MVVM.Views
             CandlesModule.NewXScale += sc => NewXScale?.Invoke(sc);
             CandlesModule.NewXTrans += tr => NewXTrans?.Invoke(tr);
 
-            IndicatorsManger = new IndicatorsManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD, CursorLinesLayer, TimesLayer);
+            IndicatorsManger = new BottomIndicatorManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD, CursorLinesLayer, TimesLayer);
 
             ChartGrid.PreviewMouseRightButtonDown += (s, e) =>
             {

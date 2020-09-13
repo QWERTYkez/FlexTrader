@@ -25,9 +25,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace ChartModules.IndicatorModules.Indicators
+namespace ChartModules.BottomIndicators.Indicators
 {
-    public class MACD : Indicator
+    public class MACD : BottomIndicator
     {
         public MACD(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
             : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine, true)

@@ -24,9 +24,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace ChartModules.IndicatorModules
+namespace ChartModules.BottomIndicators.Indicators
 {
-    public class Volumes : Indicator
+    public class Volumes : BottomIndicator
     {
         public Volumes(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
             : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine)

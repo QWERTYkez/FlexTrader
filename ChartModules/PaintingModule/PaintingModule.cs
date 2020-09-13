@@ -102,7 +102,7 @@ namespace ChartModules.PaintingModule
             PrototypeTimeCanvas.ClearVisuals();
         }
 
-        private readonly List<ChangingElement> ElementsCollection = new List<ChangingElement>();
+        private readonly List<HookElement> ElementsCollection = new List<HookElement>();
         private void CollectionChanged()
         {
             Sets.Clear();
@@ -128,7 +128,7 @@ namespace ChartModules.PaintingModule
             Redraw();
         }
 
-        private void AddElement(ChangingElement el)
+        private void AddElement(HookElement el)
         {
             el.SetApplyChangeAction(CollectionChanged);
             el.Chart = Chart;
@@ -137,7 +137,7 @@ namespace ChartModules.PaintingModule
             CollectionChanged();
             ResetHooks();
         }
-        private void DeleteElement(ChangingElement el)
+        private void DeleteElement(HookElement el)
         {
             ElementsCollection.Remove(el);
             CollectionChanged();

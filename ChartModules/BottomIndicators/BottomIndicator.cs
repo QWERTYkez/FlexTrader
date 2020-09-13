@@ -27,13 +27,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace ChartModules.IndicatorModules
+namespace ChartModules.BottomIndicators
 {
-    public abstract class Indicator : ChartModule
+    public abstract class BottomIndicator : ChartModule
     {
         public static readonly SolidColorBrush CursorGrabber = new SolidColorBrush(Color.FromArgb(0,0,0,0));
         private bool Twin;
-        public Indicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, 
+        public BottomIndicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, 
             DrawingCanvas TimeLine, bool Twin = false) : base(Chart)
         {
             this.Twin = Twin;
@@ -136,8 +136,8 @@ namespace ChartModules.IndicatorModules
                 () => Dispatcher.Invoke(() => Selector.Visibility = Visibility.Collapsed));
         }
 
-        public event Action<Indicator, int> Moving;
-        public event Action<Indicator> Delete;
+        public event Action<BottomIndicator, int> Moving;
+        public event Action<BottomIndicator> Delete;
 
         private readonly Border Selector = new Border
         {
