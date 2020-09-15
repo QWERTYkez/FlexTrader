@@ -50,8 +50,8 @@ namespace ChartModules.StandardModules
         private protected override void Destroy()
         {
             Chart.FontBrushChanged -= () => Redraw();
-            GridLayer.DeleteVisual(TimeGridVisual);
-            TimeLine.DeleteVisual(TimesVisual);
+            GridLayer.RemoveVisual(TimeGridVisual);
+            TimeLine.RemoveVisual(TimesVisual);
         }
 
         public event Action HorizontalСhanges;

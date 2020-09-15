@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -42,9 +43,12 @@ namespace ChartModules
         private protected abstract List<Setting> GetSets();
         public List<Setting> GetSettings()
         {
-            var sets = GetSets();
-            sets.Add(new Setting(() => this.Locked, b => this.Locked = b));
-            sets.Add(new Setting(Delete));
+            var sets = new List<Setting>
+            {
+                new Setting(() => this.Locked, b => this.Locked = b),
+                new Setting(Delete)
+            };
+            sets.AddRange(GetSets());
             return sets;
         }
 
@@ -97,16 +101,21 @@ namespace ChartModules
 
         private protected void DrawElement(Vector? vec, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual, bool DrawOver = false)
         {
-            var acts = PrepareToDrawing(vec, VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip, DrawOver);
-
-            Dispatcher.Invoke(() =>
+            Task.Run(() =>
             {
-                using (var dc = ElementsVisual.RenderOpen())
-                    acts[0]?.Invoke(dc);
-                using (var dc = PricesVisual.RenderOpen())
-                    acts[1]?.Invoke(dc);
-                using (var dc = TimesVisual.RenderOpen())
-                    acts[2]?.Invoke(dc);
+                Action<DrawingContext>[] acts;
+                if (PricesVisual == null) acts = PrepareToDrawing(vec, 0, DrawOver);
+                else acts = PrepareToDrawing(vec, VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip, DrawOver);
+
+                Dispatcher.Invoke(() =>
+                {
+                    using (var dc = ElementsVisual.RenderOpen())
+                        acts[0]?.Invoke(dc);
+                    using (var dc = PricesVisual?.RenderOpen())
+                        acts[1]?.Invoke(dc);
+                    using (var dc = TimesVisual?.RenderOpen())
+                        acts[2]?.Invoke(dc);
+                });
             });
         }
 

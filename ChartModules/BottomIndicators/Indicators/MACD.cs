@@ -50,7 +50,7 @@ namespace ChartModules.BottomIndicators.Indicators
                         Redraw();
                     }
                 }, 
-                2, 500)
+                2, null)
             });
             Sets.Add(new Setting("MACD", () => { return MACDbr; },
                 Br => { this.MACDbr = Br; Rendering(); }));
@@ -138,7 +138,7 @@ namespace ChartModules.BottomIndicators.Indicators
         private int N1 = 12; //FastLength
         private int N2 = 26; //SliwLength
         private readonly List<Data> Values = new List<Data>();
-        private void CalculateValues()
+        private protected override void Calculate()
         {
             var A1 = 2 / ((double)N1 + 1);
             var A2 = 2 / ((double)N2 + 1);
@@ -170,10 +170,6 @@ namespace ChartModules.BottomIndicators.Indicators
                     A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - 1].EMA_fast,
                     A2 * AllCandles[i].CloseD + (1 - A2) * Values[i - 1].EMA_Slow));
             }
-        }
-        private protected override void Calculate()
-        {
-            CalculateValues();
 
             Rects = new Rect[Values.Count];
             Parallel.For(1, Values.Count, i =>
@@ -225,7 +221,7 @@ namespace ChartModules.BottomIndicators.Indicators
         }
         private protected override void RedrawSecond(DateTime tA, DateTime tB)
         {
-            var dT = (Chart.TimeB - Chart.TimeA) / Chart.ChWidth;
+            dT = (Chart.TimeB - Chart.TimeA) / Chart.ChWidth;
 
             var fastValues = (from v in Values where v.TimeStamp > tA && 
                              v.TimeStamp < tB && v.Fast select v).ToList();
@@ -240,14 +236,11 @@ namespace ChartModules.BottomIndicators.Indicators
             var LS = new LineSegment[fastValues.Count - 1];
             Parallel.For(1, fastValues.Count, i =>
             {
-                LS[i - 1] = new LineSegment(new Point(
-                    (fastValues[i].TimeStamp - Chart.TimeA) / dT,
-                     ToHeight(fastValues[i].EMA_fast)), true);
+                LS[i - 1] = new LineSegment(GetPoint(fastValues[i].TimeStamp, fastValues[i].EMA_fast), true);
                 LS[i - 1].Freeze();
             });
-            var geo1 = new PathGeometry(new[] { new PathFigure(
-                new Point((fastValues[0].TimeStamp - Chart.TimeA) / dT,
-                ToHeight(fastValues[0].EMA_fast)), LS, false) }); geo1.Freeze();
+            var geo1 = new PathGeometry(new[] { new PathFigure(GetPoint(fastValues[0].TimeStamp, 
+                fastValues[0].EMA_fast), LS, false) }); geo1.Freeze();
 
             if (slowValues.Count < 2) 
             {
@@ -262,14 +255,12 @@ namespace ChartModules.BottomIndicators.Indicators
             LS = new LineSegment[slowValues.Count - 1];
             Parallel.For(1, slowValues.Count, i =>
             {
-                LS[i - 1] = new LineSegment(new Point(
-                    (slowValues[i].TimeStamp - Chart.TimeA) / dT,
-                    ToHeight(slowValues[i].EMA_Slow)), true);
+                var p = GetPoint(slowValues[i].TimeStamp, slowValues[i].EMA_Slow);
+                LS[i - 1] = new LineSegment(p, true);
                 LS[i - 1].Freeze();
             });
-            var geo2 = new PathGeometry(new[] { new PathFigure(
-                new Point((slowValues[0].TimeStamp - Chart.TimeA) / dT,
-                ToHeight(slowValues[0].EMA_Slow)), LS, false) }); geo2.Freeze();
+            var geo2 = new PathGeometry(new[] { new PathFigure(GetPoint(slowValues[0].TimeStamp, 
+                slowValues[0].EMA_Slow), LS, false) }); geo2.Freeze();
 
             
             Dispatcher.Invoke(() =>
@@ -280,7 +271,6 @@ namespace ChartModules.BottomIndicators.Indicators
                 dc.DrawGeometry(null, SlowPen, geo2);
             });
         }
-
         private struct Data
         {
             public Data(DateTime TimeStamp)

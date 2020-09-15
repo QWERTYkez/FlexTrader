@@ -33,7 +33,7 @@ namespace ChartModules
             base.AddVisualChild(visual);
             base.AddLogicalChild(visual);
         }
-        public void DeleteVisual(Visual visual)
+        public void RemoveVisual(Visual visual)
         {
             Visuals.Remove(visual);
             base.RemoveVisualChild(visual);

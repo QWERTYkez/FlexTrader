@@ -66,9 +66,9 @@ namespace ChartModules.PaintingModule
             this.SetMenuAct = chart.MWindow.SetMenu;
 
             Chart.VerticalСhanges += () => Task.Run(() => ResetHooks());
-            Chart.VerticalСhanges += () => Redraw();
+            Chart.VerticalСhanges += Redraw;
             Chart.HorizontalСhanges += () => Task.Run(() => ResetHooks());
-            Chart.HorizontalСhanges += () => Redraw();
+            Chart.HorizontalСhanges += Redraw;
             this.ResetInstrument = Chart.MWindow.ResetInstrument;
 
             Chart.PaintingLevel = PaintingLevel;
@@ -202,21 +202,26 @@ namespace ChartModules.PaintingModule
             };
         }
 
+        private int ChangesCounter1 = 0;
         private void ResetHooks() 
         {
+            ChangesCounter1 += 1;
+            var x = ChangesCounter1;
+            Thread.Sleep(50);
+            if (x != ChangesCounter1) return;
             VisibleHooks = (from el in ElementsCollection.AsParallel() where el.VisibilityOnChart select el.Hook).ToList();
         }
 
         private int ChangesCounter = 0;
-        public Task Redraw()
+        private void Redraw()
         {
-            ChangesCounter += 1;
-            var x = ChangesCounter;
-            Thread.Sleep(50);
-            if (x != ChangesCounter) return null;
-
-            return Task.Run(() => 
+            Task.Run(() => 
             {
+                ChangesCounter += 1;
+                var x = ChangesCounter;
+                Thread.Sleep(50);
+                if (x != ChangesCounter) return;
+
                 var ppd = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
                 Action<DrawingContext>[][] lacts = new Action<DrawingContext>[ElementsCollection.Count][];
 

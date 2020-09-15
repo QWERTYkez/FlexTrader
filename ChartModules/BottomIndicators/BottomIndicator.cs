@@ -31,9 +31,9 @@ namespace ChartModules.BottomIndicators
 {
     public abstract class BottomIndicator : ChartModule
     {
-        public static readonly SolidColorBrush CursorGrabber = new SolidColorBrush(Color.FromArgb(0,0,0,0));
+        public static readonly SolidColorBrush CursorGrabber = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
         private bool Twin;
-        public BottomIndicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, 
+        public BottomIndicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer,
             DrawingCanvas TimeLine, bool Twin = false) : base(Chart)
         {
             this.Twin = Twin;
@@ -127,7 +127,7 @@ namespace ChartModules.BottomIndicators
             var sets = new List<Setting>
             {
                 new Setting((int i) => Moving.Invoke(this, i)),
-                new Setting(() => Delete.Invoke(this)) 
+                new Setting(() => Delete.Invoke(this))
             };
             sets.AddRange(Sets);
 
@@ -177,10 +177,10 @@ namespace ChartModules.BottomIndicators
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            CursorLinesLayer.DeleteVisual(Chart.CursorLinesVisual);
-            CursorLayer.DeleteVisual(Chart.CursorVisual);
-            TimeMarkLayer.DeleteVisual(CursorTimeVisual);
-            ValueMarkLayer.DeleteVisual(CursorValueVisual);
+            CursorLinesLayer.RemoveVisual(Chart.CursorLinesVisual);
+            CursorLayer.RemoveVisual(Chart.CursorVisual);
+            TimeMarkLayer.RemoveVisual(CursorTimeVisual);
+            ValueMarkLayer.RemoveVisual(CursorValueVisual);
         }
         private CursorPosition CursorPosition { get; } = new CursorPosition();
         private void CursorRedraw(object s, MouseEventArgs e)
@@ -193,7 +193,7 @@ namespace ChartModules.BottomIndicators
 
                 dt = CorrectTimePosition(ref npos);
                 value = HeightToValue(npos.Y).ToString(sf);
-                
+
                 CursorPosition.Corrected = npos;
                 CursorPosition.NMP();
 
@@ -319,7 +319,7 @@ namespace ChartModules.BottomIndicators
         }
 
 
-        private protected virtual void GetSecondMinMax(DateTime tA, DateTime tB, out double min, out double max) 
+        private protected virtual void GetSecondMinMax(DateTime tA, DateTime tB, out double min, out double max)
         { min = 0; max = 1; }
         private protected void RedrawSecond()
         {
@@ -364,7 +364,7 @@ namespace ChartModules.BottomIndicators
         }
         public void HorizontalReset(IEnumerable<ICandle> currentCandles = null)
         {
-            Task.Run(() => 
+            Task.Run(() =>
             {
                 double mmm, max;
                 if (currentCandles != null)
@@ -412,7 +412,10 @@ namespace ChartModules.BottomIndicators
                 RedrawSecond(tA, tB);
             });
         }
-        private protected double ToHeight(double val) => GrdHeight * (sMin + sDelta - val) / sDelta;
+        private protected TimeSpan dT;
+        private protected Point GetPoint(DateTime time, double val) => new Point(GetX(time), GetY(val));
+        private protected double GetX(DateTime time) => (time - Chart.TimeA) / dT;
+        private protected double GetY(double val) => GrdHeight * (sMin + sDelta - val) / sDelta;
 
         private double LastMin;
         private double LastDelta;

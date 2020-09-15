@@ -18,22 +18,50 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace ChartModules.CenterIndicators
 {
     public abstract class CenterIndicator : HookElement
     {
+        public CenterIndicator()
+        {
+            Sets.Add(new Setting((int i) => Moving.Invoke(this, i)));
+        }
+
+        public readonly DrawingVisual IndicatorVisual = new DrawingVisual();
+
         private protected override void ChangeMethod(Vector? Changes) { }
         private protected override void NewCoordinates() { }
+        private protected override void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual) { }
 
+        public event Action DataChanged;
+        private protected void DataChangedInvoke() => DataChanged.Invoke();
         public event Action<CenterIndicator, int> Moving;
-        private protected override List<Setting> GetSets()
+        private protected List<Setting> Sets { get; } = new List<Setting>();
+        private protected override List<Setting> GetSets() => Sets;
+        private protected abstract void CalculateData();
+        public void Rendering() => DrawElement(null, IndicatorVisual, null, null);
+        public void SetChart(IChart Chart) 
         {
-            var sets = GetIndSets();
-            sets.Add(new Setting((int i) => Moving.Invoke(this, i)));
-            return sets;
+            this.Chart = Chart;
+            Chart.CandlesChanged += ac => Redraw();
         }
-        private protected abstract List<Setting> GetIndSets();
+        private protected void Redraw()
+        {
+            Task.Run(() =>
+            {
+                if (Chart.StartTime == DateTime.FromBinary(0)) return;
+                CalculateData();
+                Rendering();
+            });
+        }
+
+        private protected TimeSpan dT;
+        private protected Point GetPoint(DateTime time, double val) => new Point(GetX(time), GetY(val));
+        private protected double GetX(DateTime time) => (time - Chart.TimeA) / dT;
+        private protected double GetY(double val) => Chart.ChHeight * (Chart.PricesMin + Chart.PricesDelta - val / Chart.TickSize) / Chart.PricesDelta;
     }
 }

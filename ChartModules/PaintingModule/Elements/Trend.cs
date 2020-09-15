@@ -71,7 +71,7 @@ namespace ChartModules.PaintingModule.Elements
                 var P1 = C.PaintingPoints[0];
                 var P2 = C.CursorPosition.Magnet_Current;
 
-                P1.GetCoeffs(P2, out double A, out double B);
+                P1.GetCoeffsAB(P2, out double A, out double B);
 
                 var linpen = new Pen(StLineBrush, StLineThikness); linpen.Freeze();
                 var linps = new List<Point>();
@@ -145,9 +145,9 @@ namespace ChartModules.PaintingModule.Elements
         {
             get
             {
-                var P1 = Point1.ToPoint();
-                var P2 = Point2.ToPoint();
-                P1.GetCoeffs(P2, out double A, out double B);
+                var P1 = Point1.ToPoint(Chart);
+                var P2 = Point2.ToPoint(Chart);
+                P1.GetCoeffsAB(P2, out double A, out double B);
                 double C = A * Chart.ChWidth + B;
 
                 if ((B < 0 && C < 0) || (A > Chart.ChHeight && B > Chart.ChHeight)) return false;
@@ -181,27 +181,27 @@ namespace ChartModules.PaintingModule.Elements
 
         private protected override double GetDistance(Point P)
         {
-            var P1 = Point1.ToPoint();
-            var P2 = Point2.ToPoint();
-            double A = P1.GetDistance(P2);
-            double B = P.GetDistance(P2);
-            double C = P.GetDistance(P1);
+            var P1 = Point1.ToPoint(Chart);
+            var P2 = Point2.ToPoint(Chart);
+            double A = P1.DistanceTo(P2);
+            double B = P.DistanceTo(P2);
+            double C = P.DistanceTo(P1);
 
             double pp = (A + B + C) / 2;
             return (2 * Math.Sqrt(pp * (pp - A) * (pp - B) * (pp - C))) / A;
         }
         private protected override Point GetHookPoint(Point P)
         {
-            var P1 = Point1.ToPoint();
-            var P2 = Point2.ToPoint();
-            double A = P1.GetDistance(P2);
-            double B = P.GetDistance(P2);
-            double C = P.GetDistance(P1);
+            var P1 = Point1.ToPoint(Chart);
+            var P2 = Point2.ToPoint(Chart);
+            double A = P1.DistanceTo(P2);
+            double B = P.DistanceTo(P2);
+            double C = P.DistanceTo(P1);
             double pp = (A + B + C) / 2;
             double h = (2 * Math.Sqrt(pp * (pp - A) * (pp - B) * (pp - C))) / A;
 
             double z = Math.Sqrt(Math.Pow(C, 2) - Math.Pow(h, 2));
-            P1.GetCoeffs(P2, out double a, out _);
+            P1.GetCoeffsAB(P2, out double a, out _);
             double x = z / Math.Sqrt(Math.Pow(a, 2) + 1);
             return new Point(P1.X + x, P1.Y + a*x);
         }
@@ -210,9 +210,9 @@ namespace ChartModules.PaintingModule.Elements
         {
             var br = Dispatcher.Invoke(() => { return Chart.ChartBackground; });
 
-            var P1 = Point1.ToPoint();
-            var P2 = Point2.ToPoint();
-            P1.GetCoeffs(P2, out double A, out double B);
+            var P1 = Point1.ToPoint(Chart);
+            var P2 = Point2.ToPoint(Chart);
+            P1.GetCoeffsAB(P2, out double A, out double B);
 
             var linpen = new Pen(br, this.LineThikness + 1); linpen.Freeze();
             var linps = new List<Point>();
@@ -250,13 +250,13 @@ namespace ChartModules.PaintingModule.Elements
         {
             if (Changes.HasValue)
             {
-                NP1 = Point1.ToPoint() + Changes.Value;
-                NP2 = Point2.ToPoint() + Changes.Value;
+                NP1 = Point1.ToPoint(Chart) + Changes.Value;
+                NP2 = Point2.ToPoint(Chart) + Changes.Value;
             }
             else
             {
-                NP1 = Point1.ToPoint();
-                NP2 = Point2.ToPoint();
+                NP1 = Point1.ToPoint(Chart);
+                NP2 = Point2.ToPoint(Chart);
             }
         }
         public override Action<DrawingContext>[] PrepareToDrawing(Vector? vec, double PixelsPerDip, bool DrawOver = false)
@@ -269,10 +269,10 @@ namespace ChartModules.PaintingModule.Elements
             }
             else
             {
-                P1 = Point1.ToPoint();
-                P2 = Point2.ToPoint();
+                P1 = Point1.ToPoint(Chart);
+                P2 = Point2.ToPoint(Chart);
             }
-            P1.GetCoeffs(P2, out double A, out double B);
+            P1.GetCoeffsAB(P2, out double A, out double B);
 
             var linpen = new Pen(this.LineBrush, this.LineThikness + 1); linpen.Freeze();
             var linps = new List<Point>();
@@ -338,14 +338,14 @@ namespace ChartModules.PaintingModule.Elements
                 new Hook
                 (
                     this,
-                    P => P.GetDistance(Point1.ToPoint()),
-                    P => Point1.ToPoint(),
+                    P => P.DistanceTo(Point1.ToPoint(Chart)),
+                    P => Point1.ToPoint(Chart),
                     () => 14,
                     V => 
                     {
-                        if (V.HasValue) NP1 = Point1.ToPoint() + V.Value;
-                        else NP1 = Point1.ToPoint();
-                        NP2 = Point2.ToPoint();
+                        if (V.HasValue) NP1 = Point1.ToPoint(Chart) + V.Value;
+                        else NP1 = Point1.ToPoint(Chart);
+                        NP2 = Point2.ToPoint(Chart);
                     },
                     DrawElement,
                     DrawShadow,
@@ -354,14 +354,14 @@ namespace ChartModules.PaintingModule.Elements
                 new Hook
                 (
                     this,
-                    P => P.GetDistance(Point2.ToPoint()),
-                    P => Point2.ToPoint(),
+                    P => P.DistanceTo(Point2.ToPoint(Chart)),
+                    P => Point2.ToPoint(Chart),
                     () => 14,
                     V => 
                     {
-                        if (V.HasValue) NP2 = Point2.ToPoint() + V.Value;
-                        else NP2 = Point2.ToPoint();
-                        NP1 = Point1.ToPoint();
+                        if (V.HasValue) NP2 = Point2.ToPoint(Chart) + V.Value;
+                        else NP2 = Point2.ToPoint(Chart);
+                        NP1 = Point1.ToPoint(Chart);
                     },
                     DrawElement,
                     DrawShadow,

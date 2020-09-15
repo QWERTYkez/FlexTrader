@@ -74,13 +74,13 @@ namespace ChartModules
         }
         private protected override void Destroy()
         {
-            HooksLayer.DeleteVisual(ShadowVisual);
-            HooksLayer.DeleteVisual(OverVisual);
-            HooksLayer.DeleteVisual(PointVisual);
-            HookPriceLayer.DeleteVisual(ShadowPriceVisual);
-            HookPriceLayer.DeleteVisual(OverPriceVisual);
-            HookTimeLayer.DeleteVisual(OverTimeVisual);
-            HookTimeLayer.DeleteVisual(ShadowTimeVisual);
+            HooksLayer.RemoveVisual(ShadowVisual);
+            HooksLayer.RemoveVisual(OverVisual);
+            HooksLayer.RemoveVisual(PointVisual);
+            HookPriceLayer.RemoveVisual(ShadowPriceVisual);
+            HookPriceLayer.RemoveVisual(OverPriceVisual);
+            HookTimeLayer.RemoveVisual(OverTimeVisual);
+            HookTimeLayer.RemoveVisual(ShadowTimeVisual);
         }
 
         private protected override string SetsName { get; }

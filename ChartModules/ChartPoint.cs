@@ -23,36 +23,34 @@ namespace ChartModules
 {
     public struct ChartPoint
     {
-        public ChartPoint(in DateTime Time, in double Price, IChart Chart)
+        public ChartPoint(in DateTime Time, in double Price)
         {
-            this.Time = Time;
+            this.TimeStamp = Time;
             this.Price = Price;
-            this.Chart = Chart;
         }
         public ChartPoint(in Point P, IChart Chart)
         {
-            this.Time = Chart.WidthToTime(P.X);
+            this.TimeStamp = Chart.WidthToTime(P.X);
             this.Price = Chart.HeightToPrice(P.Y);
-            this.Chart = Chart;
         }
 
-        public DateTime Time;
+        public DateTime TimeStamp;
         public double Price;
-        private readonly IChart Chart;
 
-        public Point ToPoint() =>
-            new Point(Chart.TimeToWidth(this.Time), Chart.PriceToHeight(this.Price));
+        public Point ToPoint(IChart Chart) =>
+            new Point(Chart.TimeToWidth(this.TimeStamp), Chart.PriceToHeight(this.Price));
     }
 
     public static class PointExtension
     {
         public static ChartPoint ToChartPoint(in this Point P, IChart C) =>
-            new ChartPoint(C.WidthToTime(P.X), C.HeightToPrice(P.Y), C);
+            new ChartPoint(C.WidthToTime(P.X), C.HeightToPrice(P.Y));
 
-        public static void GetCoeffs(in this Point P1, in Point P2, out double A, out double B)
+        public static void GetCoeffsAB(in this Point P1, in Point P2, out double A, out double B)
         { A = (P2.Y - P1.Y) / (P2.X - P1.X); B = -A * P1.X + P1.Y; }
+        public static double GetCoeffsA(in this Point P1, in Point P2) => (P2.Y - P1.Y) / (P2.X - P1.X);
 
-        public static double GetDistance(in this Point A, in Point B) =>
+        public static double DistanceTo(in this Point A, in Point B) =>
             Math.Sqrt(Math.Pow(B.X - A.X, 2) + Math.Pow(B.Y - A.Y, 2));
     }
 }

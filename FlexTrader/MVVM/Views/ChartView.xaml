@@ -58,7 +58,7 @@
             Cursor="None"
             SizeChanged="ChartGrid_SizeChanged">
             <CM:DrawingCanvas x:Name="GridLayerHorizontal" />
-            <CM:DrawingCanvas x:Name="BackChart" />
+            <CM:DrawingCanvas x:Name="BackgroundIndLayer" />
             <Grid ClipToBounds="True">
                 <Grid RenderTransformOrigin="1,0.5">
                     <Grid RenderTransformOrigin="0.5,0.5">
@@ -78,6 +78,7 @@
                     </Grid.RenderTransform>
                 </Grid>
             </Grid>
+            <CM:DrawingCanvas x:Name="ForegroundIndLayer" />
             <Grid x:Name="SubLayers">
                 <CM:DrawingCanvas x:Name="LevelsLayer" />
                 <CM:DrawingCanvas x:Name="PaintingsLayer" />

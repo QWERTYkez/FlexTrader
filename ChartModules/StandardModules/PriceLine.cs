@@ -57,8 +57,8 @@ namespace ChartModules.StandardModules
         private protected override void Destroy()
         {
             Chart.FontBrushChanged -= () => Redraw();
-            GridLayer.DeleteVisual(PriceGridVisual);
-            PriceLine.DeleteVisual(PricesVisual);
+            GridLayer.RemoveVisual(PriceGridVisual);
+            PriceLine.RemoveVisual(PricesVisual);
         }
 
         public event Action VerticalСhanges;

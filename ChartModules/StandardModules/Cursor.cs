@@ -108,11 +108,11 @@ namespace ChartModules.StandardModules
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            CursorLinesLayer.DeleteVisual(CursorLinesVisual);
-            CursorLayer.DeleteVisual(CursorVisual);
-            MagnetLayer.DeleteVisual(MagnetVisual);
-            TimeLine.DeleteVisual(CursorTimeVisual);
-            PriceLine.DeleteVisual(CursorPriceVisual);
+            CursorLinesLayer.RemoveVisual(CursorLinesVisual);
+            CursorLayer.RemoveVisual(CursorVisual);
+            MagnetLayer.RemoveVisual(MagnetVisual);
+            TimeLine.RemoveVisual(CursorTimeVisual);
+            PriceLine.RemoveVisual(CursorPriceVisual);
         }
         private protected override void Destroy()
         {
