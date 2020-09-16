@@ -300,6 +300,12 @@ namespace FlexTrader.MVVM.Resources
                             }
                         });
 
+                        var BaseButtonsGrd = new Grid();
+                        BaseButtonsGrd.ColumnDefinitions.Add(new ColumnDefinition());
+                        BaseButtonsGrd.ColumnDefinitions.Add(new ColumnDefinition());
+                        BaseButtonsGrd.ColumnDefinitions.Add(new ColumnDefinition());
+                        BWP.Children.Add(BaseButtonsGrd);
+
                         Slidings = new List<Sliding>();
 
                         WrapPanel wp;
@@ -323,16 +329,19 @@ namespace FlexTrader.MVVM.Resources
                                             Content = L,
                                             IsActive = L.Locked
                                         };
+                                        Grid.SetColumn(lpb, 0);
                                         lpb.Click += (s, e) =>
                                         {
                                             L.Locked = !L.Locked;
                                             set.SetBool(L.Locked);
                                             lpb.IsActive = L.Locked;
                                         };
-                                        BWP.Children.Add(lpb);
+                                        BaseButtonsGrd.Children.Add(lpb);
                                         break;
                                     case SetType.Move:
-                                        BWP.Children.Add(new Mover(set.SetInt));
+                                        var mv = new Mover(set.SetInt);
+                                        Grid.SetColumn(mv, 1);
+                                        BaseButtonsGrd.Children.Add(mv);
                                         break;
                                     case SetType.Delete:
                                         var dpb = new PaletteButton()
@@ -346,6 +355,7 @@ namespace FlexTrader.MVVM.Resources
                                                 Rotated = true
                                             }
                                         };
+                                        Grid.SetColumn(dpb, 2);
                                         dpb.Click += (s, e) =>
                                         {
                                             OverlayMenu.Visibility = Visibility.Hidden;
@@ -353,7 +363,7 @@ namespace FlexTrader.MVVM.Resources
                                             set.Delete();
                                             RemoveHook.Invoke();
                                         };
-                                        BWP.Children.Add(dpb);
+                                        BaseButtonsGrd.Children.Add(dpb);
                                         break;
                                     case SetType.Brush:
                                         var cp = new ColorPicker(set.GetBrush(), set.SetBrush) { CornerRadius = 10 };

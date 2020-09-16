@@ -28,7 +28,7 @@ using System.Windows.Media;
 
 namespace ChartModules.PaintingModule
 {
-    public class PaintingModule : ChartModule
+    public class PaintingModule : ChartModule, IHooksContainer
     {
         private readonly DrawingCanvas ElementsCanvas;
         private readonly DrawingCanvas PricesCanvas;
@@ -102,7 +102,7 @@ namespace ChartModules.PaintingModule
             PrototypeTimeCanvas.ClearVisuals();
         }
 
-        private readonly List<HookElement> ElementsCollection = new List<HookElement>();
+        private readonly List<PaintingElement> ElementsCollection = new List<PaintingElement>();
         private void CollectionChanged()
         {
             Sets.Clear();
@@ -110,25 +110,25 @@ namespace ChartModules.PaintingModule
             {
                 for (int i = 0; i < ElementsCollection.Count; i++)
                     Sets.AddLevel($"{i + 1:000}. {ElementsCollection[i].ElementName}",
-                        ElementsCollection[i].GetSettings().ToArray());
+                        ElementsCollection[i].Sets.ToArray());
             }
             else if (ElementsCollection.Count > 9)
             {
                 for (int i = 0; i < ElementsCollection.Count; i++)
                     Sets.AddLevel($"{i + 1:00}. {ElementsCollection[i].ElementName}",
-                        ElementsCollection[i].GetSettings().ToArray());
+                        ElementsCollection[i].Sets.ToArray());
             }
             else
             {
                 for (int i = 0; i < ElementsCollection.Count; i++)
                     Sets.AddLevel($"{i + 1}. {ElementsCollection[i].ElementName}",
-                        ElementsCollection[i].GetSettings().ToArray());
+                        ElementsCollection[i].Sets.ToArray());
             }
 
             Redraw();
         }
 
-        private void AddElement(HookElement el)
+        private void AddElement(PaintingElement el)
         {
             el.SetApplyChangeAction(CollectionChanged);
             el.Chart = Chart;
@@ -137,8 +137,9 @@ namespace ChartModules.PaintingModule
             CollectionChanged();
             ResetHooks();
         }
-        private void DeleteElement(HookElement el)
+        private void DeleteElement(HookElement e)
         {
+            var el = e as PaintingElement;
             ElementsCollection.Remove(el);
             CollectionChanged();
             ResetHooks();
@@ -213,54 +214,65 @@ namespace ChartModules.PaintingModule
         }
 
         private int ChangesCounter = 0;
+        private object CCkey = new object();
         private void Redraw()
         {
             Task.Run(() => 
             {
                 ChangesCounter += 1;
                 var x = ChangesCounter;
-                Thread.Sleep(50);
-                if (x != ChangesCounter) return;
-
-                var ppd = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
-                Action<DrawingContext>[][] lacts = new Action<DrawingContext>[ElementsCollection.Count][];
-
-                try
+                lock (CCkey)
                 {
-                    for (int i = 0; i < ElementsCollection.Count; i++)
-                        lacts[i] = ElementsCollection[i].PrepareToDrawing(null, ppd);
+                    if (x != ChangesCounter) return;
+
+                    var ppd = VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip;
+                    Action<DrawingContext>[][] lacts = new Action<DrawingContext>[ElementsCollection.Count][];
+
+                    try
+                    {
+                        for (int i = 0; i < ElementsCollection.Count; i++)
+                            lacts[i] = ElementsCollection[i].PrepareToDrawing(null, ppd);
+                    }
+                    catch (IndexOutOfRangeException) { return; }
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        using (var dc = ElementsVisual.RenderOpen())
+                        {
+                            foreach (var acts in lacts)
+                            {
+                                acts[0]?.Invoke(dc);
+                            }
+                        }
+                        using (var dc = PricesVisual.RenderOpen())
+                        {
+                            foreach (var acts in lacts)
+                            {
+                                acts[1]?.Invoke(dc);
+                            }
+                        }
+                        using (var dc = TimesVisual.RenderOpen())
+                        {
+                            foreach (var acts in lacts)
+                            {
+                                acts[2]?.Invoke(dc);
+                            }
+                        }
+                    });
                 }
-                catch (IndexOutOfRangeException) { return; }
-                
-                Dispatcher.Invoke(() =>
-                {
-                    using (var dc = ElementsVisual.RenderOpen())
-                    {
-                        foreach (var acts in lacts)
-                        {
-                            acts[0]?.Invoke(dc);
-                        }
-                    }
-                    using (var dc = PricesVisual.RenderOpen())
-                    {
-                        foreach (var acts in lacts)
-                        {
-                            acts[1]?.Invoke(dc);
-                        }
-                    }
-                    using (var dc = TimesVisual.RenderOpen())
-                    {
-                        foreach (var acts in lacts)
-                        {
-                            acts[2]?.Invoke(dc);
-                        }
-                    }
-                });
             });
         }
 
         public List<Hook> VisibleHooks { get; private set; }
     }
+
+    public abstract class PaintingElement : HookElement 
+    {
+        public PaintingElement()
+        {
+            Sets.Add(new Setting(() => this.Locked, b => this.Locked = b));
+        }
+    } 
 
     public enum PInstrument
     {

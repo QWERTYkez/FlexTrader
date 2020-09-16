@@ -25,7 +25,7 @@ using System.Windows.Threading;
 
 namespace ChartModules.PaintingModule.Elements
 {
-    public class Trend : HookElement
+    public class Trend : PaintingElement
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;
@@ -111,7 +111,7 @@ namespace ChartModules.PaintingModule.Elements
             });
         }
 
-        public Trend(ChartPoint Point1, ChartPoint Point2)
+        public Trend(ChartPoint Point1, ChartPoint Point2) : this()
         {
             this.Point1 = Point1;
             this.Point2 = Point2;
@@ -125,7 +125,7 @@ namespace ChartModules.PaintingModule.Elements
             this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
         }
         public Trend(ChartPoint Point1, ChartPoint Point2, SolidColorBrush TextBrush, SolidColorBrush MarkFill,
-            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0)
+            SolidColorBrush LineBrush = null, double LineThikness = 0, double LineDash = 0, double LineIndent = 0) : this()
         {
             this.Point1 = Point1;
             this.Point2 = Point2;
@@ -137,6 +137,15 @@ namespace ChartModules.PaintingModule.Elements
             this.LineThikness = LineThikness;
 
             this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
+        }
+        private Trend()
+        {
+            Sets.Add(new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br; ApplyChangesToAll(); }));
+            Sets.Add(new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br; ApplyChangesToAll(); }));
+            Sets.Add(new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br; ApplyChangesToAll(); }));
+            Sets.Add(new Setting(IntType.Slider, "Thickness", () => (int)this.LineThikness, pr => { this.LineThikness = pr; ApplyChangesToAll(); }, 1, 5));
+            Sets.Add(new Setting(IntType.Slider, "Gap", () => (int)this.LineIndent, pr => { this.LineIndent = pr; ApplyChangesToAll(); }, 0, 10));
+            Sets.Add(new Setting(IntType.Slider, "Dash", () => (int)this.LineDash, pr => { this.LineDash = pr; ApplyChangesToAll(); }, 1, 10));
         }
 
         public override string ElementName { get => "Trend"; }
@@ -153,19 +162,6 @@ namespace ChartModules.PaintingModule.Elements
                 if ((B < 0 && C < 0) || (A > Chart.ChHeight && B > Chart.ChHeight)) return false;
                 else return true;
             }
-        }
-
-        private protected override List<Setting> GetSets()
-        {
-            return new List<Setting>
-            {
-                new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br; ApplyChangesToAll(); }),
-                new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br; ApplyChangesToAll(); }),
-                new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br; ApplyChangesToAll(); }),
-                new Setting(IntType.Slider, "Thickness", () => (int)this.LineThikness, pr => { this.LineThikness = pr; ApplyChangesToAll(); }, 1, 5),
-                new Setting(IntType.Slider, "Gap", () => (int)this.LineIndent, pr => { this.LineIndent = pr; ApplyChangesToAll(); }, 0, 10),
-                new Setting(IntType.Slider, "Dash", () => (int)this.LineDash, pr => { this.LineDash = pr; ApplyChangesToAll(); }, 1, 10)
-            };
         }
 
         private ChartPoint Point1 { get; set; }

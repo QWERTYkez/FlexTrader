@@ -21,11 +21,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media;
 
 namespace ChartModules.CenterIndicators
 {
-    public class CenterIndicatorManger
+    public class CenterIndicatorManger: IHooksContainer
     {
         private IChart Chart;
         public CenterIndicatorManger(IChart Chart, DrawingCanvas BackgroundIndLayer, DrawingCanvas ForegroundIndLayer)
@@ -40,7 +39,8 @@ namespace ChartModules.CenterIndicators
             Chart.HorizontalСhanges += ResetHooks;
 
             ///////////
-            AddElement(new MA());
+            AddElement(new SMA());
+            AddElement(new EMA());
         }
         private DrawingCanvas BackgroundIndLayer;
         private DrawingCanvas ForegroundIndLayer;
@@ -48,30 +48,6 @@ namespace ChartModules.CenterIndicators
 
         private readonly List<CenterIndicator> BackgroundIndicators = new List<CenterIndicator>();
         private readonly List<CenterIndicator> ForegroundIndicators = new List<CenterIndicator>();
-        private void CollectionChanged()
-        {
-            //Sets.Clear();
-            //if (ElementsCollection.Count > 99)
-            //{
-            //    for (int i = 0; i < ElementsCollection.Count; i++)
-            //        Sets.AddLevel($"{i + 1:000}. {ElementsCollection[i].ElementName}",
-            //            ElementsCollection[i].GetSettings().ToArray());
-            //}
-            //else if (ElementsCollection.Count > 9)
-            //{
-            //    for (int i = 0; i < ElementsCollection.Count; i++)
-            //        Sets.AddLevel($"{i + 1:00}. {ElementsCollection[i].ElementName}",
-            //            ElementsCollection[i].GetSettings().ToArray());
-            //}
-            //else
-            //{
-            //    for (int i = 0; i < ElementsCollection.Count; i++)
-            //        Sets.AddLevel($"{i + 1}. {ElementsCollection[i].ElementName}",
-            //            ElementsCollection[i].GetSettings().ToArray());
-            //}
-
-            //Redraw();
-        }
         private void AddElement(CenterIndicator el)
         {
             el.SetChart(Chart);
@@ -79,7 +55,6 @@ namespace ChartModules.CenterIndicators
             el.Moving += MoveIndicator;
             ForegroundIndicators.Add(el);
             ForegroundIndLayer.AddVisual(el.IndicatorVisual);
-            CollectionChanged();
             ResetHooks();
         }
         private void DeleteElement(HookElement e)
@@ -95,7 +70,6 @@ namespace ChartModules.CenterIndicators
                 ForegroundIndicators.Remove(el);
                 ForegroundIndLayer.RemoveVisual(el.IndicatorVisual);
             }
-            CollectionChanged();
             ResetHooks();
         }
         private void ResetVisualsBackground()
@@ -106,9 +80,18 @@ namespace ChartModules.CenterIndicators
         }
         private void ResetVisualsForeground()
         {
+            ForegroundIndLayer.ClearVisuals();
+            foreach (var ind in ForegroundIndicators)
+                ForegroundIndLayer.AddVisual(ind.IndicatorVisual);
+        }
+        private void ResetVisuals()
+        {
             BackgroundIndLayer.ClearVisuals();
+            ForegroundIndLayer.ClearVisuals();
             foreach (var ind in BackgroundIndicators)
                 BackgroundIndLayer.AddVisual(ind.IndicatorVisual);
+            foreach (var ind in ForegroundIndicators)
+                ForegroundIndLayer.AddVisual(ind.IndicatorVisual);
         }
         private void MoveIndicator(CenterIndicator indicator, int i)
         {
@@ -129,8 +112,7 @@ namespace ChartModules.CenterIndicators
                     {
                         ForegroundIndicators.Remove(indicator);
                         BackgroundIndicators.Add(indicator);
-                        ResetVisualsBackground();
-                        ResetVisualsForeground();
+                        ResetVisuals();
                     }
                     else
                     {
@@ -147,10 +129,9 @@ namespace ChartModules.CenterIndicators
                     i = BackgroundIndicators.IndexOf(indicator);
                     if (i == BackgroundIndicators.Count - 1)
                     {
-                        BackgroundIndicators.Add(indicator);
+                        BackgroundIndicators.Remove(indicator);
                         ForegroundIndicators.Insert(0, indicator);
-                        ResetVisualsBackground();
-                        ResetVisualsForeground();
+                        ResetVisuals();
                     }
                     else
                     {
@@ -170,27 +151,35 @@ namespace ChartModules.CenterIndicators
             }
         }
 
-        private int ChangesCounter = 0;
+        private int ChangesCounter1 = 0;
         private void ResetHooks()
         {
             Task.Run(() => 
             {
-                ChangesCounter += 1;
-                var x = ChangesCounter;
+                ChangesCounter1 += 1;
+                var x = ChangesCounter1;
                 Thread.Sleep(50);
-                if (x != ChangesCounter) return;
+                if (x != ChangesCounter1) return;
                 VisibleHooks = (from el in BackgroundIndicators.AsParallel() where el.VisibilityOnChart select el.Hook).ToList();
-                VisibleHooks.AddRange(from el in BackgroundIndicators.AsParallel() where el.VisibilityOnChart select el.Hook);
+                VisibleHooks.AddRange(from el in ForegroundIndicators.AsParallel() where el.VisibilityOnChart select el.Hook);
             });
         }
 
+        private int ChangesCounter = 0;
+        private object CCkey = new object();
         private void Redraw()
         {
             Task.Run(() =>
             {
-                
-                foreach (var ind in BackgroundIndicators) ind.Rendering();
-                foreach (var ind in ForegroundIndicators) ind.Rendering();
+                ChangesCounter += 1;
+                var x = ChangesCounter;
+                lock (CCkey)
+                {
+                    if (x != ChangesCounter) return;
+
+                    foreach (var ind in BackgroundIndicators) ind.Rendering();
+                    foreach (var ind in ForegroundIndicators) ind.Rendering();
+                }
             });
         }
 

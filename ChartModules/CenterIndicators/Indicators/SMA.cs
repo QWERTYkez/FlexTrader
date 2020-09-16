@@ -25,13 +25,13 @@ using System.Windows.Media;
 
 namespace ChartModules.CenterIndicators.Indicators
 {
-    public class MA : CenterIndicator
+    public class SMA : CenterIndicator
     {
-        public MA()
+        public SMA()
         {
             LinePen.Freeze();
 
-            Sets.Add(new Setting(IntType.Picker, "Period", () => Per, i => { Per = i; CalculateData(); DataChangedInvoke(); }, 2, null));
+            Sets.Add(new Setting(IntType.Picker, "Period", () => Per, i => { Per = i; ApplyDataChanges(); }, 2, null));
             Sets.AddLevel("Line", new Setting[]
             {
                 new Setting("color", () => { return LinePen.Brush; },
@@ -42,24 +42,25 @@ namespace ChartModules.CenterIndicators.Indicators
                             LinePen = new Pen(Br, LinePen.Thickness);
                             LinePen.Freeze();
                         });
-                        DataChangedInvoke();
+                        ApplyRenderChanges();
                     }),
                 new Setting(IntType.Slider, "weight", () => (int)(LinePen.Thickness * 10),
-                    d => { LinePen = new Pen(LinePen.Brush, (double)d / 10); LinePen.Freeze(); DataChangedInvoke(); }, 10, 50)
+                    d => { LinePen = new Pen(LinePen.Brush, (double)d / 10); LinePen.Freeze(); ApplyRenderChanges(); }, 10, 50)
             });
         }
 
         private int Per = 10;
         private Pen LinePen = new Pen(Brushes.Cyan, 3);
-        private readonly List<ChartPoint> MAs = new List<ChartPoint>();
+        private readonly List<ChartPoint> Data = new List<ChartPoint>();
         private protected override void CalculateData()
         {
+            Data.Clear();
             double Sum = 0;
             for (int i = 0; i < Per - 1; i++) Sum += Chart.AllCandles[i].CloseD;
             for (int i = Per - 1; i < Chart.AllCandles.Count; i++)
             {
                 Sum += Chart.AllCandles[i].CloseD;
-                MAs.Add(new ChartPoint(Chart.AllCandles[i].TimeStamp, Sum / Per));
+                Data.Add(new ChartPoint(Chart.AllCandles[i].TimeStamp, Sum / Per));
                 Sum -= Chart.AllCandles[i - Per + 1].CloseD;
             }
         }
@@ -72,7 +73,7 @@ namespace ChartModules.CenterIndicators.Indicators
                 var tA = Chart.TimeA - Chart.DeltaTime;
                 var tB = Chart.TimeB + Chart.DeltaTime;
                 dT = (Chart.TimeB - Chart.TimeA) / Chart.ChWidth;
-                var Current = (from v in MAs where v.TimeStamp > tA && v.TimeStamp < tB select v).ToList();
+                var Current = (from v in Data where v.TimeStamp > tA && v.TimeStamp < tB select v).ToList();
                 if (Current.Count > 2)
                 {
                     var LS = new LineSegment[Current.Count - 1];
@@ -90,17 +91,17 @@ namespace ChartModules.CenterIndicators.Indicators
             return adcs;
         }
 
-        public override string ElementName => "MA";
+        public override string ElementName => "SMA";
         public override double GetMagnetRadius() => LinePen.Thickness / 2 + 2;
         public override bool VisibilityOnChart 
         { 
             get 
             {
                 int n = 0;
-                while (n < MAs.Count && MAs[n].TimeStamp < Chart.TimeA) n++;
-                for (int i = n; i < MAs.Count && MAs[i].TimeStamp < Chart.TimeB; i++)
+                while (n < Data.Count && Data[n].TimeStamp < Chart.TimeA) n++;
+                for (int i = n; i < Data.Count && Data[i].TimeStamp < Chart.TimeB; i++)
                 {
-                    if (MAs[i].Price > 0 && MAs[i].Price < Chart.ChHeight) 
+                    if (Data[i].Price > 0 && Data[i].Price < Chart.ChHeight) 
                         return true;
                 }
                 return false;
@@ -114,14 +115,14 @@ namespace ChartModules.CenterIndicators.Indicators
             var Tb = Chart.WidthToTime(P.X + r);
             r /= 2;
 
-            int a = 1; while (a < MAs.Count && MAs[a].TimeStamp < Ta) a++;
-            int b = a; while (b < MAs.Count && MAs[b].TimeStamp < Tb) b++; b++;
+            int a = 1; while (a < Data.Count && Data[a].TimeStamp < Ta) a++;
+            int b = a; while (b < Data.Count && Data[b].TimeStamp < Tb) b++; b++;
             double A, dX, d; Point Pa, Pb; int k; Vector v;
             double min = Double.MaxValue;
-            for (int i = a; i < MAs.Count && i < b; i++)
+            for (int i = a; i < Data.Count && i < b; i++)
             {
-                Pa = MAs[i - 1].ToPoint(Chart);
-                Pb = MAs[i].ToPoint(Chart);
+                Pa = Data[i - 1].ToPoint(Chart);
+                Pb = Data[i].ToPoint(Chart);
                 A= Pa.GetCoeffsA(Pb);
                 dX = r / Math.Sqrt(Math.Pow(A, 2) + 1);
                 v = new Vector(dX, A * dX);
@@ -145,17 +146,6 @@ namespace ChartModules.CenterIndicators.Indicators
         public override List<(string Name, Action Act)> GetContextMenu()
         {
             return new List<(string Name, Action Act)>();
-        }
-
-        private struct Data
-        {
-            public Data(DateTime TimeStamp, double Value)
-            {
-                this.TimeStamp = TimeStamp;
-                this.Value = Value;
-            }
-            public DateTime TimeStamp { get; }
-            public double Value { get; }
         }
     }
 }

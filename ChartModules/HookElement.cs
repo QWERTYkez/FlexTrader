@@ -29,6 +29,8 @@ namespace ChartModules
     {
         public HookElement()
         {
+            Sets.Add(new Setting(Delete));
+
             Subhooks.AddRange(CreateSubhooks());
             Hook = new Hook(this, GetDistance, GetHookPoint, GetMagnetRadius, ChangeMethod, DrawElement, DrawShadow, AcceptNewCoordinates, Subhooks);
         }
@@ -40,17 +42,7 @@ namespace ChartModules
         public abstract bool VisibilityOnChart { get; }
 
         public bool Locked = false;
-        private protected abstract List<Setting> GetSets();
-        public List<Setting> GetSettings()
-        {
-            var sets = new List<Setting>
-            {
-                new Setting(() => this.Locked, b => this.Locked = b),
-                new Setting(Delete)
-            };
-            sets.AddRange(GetSets());
-            return sets;
-        }
+        public readonly List<Setting> Sets = new List<Setting>();
 
         public abstract double GetMagnetRadius();
 
@@ -60,7 +52,7 @@ namespace ChartModules
         {
             this.ApplyChangeAct = ApplyChangeAct;
         }
-        public void ApplyChanges() => ApplyChangeAct.Invoke();
+        public void ApplyChanges() => ApplyChangeAct?.Invoke();
         private Action<HookElement> DeleteAct;
         public void SetDeleteAction(Action<HookElement> DeleteAct)
         {

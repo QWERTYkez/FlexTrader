@@ -117,4 +117,9 @@ namespace ChartModules
         public Action<MouseButtonEventArgs> MovingChart { get; }
         public int Digits { get; }
     }
+
+    public interface IHooksContainer
+    {
+        public List<Hook> VisibleHooks { get; }
+    }
 }

@@ -109,8 +109,8 @@ namespace ChartModules.BottomIndicators.Indicators
             max = 0;
 
             if (Values.Count < 1) return;
-            while (Values[n].TimeStamp != TimeA) n++;
-            while (Values[n].TimeStamp < TimeB)
+            while (n < Values.Count && Values[n].TimeStamp < TimeA) n++;
+            while (n < Values.Count && Values[n].TimeStamp < TimeB)
             {
                 if (Values[n].MACD < min) min = Values[n].MACD;
                 if (Values[n].MACD > max) max = Values[n].MACD;
@@ -148,27 +148,23 @@ namespace ChartModules.BottomIndicators.Indicators
             if (N1 >= AllCandles.Count) return;
 
             double S = 0;
-            for (int i = 0; i < N1; i++)
-            {
-                Values.Add(new Data(AllCandles[i].TimeStamp));
-                S += AllCandles[i].CloseD;
-            }
+            for (int i = 0; i < N1; i++) S += AllCandles[i].CloseD;
             Values.Add(new Data(AllCandles[N1].TimeStamp, S / N1));
             S += AllCandles[N1].CloseD;
             for (int i = N1 + 1; i < N2 && i < AllCandles.Count; i++)
             {
                 Values.Add(new Data(AllCandles[i].TimeStamp,
-                    A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - 1].EMA_fast));
+                    A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - N1 - 1].EMA_fast));
                 S += AllCandles[i].CloseD;
             }
             if (N2 >= AllCandles.Count) return;
             Values.Add(new Data(AllCandles[N2].TimeStamp,
-                    A1 * AllCandles[N2].CloseD + (1 - A1) * Values[N2 - 1].EMA_fast, S / N2));
+                    A1 * AllCandles[N2].CloseD + (1 - A1) * Values[N2 - N1 - 1].EMA_fast, S / N2));
             for (int i = N2 + 1; i < AllCandles.Count; i++)
             {
                 Values.Add(new Data(AllCandles[i].TimeStamp,
-                    A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - 1].EMA_fast,
-                    A2 * AllCandles[i].CloseD + (1 - A2) * Values[i - 1].EMA_Slow));
+                    A1 * AllCandles[i].CloseD + (1 - A1) * Values[i - N1 - 1].EMA_fast,
+                    A2 * AllCandles[i].CloseD + (1 - A2) * Values[i - N1 - 1].EMA_Slow));
             }
 
             Rects = new Rect[Values.Count];
@@ -255,14 +251,12 @@ namespace ChartModules.BottomIndicators.Indicators
             LS = new LineSegment[slowValues.Count - 1];
             Parallel.For(1, slowValues.Count, i =>
             {
-                var p = GetPoint(slowValues[i].TimeStamp, slowValues[i].EMA_Slow);
-                LS[i - 1] = new LineSegment(p, true);
+                LS[i - 1] = new LineSegment(GetPoint(slowValues[i].TimeStamp, slowValues[i].EMA_Slow), true);
                 LS[i - 1].Freeze();
             });
             var geo2 = new PathGeometry(new[] { new PathFigure(GetPoint(slowValues[0].TimeStamp, 
                 slowValues[0].EMA_Slow), LS, false) }); geo2.Freeze();
 
-            
             Dispatcher.Invoke(() =>
             {
                 using var dc = IndicatorVisualSecond.RenderOpen();

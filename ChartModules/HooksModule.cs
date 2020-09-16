@@ -33,14 +33,14 @@ namespace ChartModules
         private readonly DrawingCanvas HookTimeLayer;
 
         public HooksModule(IChart chart, DrawingCanvas HooksLayer, DrawingCanvas HookPriceLayer, DrawingCanvas HookTimeLayer,
-            Func<Pen> GetCursorPen, Func<List<Hook>> GetVisibleHooks, List<FrameworkElement> OtherLayers) : base(chart)
+            Func<Pen> GetCursorPen, List<IHooksContainer> HooksContainers, List<FrameworkElement> OtherLayers) : base(chart)
         {
             this.OtherLayers = OtherLayers;
             this.HooksLayer = HooksLayer;
             this.HookPriceLayer = HookPriceLayer;
             this.HookTimeLayer = HookTimeLayer;
             this.GetCursorPen = GetCursorPen;
-            this.GetVisibleHooks = GetVisibleHooks;
+            this.HooksContainers = HooksContainers;
 
             this.SetMenuAct = chart.MWindow.SetMenu;
 
@@ -59,7 +59,19 @@ namespace ChartModules
                     Task.Run(() =>
                     {
                         RemoveHook = RemoveLastHook;
-                        RestoreChart();
+
+                        Dispatcher.Invoke(() => 
+                        {
+                            foreach (var l in OtherLayers)
+                                l.Visibility = Visibility.Visible;
+
+                            ShadowVisual.RenderOpen().Close();
+                            ShadowPriceVisual.RenderOpen().Close();
+                            ShadowTimeVisual.RenderOpen().Close();
+                            OverVisual.RenderOpen().Close();
+                            OverPriceVisual.RenderOpen().Close();
+                            OverTimeVisual.RenderOpen().Close();
+                        });
                     });
                 }
             };
@@ -86,7 +98,6 @@ namespace ChartModules
         private protected override string SetsName { get; }
 
         private readonly Func<Pen> GetCursorPen;
-        private readonly Func<List<Hook>> GetVisibleHooks;
         private readonly List<FrameworkElement> OtherLayers;
 
         private readonly Action<string, List<Setting>, Action, Action> SetMenuAct;
@@ -124,7 +135,7 @@ namespace ChartModules
             ShowContextMenu(object s, MouseEventArgs e)
         {
             var P = e.GetPosition((IInputElement)Chart);
-            var Hook = ScanHooks(GetVisibleHooks.Invoke(), P);
+            var Hook = ScanHooks(GetVisibleHooks(), P);
 
             if (Hook != null)
             {
@@ -150,6 +161,15 @@ namespace ChartModules
 
         private Action<MouseButtonEventArgs> HookingAct = null;
         private void MoveHook(MouseButtonEventArgs e) => HookingAct?.Invoke(e);
+
+        private readonly List<IHooksContainer> HooksContainers;
+        private List<Hook> GetVisibleHooks()
+        {
+            List<Hook> hooks = new List<Hook>();
+            foreach (var hc in HooksContainers)
+                hooks.AddRange(hc.VisibleHooks);
+            return hooks;
+        }
 
         private Hook CurrentHook;
         private Hook ScanHooks(List<Hook> Hooks, Point P)
@@ -189,8 +209,7 @@ namespace ChartModules
         }
         public bool Manipulating = false;
         private Point LastValue;
-        private double LastPointPrice;
-        private DateTime LastPointTime;
+        private ChartPoint LastCP;
         public void HookElement()
         {
             if (Manipulating) return;
@@ -199,7 +218,7 @@ namespace ChartModules
                 var pn = GetCursorPen.Invoke();
                 var P = Chart.CursorPosition.Current;
 
-                var NewHook = ScanHooks(GetVisibleHooks.Invoke(), P);
+                var NewHook = ScanHooks(GetVisibleHooks(), P);
                 if (NewHook != null)
                 {
                     RemoveHook = null;
@@ -226,8 +245,7 @@ namespace ChartModules
                             if (!Manipulating)
                             {
                                 LastValue = NewHook.GetHookPoint(Chart.CursorPosition.Current);
-                                LastPointPrice = Chart.HeightToPrice(LastValue.Y);
-                                LastPointTime = Chart.WidthToTime(LastValue.X);
+                                LastCP = LastValue.ToChartPoint(Chart);
 
                                 NewHook.SetResetElementAction(ce =>
                                 {
@@ -263,8 +281,7 @@ namespace ChartModules
                                 });
                                 ResizeHook = () =>
                                 {
-                                    P = new Point(Chart.TimeToWidth(LastPointTime), Chart.PriceToHeight(LastPointPrice));
-                                    LastValue = NewHook.GetHookPoint(P);
+                                    LastValue = LastCP.ToPoint(Chart);
 
                                     NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
                                     NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
@@ -276,7 +293,6 @@ namespace ChartModules
                                         dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
                                         dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
                                     });
-
                                 };
 
                                 Manipulating = true;
@@ -317,8 +333,7 @@ namespace ChartModules
                                         });
 
                                         LastValue = NewHook.GetHookPoint(Chart.CursorPosition.Current);
-                                        LastPointPrice = Chart.HeightToPrice(LastValue.Y);
-                                        LastPointTime = Chart.WidthToTime(LastValue.X);
+                                        LastCP = LastValue.ToChartPoint(Chart);
                                         NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
                                         OverVisual.Transform = null;
@@ -347,7 +362,6 @@ namespace ChartModules
                 }
                 else if (CurrentHook != null)
                 {
-                    CurrentHook.ClearEvents();
                     RemoveHook = RemoveLastHook;
                     HookingAct = null;
                     RestoreChart();
@@ -368,22 +382,21 @@ namespace ChartModules
         }
         public void RestoreChart()
         {
-            //if (CurrentHook != null)
-            {
-                CurrentHook = null;
-                Dispatcher.Invoke(() => 
-                {
-                    foreach (var l in OtherLayers)
-                        l.Visibility = Visibility.Visible;
+            CurrentHook?.ClearEvents();
+            CurrentHook = null;
 
-                    ShadowVisual.RenderOpen().Close();
-                    ShadowPriceVisual.RenderOpen().Close();
-                    ShadowTimeVisual.RenderOpen().Close();
-                    OverVisual.RenderOpen().Close();
-                    OverPriceVisual.RenderOpen().Close();
-                    OverTimeVisual.RenderOpen().Close();
-                });
-            } 
+            Dispatcher.Invoke(() =>
+            {
+                foreach (var l in OtherLayers)
+                    l.Visibility = Visibility.Visible;
+
+                ShadowVisual.RenderOpen().Close();
+                ShadowPriceVisual.RenderOpen().Close();
+                ShadowTimeVisual.RenderOpen().Close();
+                OverVisual.RenderOpen().Close();
+                OverPriceVisual.RenderOpen().Close();
+                OverTimeVisual.RenderOpen().Close();
+            });
         }
     }
 
@@ -423,23 +436,25 @@ namespace ChartModules
             this.MagnetRadius = GetMagnetRadius;
             this.AcceptChanges = AcceptNewCoordinates;
 
+            Sets = Element.Sets;
+
             Element.Changed += o => Task.Run(() => ResetElement?.Invoke(o));
         }
 
         private event Action<(ChangesElementType type, object element)?> ResetElement;
         public void SetResetElementAction(Action<(ChangesElementType type, object element)?> rea)
         {
-            ResetElement = null;
-            ResetElement += rea;
+            ResetElement = rea;
         }
-        public void ClearEvents() => ResetElement = null;
+        public void ClearEvents() => 
+            ResetElement = null;
 
         private readonly HookElement Element;
         public bool Locked { get => Element.Locked; }
 
         public List<Hook> SubHooks { get; }
         public string ElementName { get => Element.ElementName; }
-        public List<Setting> Sets { get => Element.GetSettings(); }
+        public readonly List<Setting> Sets;
         private Func<double> MagnetRadius { get; }
         private Action AcceptChanges { get; }
         private readonly Func<Point, double> GetDistanceXY;

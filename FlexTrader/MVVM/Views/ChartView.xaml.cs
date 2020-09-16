@@ -71,15 +71,6 @@ namespace FlexTrader.MVVM.Views
                 PrototypeLayer, PrototypePriceLayer, PrototypeTimeLayer);
             MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
 
-            HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
-                () => CursorModule.LinesPen,
-                () => PaintingModule.VisibleHooks,
-                new List<FrameworkElement>
-                {
-                    SubLayers,
-                    PaintingMarksLayer
-                });
-
             PriceLineModule = new PriceLineModule(this, GridLayerHorizontal, PricesLayer, PriceMarksModule);
             PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
             PriceLineModule.ScaleWidthChanged += (w, fsf) =>
@@ -109,6 +100,21 @@ namespace FlexTrader.MVVM.Views
 
             BottomIndicatorManger = new BottomIndicatorManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD, CursorLinesLayer, TimesLayer);
             CenterIndicatorManger = new CenterIndicatorManger(this, BackgroundIndLayer, ForegroundIndLayer);
+
+            HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
+                () => CursorModule.LinesPen,
+                new List<IHooksContainer>
+                {
+                    CenterIndicatorManger,
+                    PaintingModule
+                },
+                new List<FrameworkElement>
+                {
+                    SubLayers,
+                    PaintingMarksLayer,
+                    BackgroundIndLayer,
+                    ForegroundIndLayer
+                });
 
             ChartGrid.PreviewMouseRightButtonDown += (s, e) =>
             {

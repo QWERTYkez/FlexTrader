@@ -28,7 +28,10 @@ namespace ChartModules.CenterIndicators
     {
         public CenterIndicator()
         {
+            this.Locked = true;
+
             Sets.Add(new Setting((int i) => Moving.Invoke(this, i)));
+            Sets.Add(new Setting(Delete));
         }
 
         public readonly DrawingVisual IndicatorVisual = new DrawingVisual();
@@ -37,11 +40,18 @@ namespace ChartModules.CenterIndicators
         private protected override void NewCoordinates() { }
         private protected override void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual) { }
 
-        public event Action DataChanged;
-        private protected void DataChangedInvoke() => DataChanged.Invoke();
+        private protected async void ApplyDataChanges()
+        {
+            await Redraw();
+            ApplyChangesToAll();
+        }
+        private protected void ApplyRenderChanges()
+        {
+            Rendering();
+            ApplyChangesToAll();
+        }
+
         public event Action<CenterIndicator, int> Moving;
-        private protected List<Setting> Sets { get; } = new List<Setting>();
-        private protected override List<Setting> GetSets() => Sets;
         private protected abstract void CalculateData();
         public void Rendering() => DrawElement(null, IndicatorVisual, null, null);
         public void SetChart(IChart Chart) 
@@ -49,9 +59,9 @@ namespace ChartModules.CenterIndicators
             this.Chart = Chart;
             Chart.CandlesChanged += ac => Redraw();
         }
-        private protected void Redraw()
+        private protected Task Redraw()
         {
-            Task.Run(() =>
+            return Task.Run(() =>
             {
                 if (Chart.StartTime == DateTime.FromBinary(0)) return;
                 CalculateData();

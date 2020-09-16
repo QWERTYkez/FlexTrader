@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 namespace ChartModules.PaintingModule.Elements
 {
-    public class Level : HookElement
+    public class Level : PaintingElement
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;
@@ -123,7 +123,7 @@ namespace ChartModules.PaintingModule.Elements
             });
         }
 
-        public Level(double Price)
+        public Level(double Price) : this()
         {
             this.Price = Price;
             this.TextBrush = StTextBrush;
@@ -133,7 +133,7 @@ namespace ChartModules.PaintingModule.Elements
             this.LineIndent = StLineIndent;
             this.LineThikness = StLineThikness;
         }
-        public Level(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill, SolidColorBrush LineBrush, double LineThikness, double LineDash = 0, double LineIndent = 0)
+        public Level(double Price, SolidColorBrush TextBrush, SolidColorBrush MarkFill, SolidColorBrush LineBrush, double LineThikness, double LineDash = 0, double LineIndent = 0) : this()
         {
             this.Price = Price;
             this.TextBrush = TextBrush;
@@ -145,6 +145,16 @@ namespace ChartModules.PaintingModule.Elements
 
             this.TextBrush?.Freeze(); this.MarkFill?.Freeze(); this.LineBrush?.Freeze();
         }
+        private Level()
+        {
+            Sets.Add(new Setting("Price", () => this.Price, pr => { this.Price = pr; ApplyChangesToAll(pr); }));
+            Sets.Add(new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br; ApplyChangesToAll(); }));
+            Sets.Add(new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br; ApplyChangesToAll(); }));
+            Sets.Add(new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br; ApplyChangesToAll(); }));
+            Sets.Add(new Setting(IntType.Slider, "Thickness", () => (int)this.LineThikness, pr => { this.LineThikness = pr; ApplyChangesToAll(); }, 1, 5));
+            Sets.Add(new Setting(IntType.Slider, "Gap", () => (int)this.LineIndent, pr => { this.LineIndent = pr; ApplyChangesToAll(); }, 0, 10));
+            Sets.Add(new Setting(IntType.Slider, "Dash", () => (int)this.LineDash, pr => { this.LineDash = pr; ApplyChangesToAll(); }, 1, 10));
+        }
 
         public override string ElementName { get => "Level"; }
         public override double GetMagnetRadius() => LineThikness / 2 + 2;
@@ -154,20 +164,6 @@ namespace ChartModules.PaintingModule.Elements
                 if (heght > 0 && heght < Chart.ChHeight) return true;
                 else return false;
             } }
-
-        private protected override List<Setting> GetSets()
-        {
-            return new List<Setting>
-            {
-                new Setting("Price", () => this.Price, pr => { this.Price = pr; ApplyChangesToAll(pr); }),
-                new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br; ApplyChangesToAll(); }),
-                new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br; ApplyChangesToAll(); }),
-                new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br; ApplyChangesToAll(); }),
-                new Setting(IntType.Slider, "Thickness", () => (int)this.LineThikness, pr => { this.LineThikness = pr; ApplyChangesToAll(); }, 1, 5),
-                new Setting(IntType.Slider, "Gap", () => (int)this.LineIndent, pr => { this.LineIndent = pr; ApplyChangesToAll(); }, 0, 10),
-                new Setting(IntType.Slider, "Dash", () => (int)this.LineDash, pr => { this.LineDash = pr; ApplyChangesToAll(); }, 1, 10)
-            };
-        }
 
         private double Price { get; set; }
         private double NPrice { get; set; }
@@ -188,8 +184,8 @@ namespace ChartModules.PaintingModule.Elements
         }
         private protected override void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
         {
-            var br = Dispatcher.Invoke(() => { return Chart.ChartBackground; });
-            var c = ((SolidColorBrush)br).Color;
+            var c = Dispatcher.Invoke(() => { return ((SolidColorBrush)Chart.ChartBackground).Color; });
+            var br = new SolidColorBrush(c);
 
             var br2 = new SolidColorBrush(Color.FromArgb(255,
                 (byte)(c.R - 15),
