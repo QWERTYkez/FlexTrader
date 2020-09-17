@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartModules.PaintingModule;
+using ChartModules.CenterIndicators;
 using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;

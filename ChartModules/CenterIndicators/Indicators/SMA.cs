@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 namespace ChartModules.CenterIndicators.Indicators
 {
-    public class SMA : CenterIndicator
+    public class SMA : Indicator
     {
         public SMA()
         {
@@ -142,10 +142,5 @@ namespace ChartModules.CenterIndicators.Indicators
         }
         private Point MinP;
         private protected override Point GetHookPoint(Point P) => MinP;
-
-        public override List<(string Name, Action Act)> GetContextMenu()
-        {
-            return new List<(string Name, Action Act)>();
-        }
     }
 }

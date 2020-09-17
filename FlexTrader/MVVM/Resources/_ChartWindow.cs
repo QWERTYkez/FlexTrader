@@ -17,7 +17,7 @@
 */
 
 using ChartModules;
-using ChartModules.PaintingModule;
+using ChartModules.CenterIndicators;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.Views;
 using System;

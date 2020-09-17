@@ -109,7 +109,7 @@ namespace ChartModules.BottomIndicators.Indicators
             max = 0;
 
             if (Values.Count < 1) return;
-            while (n < Values.Count && Values[n].TimeStamp < TimeA) n++;
+            while (n < Values.Count && Values[n].TimeStamp <  TimeA) n++;
             while (n < Values.Count && Values[n].TimeStamp < TimeB)
             {
                 if (Values[n].MACD < min) min = Values[n].MACD;

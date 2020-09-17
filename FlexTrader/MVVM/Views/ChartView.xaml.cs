@@ -19,7 +19,6 @@
 using ChartModules;
 using ChartModules.BottomIndicators;
 using ChartModules.CenterIndicators;
-using ChartModules.PaintingModule;
 using ChartModules.StandardModules;
 using FlexTrader.MVVM.ViewModels;
 using System;
@@ -67,10 +66,6 @@ namespace FlexTrader.MVVM.Views
 
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
-            PaintingModule = new PaintingModule(this, PaintingsLayer, PaintingMarksLayer, PaintingTimeLayer,
-                PrototypeLayer, PrototypePriceLayer, PrototypeTimeLayer);
-            MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
-
             PriceLineModule = new PriceLineModule(this, GridLayerHorizontal, PricesLayer, PriceMarksModule);
             PriceLineModule.VerticalСhanges += () => VerticalСhanges.Invoke();
             PriceLineModule.ScaleWidthChanged += (w, fsf) =>
@@ -99,15 +94,13 @@ namespace FlexTrader.MVVM.Views
             CandlesModule.NewXTrans += tr => NewXTrans?.Invoke(tr);
 
             BottomIndicatorManger = new BottomIndicatorManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD, CursorLinesLayer, TimesLayer);
-            CenterIndicatorManger = new CenterIndicatorManger(this, BackgroundIndLayer, ForegroundIndLayer);
+            CenterIndicatorManger = new CenterIndicatorManger(this, BackgroundIndLayer, ForegroundIndLayer, PaintingMarksLayer, PaintingTimeLayer);
+            
+            PaintingModule = new PaintingModule(this, PrototypeLayer, PrototypePriceLayer, PrototypeTimeLayer, CenterIndicatorManger.AddElement);
+            MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
 
             HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
-                () => CursorModule.LinesPen,
-                new List<IHooksContainer>
-                {
-                    CenterIndicatorManger,
-                    PaintingModule
-                },
+                () => CursorModule.LinesPen, CenterIndicatorManger,
                 new List<FrameworkElement>
                 {
                     SubLayers,

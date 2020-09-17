@@ -17,21 +17,26 @@
 */
 
 using ChartModules.CenterIndicators.Indicators;
+using ChartModules.CenterIndicators.Paintings;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace ChartModules.CenterIndicators
 {
     public class CenterIndicatorManger: IHooksContainer
     {
         private IChart Chart;
-        public CenterIndicatorManger(IChart Chart, DrawingCanvas BackgroundIndLayer, DrawingCanvas ForegroundIndLayer)
+        public CenterIndicatorManger(IChart Chart, DrawingCanvas BackgroundIndLayer, 
+            DrawingCanvas ForegroundIndLayer, DrawingCanvas PricesCanvas, DrawingCanvas TimesCanvas)
         {
             this.Chart = Chart;
             this.BackgroundIndLayer = BackgroundIndLayer;
-            this.ForegroundIndLayer = ForegroundIndLayer;
+            this.ForegroundIndLayer = ForegroundIndLayer; 
+            this.PricesCanvas = PricesCanvas;
+            this.TimesCanvas = TimesCanvas;
 
             Chart.VerticalСhanges += Redraw;
             Chart.HorizontalСhanges += Redraw;
@@ -42,24 +47,31 @@ namespace ChartModules.CenterIndicators
             AddElement(new SMA());
             AddElement(new EMA());
         }
-        private DrawingCanvas BackgroundIndLayer;
-        private DrawingCanvas ForegroundIndLayer;
+        private readonly DrawingCanvas BackgroundIndLayer;
+        private readonly DrawingCanvas ForegroundIndLayer;
+        private readonly DrawingCanvas PricesCanvas;
+        private readonly DrawingCanvas TimesCanvas;
 
-
-        private readonly List<CenterIndicator> BackgroundIndicators = new List<CenterIndicator>();
-        private readonly List<CenterIndicator> ForegroundIndicators = new List<CenterIndicator>();
-        private void AddElement(CenterIndicator el)
+        private readonly List<HookElement> BackgroundIndicators = new List<HookElement>();
+        private readonly List<HookElement> ForegroundIndicators = new List<HookElement>();
+        public void AddElement(HookElement el)
         {
             el.SetChart(Chart);
             el.SetDeleteAction(DeleteElement);
             el.Moving += MoveIndicator;
             ForegroundIndicators.Add(el);
             ForegroundIndLayer.AddVisual(el.IndicatorVisual);
+            
+            if (el is Painting)
+            {
+                PricesCanvas.AddVisual(el.PriceVisual);
+                TimesCanvas.AddVisual(el.TimeVisual);
+            }
+
             ResetHooks();
         }
-        private void DeleteElement(HookElement e)
+        private void DeleteElement(HookElement el)
         {
-            var el = e as CenterIndicator;
             if (BackgroundIndicators.Contains(el))
             {
                 BackgroundIndicators.Remove(el);
@@ -70,19 +82,22 @@ namespace ChartModules.CenterIndicators
                 ForegroundIndicators.Remove(el);
                 ForegroundIndLayer.RemoveVisual(el.IndicatorVisual);
             }
+            ResetPricesTimes();
             ResetHooks();
         }
         private void ResetVisualsBackground()
         {
             BackgroundIndLayer.ClearVisuals();
-            foreach (var ind in BackgroundIndicators) 
+            foreach (var ind in BackgroundIndicators)
                 BackgroundIndLayer.AddVisual(ind.IndicatorVisual);
+            ResetPricesTimes();
         }
         private void ResetVisualsForeground()
         {
             ForegroundIndLayer.ClearVisuals();
             foreach (var ind in ForegroundIndicators)
                 ForegroundIndLayer.AddVisual(ind.IndicatorVisual);
+            ResetPricesTimes();
         }
         private void ResetVisuals()
         {
@@ -92,61 +107,119 @@ namespace ChartModules.CenterIndicators
                 BackgroundIndLayer.AddVisual(ind.IndicatorVisual);
             foreach (var ind in ForegroundIndicators)
                 ForegroundIndLayer.AddVisual(ind.IndicatorVisual);
+            ResetPricesTimes();
         }
-        private void MoveIndicator(CenterIndicator indicator, int i)
+        private void ResetPricesTimes()
         {
-            if (ForegroundIndicators.Contains(indicator))
+            PricesCanvas.ClearVisuals(); 
+            TimesCanvas.ClearVisuals();
+            foreach (var ind in BackgroundIndicators)
             {
-                if (i > 0)
+                PricesCanvas.AddVisual(ind.PriceVisual);
+                TimesCanvas.AddVisual(ind.TimeVisual);
+            }
+            foreach (var ind in ForegroundIndicators)
+            {
+                PricesCanvas.AddVisual(ind.PriceVisual);
+                TimesCanvas.AddVisual(ind.TimeVisual);
+            }
+        }
+        private void MoveIndicator(HookElement element, int i)
+        {
+            if (ForegroundIndicators.Contains(element))
+            {
+                switch (i)
                 {
-                    i = ForegroundIndicators.IndexOf(indicator);
-                    if (i == ForegroundIndicators.Count - 1) return;
-                    ForegroundIndicators.Remove(indicator);
-                    ForegroundIndicators.Insert(i + 1, indicator);
-                    ResetVisualsForeground();
-                }
-                else
-                {
-                    i = ForegroundIndicators.IndexOf(indicator); 
-                    if (i == 0)
-                    {
-                        ForegroundIndicators.Remove(indicator);
-                        BackgroundIndicators.Add(indicator);
-                        ResetVisuals();
-                    }
-                    else
-                    {
-                        ForegroundIndicators.Remove(indicator);
-                        ForegroundIndicators.Insert(i - 1, indicator);
-                        ResetVisualsForeground();
-                    }
+                    case 2:
+                        {
+                            i = ForegroundIndicators.IndexOf(element);
+                            if (i == ForegroundIndicators.Count - 1) return;
+                            ForegroundIndicators.Remove(element);
+                            ForegroundIndicators.Add(element);
+                            ResetVisualsForeground();
+                        }
+                        break;
+                    case 1:
+                        {
+                            i = ForegroundIndicators.IndexOf(element);
+                            if (i == ForegroundIndicators.Count - 1) return;
+                            ForegroundIndicators.Remove(element);
+                            ForegroundIndicators.Insert(i + 1, element);
+                            ResetVisualsForeground();
+                        }
+                        break;
+                    case -1:
+                        {
+                            i = ForegroundIndicators.IndexOf(element);
+                            if (i == 0)
+                            {
+                                ForegroundIndicators.Remove(element);
+                                BackgroundIndicators.Add(element);
+                                ResetVisuals();
+                            }
+                            else
+                            {
+                                ForegroundIndicators.Remove(element);
+                                ForegroundIndicators.Insert(i - 1, element);
+                                ResetVisualsForeground();
+                            }
+                        }
+                        break;
+                    case -2:
+                        {
+                            ForegroundIndicators.Remove(element);
+                            BackgroundIndicators.Insert(0, element);
+                            ResetVisuals();
+                        }
+                        break;
                 }
             }
             else
             {
-                if (i > 0)
+                switch (i)
                 {
-                    i = BackgroundIndicators.IndexOf(indicator);
-                    if (i == BackgroundIndicators.Count - 1)
-                    {
-                        BackgroundIndicators.Remove(indicator);
-                        ForegroundIndicators.Insert(0, indicator);
-                        ResetVisuals();
-                    }
-                    else
-                    {
-                        BackgroundIndicators.Remove(indicator);
-                        BackgroundIndicators.Insert(i + 1, indicator);
-                        ResetVisualsBackground();
-                    }
-                }
-                else
-                {
-                    i = BackgroundIndicators.IndexOf(indicator);
-                    if (i == 0) return;
-                    BackgroundIndicators.Remove(indicator);
-                    BackgroundIndicators.Insert(i - 1, indicator);
-                    ResetVisualsBackground();
+                    case 2:
+                        {
+                            BackgroundIndicators.Remove(element);
+                            ForegroundIndicators.Add(element);
+                            ResetVisuals();
+                        }
+                        break;
+                    case 1:
+                        {
+                            i = BackgroundIndicators.IndexOf(element);
+                            if (i == BackgroundIndicators.Count - 1)
+                            {
+                                BackgroundIndicators.Remove(element);
+                                ForegroundIndicators.Insert(0, element);
+                                ResetVisuals();
+                            }
+                            else
+                            {
+                                BackgroundIndicators.Remove(element);
+                                BackgroundIndicators.Insert(i + 1, element);
+                                ResetVisualsBackground();
+                            }
+                        }
+                        break;
+                    case -1:
+                        {
+                            i = BackgroundIndicators.IndexOf(element);
+                            if (i == 0) return;
+                            BackgroundIndicators.Remove(element);
+                            BackgroundIndicators.Insert(i - 1, element);
+                            ResetVisualsBackground();
+                        }
+                        break;
+                    case -2:
+                        {
+                            i = BackgroundIndicators.IndexOf(element);
+                            if (i == 0) return;
+                            BackgroundIndicators.Remove(element);
+                            BackgroundIndicators.Insert(0, element);
+                            ResetVisualsBackground();
+                        }
+                        break;
                 }
             }
         }

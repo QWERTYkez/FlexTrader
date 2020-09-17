@@ -23,9 +23,9 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace ChartModules.PaintingModule.Elements
+namespace ChartModules.CenterIndicators.Paintings
 {
-    public class Trend : PaintingElement
+    public class Trend : Painting
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;
@@ -364,11 +364,6 @@ namespace ChartModules.PaintingModule.Elements
                     AcceptNewCoordinates
                 )
             };
-        }
-
-        public override List<(string Name, Action Act)> GetContextMenu()
-        {
-            return new List<(string Name, Action Act)>();
         }
     }
 }

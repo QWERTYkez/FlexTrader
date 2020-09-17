@@ -23,16 +23,23 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace ChartModules
+namespace ChartModules.CenterIndicators
 {
     public abstract class HookElement
     {
         public HookElement()
         {
+            Sets.Add(new Setting((int i) => Moving.Invoke(this, i)));
             Sets.Add(new Setting(Delete));
 
             Subhooks.AddRange(CreateSubhooks());
-            Hook = new Hook(this, GetDistance, GetHookPoint, GetMagnetRadius, ChangeMethod, DrawElement, DrawShadow, AcceptNewCoordinates, Subhooks);
+            Hook = new Hook(this, GetDistance, GetHookPoint, GetMagnetRadius, ChangeMethod,
+                DrawElement, DrawShadow, AcceptNewCoordinates, Subhooks);
+        }
+
+        public virtual void SetChart(IChart Chart)
+        {
+            this.Chart = Chart;
         }
 
         private IChart chart;
@@ -40,6 +47,13 @@ namespace ChartModules
         private protected Dispatcher Dispatcher { get; set; }
         public abstract string ElementName { get; }
         public abstract bool VisibilityOnChart { get; }
+
+        public readonly DrawingVisual IndicatorVisual = new DrawingVisual();
+        public DrawingVisual PriceVisual { get; set; }
+        public DrawingVisual TimeVisual { get; set; }
+
+        public void Rendering() => DrawElement(null, IndicatorVisual, PriceVisual, TimeVisual);
+        private protected virtual void CalculateData() { }
 
         public bool Locked = false;
         public readonly List<Setting> Sets = new List<Setting>();
@@ -58,7 +72,7 @@ namespace ChartModules
         {
             this.DeleteAct = DeleteAct;
         }
-        public void Delete() => DeleteAct.Invoke(this);
+        public void Delete() => Dispatcher.Invoke(() => DeleteAct.Invoke(this));
         public Action ChangeHook { get; set; }
         
         private protected void ApplyChangesToAll()
@@ -91,23 +105,44 @@ namespace ChartModules
         private protected abstract void NewCoordinates();
         private protected abstract void ChangeMethod(Vector? Changes);
 
-        private protected void DrawElement(Vector? vec, DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual, bool DrawOver = false)
+        private protected void DrawElement(Vector? vec, DrawingVisual ElementVisual, DrawingVisual PriceVisual, DrawingVisual TimeVisual, bool DrawOver = false)
         {
             Task.Run(() =>
             {
                 Action<DrawingContext>[] acts;
-                if (PricesVisual == null) acts = PrepareToDrawing(vec, 0, DrawOver);
-                else acts = PrepareToDrawing(vec, VisualTreeHelper.GetDpi(PricesVisual).PixelsPerDip, DrawOver);
+                if (PriceVisual == null) acts = PrepareToDrawing(vec, 0, DrawOver);
+                else 
+                    acts = PrepareToDrawing(vec, VisualTreeHelper.GetDpi(PriceVisual).PixelsPerDip, DrawOver);
 
                 Dispatcher.Invoke(() =>
                 {
-                    using (var dc = ElementsVisual.RenderOpen())
+                    using (var dc = ElementVisual.RenderOpen())
                         acts[0]?.Invoke(dc);
-                    using (var dc = PricesVisual?.RenderOpen())
+                    using (var dc = PriceVisual?.RenderOpen())
                         acts[1]?.Invoke(dc);
-                    using (var dc = TimesVisual?.RenderOpen())
+                    using (var dc = TimeVisual?.RenderOpen())
                         acts[2]?.Invoke(dc);
                 });
+            });
+        }
+
+        private protected async void ApplyDataChanges()
+        {
+            await Redraw();
+            ApplyChangesToAll();
+        }
+        private protected void ApplyRenderChanges()
+        {
+            Rendering();
+            ApplyChangesToAll();
+        }
+        private protected Task Redraw()
+        {
+            return Task.Run(() =>
+            {
+                if (Chart.StartTime == DateTime.FromBinary(0)) return;
+                CalculateData();
+                Rendering();
             });
         }
 
@@ -115,7 +150,16 @@ namespace ChartModules
 
         private protected virtual List<Hook> CreateSubhooks() => new List<Hook>();
 
+        public event Action<HookElement, int> Moving;
+        private protected void ToFront() => Dispatcher.Invoke(() => Moving(this, 2));
+        private protected void ToBack() => Dispatcher.Invoke(() => Moving(this, -2));
+
         public abstract List<(string Name, Action Act)> GetContextMenu();
+
+        private protected TimeSpan dT;
+        private protected Point GetPoint(DateTime time, double val) => new Point(GetX(time), GetY(val));
+        private protected double GetX(DateTime time) => (time - Chart.TimeA) / dT;
+        private protected double GetY(double val) => Chart.ChHeight * (Chart.PricesMin + Chart.PricesDelta - val / Chart.TickSize) / Chart.PricesDelta;
     }
     public enum ChangesElementType
     {

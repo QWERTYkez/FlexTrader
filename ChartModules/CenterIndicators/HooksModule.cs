@@ -16,6 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using ChartModules.CenterIndicators;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -33,14 +34,14 @@ namespace ChartModules
         private readonly DrawingCanvas HookTimeLayer;
 
         public HooksModule(IChart chart, DrawingCanvas HooksLayer, DrawingCanvas HookPriceLayer, DrawingCanvas HookTimeLayer,
-            Func<Pen> GetCursorPen, List<IHooksContainer> HooksContainers, List<FrameworkElement> OtherLayers) : base(chart)
+            Func<Pen> GetCursorPen, CenterIndicatorManger CenterIndicatorManger, List<FrameworkElement> OtherLayers) : base(chart)
         {
             this.OtherLayers = OtherLayers;
             this.HooksLayer = HooksLayer;
             this.HookPriceLayer = HookPriceLayer;
             this.HookTimeLayer = HookTimeLayer;
             this.GetCursorPen = GetCursorPen;
-            this.HooksContainers = HooksContainers;
+            this.CIM = CenterIndicatorManger;
 
             this.SetMenuAct = chart.MWindow.SetMenu;
 
@@ -135,7 +136,7 @@ namespace ChartModules
             ShowContextMenu(object s, MouseEventArgs e)
         {
             var P = e.GetPosition((IInputElement)Chart);
-            var Hook = ScanHooks(GetVisibleHooks(), P);
+            var Hook = ScanHooks(CIM.VisibleHooks, P);
 
             if (Hook != null)
             {
@@ -150,7 +151,7 @@ namespace ChartModules
                             dc.DrawLine(pn, new Point(P.X + 10, P.Y + 10), new Point(P.X - 10, P.Y - 10));
                             dc.DrawLine(pn, new Point(P.X + 10, P.Y - 10), new Point(P.X - 10, P.Y + 10));
                         },
-                        () => RemoveLastHook());
+                        PointVisual.RenderOpen().Close);
             }
             else
             {
@@ -162,14 +163,7 @@ namespace ChartModules
         private Action<MouseButtonEventArgs> HookingAct = null;
         private void MoveHook(MouseButtonEventArgs e) => HookingAct?.Invoke(e);
 
-        private readonly List<IHooksContainer> HooksContainers;
-        private List<Hook> GetVisibleHooks()
-        {
-            List<Hook> hooks = new List<Hook>();
-            foreach (var hc in HooksContainers)
-                hooks.AddRange(hc.VisibleHooks);
-            return hooks;
-        }
+        private readonly CenterIndicatorManger CIM;
 
         private Hook CurrentHook;
         private Hook ScanHooks(List<Hook> Hooks, Point P)
@@ -218,7 +212,7 @@ namespace ChartModules
                 var pn = GetCursorPen.Invoke();
                 var P = Chart.CursorPosition.Current;
 
-                var NewHook = ScanHooks(GetVisibleHooks(), P);
+                var NewHook = ScanHooks(CIM.VisibleHooks, P);
                 if (NewHook != null)
                 {
                     RemoveHook = null;
@@ -413,6 +407,7 @@ namespace ChartModules
         /// <param name="AcceptNewCoordinates">Применить изменения к оригиналу</param>
         /// <param name="Element">Манипулируемый элемент</param>
         /// <param name="SubHooks"></param>
+        /// <param name="ContextMenu">Контекстное меню</param>
         /// <param name="ChangeMethod">Метод передвижения</param>
         /// <param name="GetMagnetRadius">Радиус Зацепления</param>
         public Hook(
@@ -465,31 +460,21 @@ namespace ChartModules
 
         public double GetMagnetRadius() => MagnetRadius();
         
-        public Point GetCurrentPosition(Point CursorPos) => GetVal.Invoke(CursorPos);
-        public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY.Invoke(CursorPoint));
-        public Point GetHookPoint(Point P) => GetVal.Invoke(P);
+        public Point GetCurrentPosition(Point CursorPos) => GetVal(CursorPos);
+        public double GetDistance(Point CursorPoint) => Math.Abs(GetDistanceXY(CursorPoint));
+        public Point GetHookPoint(Point P) => GetVal(P);
 
-        public void AcceptNewCoordinates() => AcceptChanges.Invoke();
+        public void AcceptNewCoordinates() => AcceptChanges();
 
         public void DrawShadow(DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual) =>
-            ActionDrawShadow.Invoke(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
+            ActionDrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
         public void DrawOver(Vector? vec, DrawingVisual ShadowVisual, DrawingVisual ShadowPriceVisual, DrawingVisual ShadowTimeVisual)
         {
-            ChangeMethod.Invoke(vec);
-            ActionDrawOver.Invoke(vec, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual, true);
-        }  
-
-        public List<(string Name, Action Act)> GetContextMenu() 
-        {
-            var Items = Element.GetContextMenu();
-
-            if (Items.Count > 0) Items.Add(("+++", null));
-            if (Locked) Items.Add(("Unlock", () => Element.Locked = !Element.Locked));
-            else Items.Add(("Lock", () => Element.Locked = !Element.Locked));
-            Items.Add(("Delete", Element.Delete));
-
-            return Items;
+            ChangeMethod(vec);
+            ActionDrawOver(vec, ShadowVisual, ShadowPriceVisual, ShadowTimeVisual, true);
         }
+
+        public List<(string Name, Action Act)> GetContextMenu() => Element.GetContextMenu();
     }
 }

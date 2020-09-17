@@ -23,9 +23,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace ChartModules.PaintingModule.Elements
+namespace ChartModules.CenterIndicators.Paintings
 {
-    public class Level : PaintingElement
+    public class Level : Painting
     {
         private static SolidColorBrush StTextBrush { get; set; } = Brushes.White;
         private static SolidColorBrush StMarkFill { get; set; } = Brushes.Black;
@@ -148,12 +148,12 @@ namespace ChartModules.PaintingModule.Elements
         private Level()
         {
             Sets.Add(new Setting("Price", () => this.Price, pr => { this.Price = pr; ApplyChangesToAll(pr); }));
-            Sets.Add(new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br; ApplyChangesToAll(); }));
-            Sets.Add(new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br; ApplyChangesToAll(); }));
-            Sets.Add(new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br; ApplyChangesToAll(); }));
-            Sets.Add(new Setting(IntType.Slider, "Thickness", () => (int)this.LineThikness, pr => { this.LineThikness = pr; ApplyChangesToAll(); }, 1, 5));
-            Sets.Add(new Setting(IntType.Slider, "Gap", () => (int)this.LineIndent, pr => { this.LineIndent = pr; ApplyChangesToAll(); }, 0, 10));
-            Sets.Add(new Setting(IntType.Slider, "Dash", () => (int)this.LineDash, pr => { this.LineDash = pr; ApplyChangesToAll(); }, 1, 10));
+            Sets.Add(new Setting("Line", () => this.LineBrush, br => { this.LineBrush = br; ApplyRenderChanges(); }));
+            Sets.Add(new Setting("Text", () => this.TextBrush, br => { this.TextBrush = br; ApplyRenderChanges(); }));
+            Sets.Add(new Setting("Mark", () => this.MarkFill, br => { this.MarkFill = br; ApplyRenderChanges(); }));
+            Sets.Add(new Setting(IntType.Slider, "Thickness", () => (int)this.LineThikness, pr => { this.LineThikness = pr; ApplyRenderChanges(); }, 1, 5));
+            Sets.Add(new Setting(IntType.Slider, "Gap", () => (int)this.LineIndent, pr => { this.LineIndent = pr; ApplyRenderChanges(); }, 0, 10));
+            Sets.Add(new Setting(IntType.Slider, "Dash", () => (int)this.LineDash, pr => { this.LineDash = pr; ApplyRenderChanges(); }, 1, 10));
         }
 
         public override string ElementName { get => "Level"; }
@@ -332,11 +332,6 @@ namespace ChartModules.PaintingModule.Elements
         private protected override void NewCoordinates()
         {
             this.Price = this.NPrice;
-        }
-
-        public override List<(string Name, Action Act)> GetContextMenu()
-        {
-            return new List<(string Name, Action Act)>();
         }
     }
 }

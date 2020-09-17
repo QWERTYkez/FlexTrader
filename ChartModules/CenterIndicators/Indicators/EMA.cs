@@ -25,7 +25,7 @@ using System.Windows.Media;
 
 namespace ChartModules.CenterIndicators.Indicators
 {
-    public class EMA : CenterIndicator
+    public class EMA : Indicator
     {
         public EMA()
         {
@@ -61,21 +61,13 @@ namespace ChartModules.CenterIndicators.Indicators
             if (Per >= Chart.AllCandles.Count) return;
 
             double Sum = 0;
-            for (int i = 0; i < Per - 1; i++) Sum += Chart.AllCandles[i].CloseD;
+            for (int i = 0; i < Per; i++) Sum += Chart.AllCandles[i].CloseD;
             Data.Add(new ChartPoint(Chart.AllCandles[Per].TimeStamp, Sum / Per));
 
             for (int i = Per + 1; i < Chart.AllCandles.Count; i++)
             {
                 Data.Add(new ChartPoint(Chart.AllCandles[i].TimeStamp,
                     A * Chart.AllCandles[i].CloseD + (1 - A) * Data[i - Per - 1].Price));
-
-
-
-
-
-                //Sum += Chart.AllCandles[i].CloseD;
-                //Data.Add(new ChartPoint(Chart.AllCandles[i].TimeStamp, Sum / Per));
-                //Sum -= Chart.AllCandles[i - Per + 1].CloseD;
             }
         }
 
@@ -156,10 +148,5 @@ namespace ChartModules.CenterIndicators.Indicators
         }
         private Point MinP;
         private protected override Point GetHookPoint(Point P) => MinP;
-
-        public override List<(string Name, Action Act)> GetContextMenu()
-        {
-            return new List<(string Name, Action Act)>();
-        }
     }
 }
