@@ -90,31 +90,6 @@ namespace ChartModules.CenterIndicators
             PrototypeTimeCanvas.ClearVisuals();
         }
 
-        private void CollectionChanged()
-        {
-            //Sets.Clear();
-            //if (ElementsCollection.Count > 99)
-            //{
-            //    for (int i = 0; i < ElementsCollection.Count; i++)
-            //        Sets.AddLevel($"{i + 1:000}. {ElementsCollection[i].ElementName}",
-            //            ElementsCollection[i].Sets.ToArray());
-            //}
-            //else if (ElementsCollection.Count > 9)
-            //{
-            //    for (int i = 0; i < ElementsCollection.Count; i++)
-            //        Sets.AddLevel($"{i + 1:00}. {ElementsCollection[i].ElementName}",
-            //            ElementsCollection[i].Sets.ToArray());
-            //}
-            //else
-            //{
-            //    for (int i = 0; i < ElementsCollection.Count; i++)
-            //        Sets.AddLevel($"{i + 1}. {ElementsCollection[i].ElementName}",
-            //            ElementsCollection[i].Sets.ToArray());
-            //}
-
-            //Redraw();
-        }
-
         public void ClearPrototype()
         {
             Task.Run(() => 
@@ -175,28 +150,6 @@ namespace ChartModules.CenterIndicators
 
         public List<Hook> VisibleHooks { get; private set; }
     }
-
-    //public abstract class Painting : HookElement 
-    //{
-    //    public Painting()
-    //    {
-    //        Sets.Add(new Setting(() => this.Locked, b => this.Locked = b));
-    //    }
-
-    //    public override List<(string Name, Action Act)> GetContextMenu()
-    //    {
-    //        (string Name, Action Act) Lock;
-    //        if (Locked) Lock = ("Unlock", () => Locked = !Locked);
-    //        else Lock = ("Lock", () => Locked = !Locked);
-
-    //        return new List<(string Name, Action Act)>
-    //        {
-    //            ("+++", null),
-    //            Lock,
-    //            ("Delete", Delete)
-    //        };
-    //    }
-    //} 
 
     public enum PInstrument
     {

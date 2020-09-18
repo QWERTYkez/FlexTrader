@@ -21,23 +21,31 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace ChartModules.BottomIndicators.Indicators
 {
-    public class Volumes : BottomIndicator
+    public class Volumes : Indicator
     {
-        public Volumes(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
-            : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine)
+        public Volumes(IChart Chart) : base(Chart)
         {
-            CandleBrushUp = Chart.CandleBrushUp;
-            CandleBrushDown = Chart.CandleBrushDown;
+            VolumesBrUp = Chart.CandleBrushUp;
+            VolumesBrDown = Chart.CandleBrushDown;
 
-            Sets.Add(new Setting("Bullish Volume", () => { return CandleBrushUp; }, 
-                Br => { this.CandleBrushUp = Br; Rendering(); }));
-            Sets.Add(new Setting("Bearish Volume", () => { return CandleBrushDown; },
-                Br => { this.CandleBrushDown = Br; Rendering(); }));
+            Sets.Add(new Setting("Bullish Volume", () => { return VolumesBrUp; }, 
+                Br => { this.VolumesBrUp = Br; Rendering(); }));
+            Sets.Add(new Setting("Bearish Volume", () => { return VolumesBrDown; },
+                Br => { this.VolumesBrDown = Br; Rendering(); }));
+        }
+        public Volumes(IChart Chart, SolidColorBrush VolumesBrUp, SolidColorBrush VolumesBrDown) : base(Chart)
+        {
+            this.VolumesBrUp = VolumesBrUp;
+            this.VolumesBrDown = VolumesBrDown;
+
+            Sets.Add(new Setting("Bullish Volume", () => { return VolumesBrUp; },
+                Br => { this.VolumesBrUp = Br; Rendering(); }));
+            Sets.Add(new Setting("Bearish Volume", () => { return VolumesBrDown; },
+                Br => { this.VolumesBrDown = Br; Rendering(); }));
         }
 
         private protected override void DestroyThis() { }
@@ -62,8 +70,8 @@ namespace ChartModules.BottomIndicators.Indicators
             max = Convert.ToDouble(m);
         }
 
-        private Brush CandleBrushUp;
-        private Brush CandleBrushDown;
+        private Brush VolumesBrUp;
+        private Brush VolumesBrDown;
         private readonly List<Rect> VolumesUp = new List<Rect>();
         private readonly List<Rect> VolumesDown = new List<Rect>();
         private protected override void Calculate()
@@ -86,9 +94,9 @@ namespace ChartModules.BottomIndicators.Indicators
                 using var dc = IndicatorVisualBase.RenderOpen();
 
                 foreach (var rect in VolumesUp)
-                    dc.DrawRectangle(CandleBrushUp, null, rect);
+                    dc.DrawRectangle(VolumesBrUp, null, rect);
                 foreach (var rect in VolumesDown)
-                    dc.DrawRectangle(CandleBrushDown, null, rect);
+                    dc.DrawRectangle(VolumesBrDown, null, rect);
             });
         }
     }

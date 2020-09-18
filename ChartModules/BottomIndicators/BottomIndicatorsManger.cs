@@ -26,40 +26,36 @@ using System.Windows.Media;
 
 namespace ChartModules.BottomIndicators
 {
-    public class BottomIndicatorManger
+    public class BottomIndicatorsManger
     {
         private readonly IChart Chart;
         private readonly Grid IndicatorsGrid;
         private readonly RowDefinition IndicatorsRow;
         private readonly RowDefinition IndicatorsSplitter;
-        private readonly DrawingCanvas CursorLinesLayer;
-        private readonly DrawingCanvas TimeLine;
-        public BottomIndicatorManger(IChart Chart, Grid IndicatorsGrid, RowDefinition IndicatorsRowRD, 
-            RowDefinition IndicatorsSplitterRD, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
+        public BottomIndicatorsManger(IChart Chart, Grid IndicatorsGrid, 
+            RowDefinition IndicatorsRowRD, RowDefinition IndicatorsSplitterRD)
         {
             this.Chart = Chart;
             this.IndicatorsGrid = IndicatorsGrid;
             this.IndicatorsRow = IndicatorsRowRD;
             this.IndicatorsSplitter = IndicatorsSplitterRD;
-            this.CursorLinesLayer = CursorLinesLayer;
-            this.TimeLine = TimeLine;
 
             IndicatorsRow.Height = new GridLength(0);
             IndicatorsSplitter.Height = new GridLength(0);
 
             ///////////
-            AddIndicator(IndicatorType.Volumes);
-            AddIndicator(IndicatorType.MACD);
+            AddIndicator(new Volumes(Chart));
+            AddIndicator(new MACD(Chart));
         }
 
-        private readonly List<BottomIndicator> Indicators = new List<BottomIndicator>();
+        private readonly List<Indicator> Indicators = new List<Indicator>();
 
         private readonly List<RowDefinition> SliderRows = new List<RowDefinition>();
         private readonly List<RowDefinition> IndicatorRows = new List<RowDefinition>();
         private readonly List<Grid> BaseGrds = new List<Grid>();
         private readonly List<Grid> ScaleGrds = new List<Grid>();
         private readonly List<GridSplitter> Splitters = new List<GridSplitter>();
-        public void AddIndicator(IndicatorType type)
+        public void AddIndicator(Indicator Indicator)
         {
             var i = Indicators.Count * 2;
 
@@ -92,26 +88,15 @@ namespace ChartModules.BottomIndicators
             var Rd2 = new RowDefinition { Height = new GridLength(1, GridUnitType.Star) };
             IndicatorsGrid.RowDefinitions.Add(Rd2); IndicatorRows.Add(Rd2);
 
-            var BaseGrd = new Grid();
-            Grid.SetRow(BaseGrd, i);
-            IndicatorsGrid.Children.Add(BaseGrd); BaseGrds.Add(BaseGrd);
-
-            var ScaleGrd = new Grid();
-            Grid.SetRow(ScaleGrd, i);
-            Grid.SetColumn(ScaleGrd, 2);
-            IndicatorsGrid.Children.Add(ScaleGrd); ScaleGrds.Add(ScaleGrd);
-
-            BottomIndicator Indicator = type switch
-            {
-                IndicatorType.Volumes => new Volumes(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
-                IndicatorType.MACD => new MACD(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine),
-                _ => throw new NotImplementedException()
-            };
+            Indicator.SetRow(i);
+            IndicatorsGrid.Children.Add(Indicator.BaseGrd); BaseGrds.Add(Indicator.BaseGrd);
+            IndicatorsGrid.Children.Add(Indicator.ScaleGrd); ScaleGrds.Add(Indicator.ScaleGrd);
+            
             Indicator.Delete += DeleteIndicator;
             Indicator.Moving += MoveIndicator;
             Indicators.Add(Indicator);
         }
-        private void DeleteIndicator(BottomIndicator indicator)
+        private void DeleteIndicator(Indicator indicator)
         {
             int i = Indicators.IndexOf(indicator);
             if (i + 1 < Indicators.Count)
@@ -144,7 +129,7 @@ namespace ChartModules.BottomIndicators
                 IndicatorsSplitter.Height = new GridLength(0);
             }
         }
-        private void MoveIndicator(BottomIndicator indicator, int i)
+        private void MoveIndicator(Indicator indicator, int i)
         {
             if (i > 0)
             {
@@ -183,11 +168,5 @@ namespace ChartModules.BottomIndicators
                 Indicators.Insert(i + 1, indicator);
             }
         }
-    }
-
-    public enum IndicatorType
-    {
-        MACD,
-        Volumes
     }
 }

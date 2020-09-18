@@ -29,17 +29,15 @@ using System.Windows.Media;
 
 namespace ChartModules.BottomIndicators
 {
-    public abstract class BottomIndicator : ChartModule
+    public abstract class Indicator : ChartModule
     {
         public static readonly SolidColorBrush CursorGrabber = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
         private bool Twin;
-        public BottomIndicator(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer,
-            DrawingCanvas TimeLine, bool Twin = false) : base(Chart)
+        public Indicator(IChart Chart, bool Twin = false) : base(Chart)
         {
             this.Twin = Twin;
-            this.BaseGrd = BaseGrd;
-            this.TimeMarkLayer = TimeLine;
-            this.CursorLinesLayer = CursorLinesLayer;
+
+            Grid.SetColumn(ScaleGrd, 2);
 
             pixelsPerDip = VisualTreeHelper.GetDpi(ScaleVisual).PixelsPerDip;
             IndicatorCanvasBase.AddVisual(IndicatorVisualBase);
@@ -100,7 +98,7 @@ namespace ChartModules.BottomIndicators
             ScaleGrd.Children.Add(ScaleCanvas);
             ScaleGrd.Children.Add(ValueMarkLayer);
 
-            CursorLinesTransform = (TranslateTransform)CursorLinesLayer.RenderTransform;
+            CursorLinesTransform = (TranslateTransform)Chart.CursorLinesLayer.RenderTransform;
             CursorLayer.RenderTransform = CursorTransform;
 
             Chart.CandlesChanged += ac => Redraw();
@@ -114,6 +112,12 @@ namespace ChartModules.BottomIndicators
                 Chart.NewXTrans += sc => SecondReset();
             }
             Chart.NewFSF += fsf => RedrawScale();
+        }
+
+        public void SetRow(int i)
+        {
+            Grid.SetRow(BaseGrd, i);
+            Grid.SetRow(ScaleGrd, i);
         }
 
         private protected override void Destroy()
@@ -136,8 +140,8 @@ namespace ChartModules.BottomIndicators
                 () => Dispatcher.Invoke(() => Selector.Visibility = Visibility.Collapsed));
         }
 
-        public event Action<BottomIndicator, int> Moving;
-        public event Action<BottomIndicator> Delete;
+        public event Action<Indicator, int> Moving;
+        public event Action<Indicator> Delete;
 
         private readonly Border Selector = new Border
         {
@@ -148,7 +152,8 @@ namespace ChartModules.BottomIndicators
         };
         private readonly ScaleTransform ScX = new ScaleTransform();
         private readonly ScaleTransform ScY = new ScaleTransform();
-        private readonly Grid BaseGrd;
+        public readonly Grid BaseGrd = new Grid();
+        public readonly Grid ScaleGrd = new Grid();
         private readonly DrawingCanvas IndicatorCanvasBase = new DrawingCanvas();
         private readonly DrawingCanvas IndicatorCanvasSecond;
         private readonly DrawingCanvas GridCanvas = new DrawingCanvas();
@@ -160,9 +165,7 @@ namespace ChartModules.BottomIndicators
         private readonly DrawingVisual ScaleVisual = new DrawingVisual();
         private readonly double pixelsPerDip;
 
-        private readonly DrawingCanvas CursorLinesLayer;
         private readonly DrawingCanvas CursorLayer = new DrawingCanvas();
-        private readonly DrawingCanvas TimeMarkLayer;
         private readonly DrawingCanvas ValueMarkLayer = new DrawingCanvas();
         private readonly DrawingVisual CursorTimeVisual = new DrawingVisual();
         private readonly DrawingVisual CursorValueVisual = new DrawingVisual();
@@ -170,16 +173,16 @@ namespace ChartModules.BottomIndicators
         private readonly TranslateTransform CursorTransform = new TranslateTransform();
         private void CursorShow(object sender, MouseEventArgs e)
         {
-            CursorLinesLayer.AddVisual(Chart.CursorLinesVisual);
+            Chart.CursorLinesLayer.AddVisual(Chart.CursorLinesVisual);
             CursorLayer.AddVisual(Chart.CursorVisual);
-            TimeMarkLayer.AddVisual(CursorTimeVisual);
+            Chart.TimesLayer.AddVisual(CursorTimeVisual);
             ValueMarkLayer.AddVisual(CursorValueVisual);
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            CursorLinesLayer.RemoveVisual(Chart.CursorLinesVisual);
+            Chart.CursorLinesLayer.RemoveVisual(Chart.CursorLinesVisual);
             CursorLayer.RemoveVisual(Chart.CursorVisual);
-            TimeMarkLayer.RemoveVisual(CursorTimeVisual);
+            Chart.TimesLayer.RemoveVisual(CursorTimeVisual);
             ValueMarkLayer.RemoveVisual(CursorValueVisual);
         }
         private CursorPosition CursorPosition { get; } = new CursorPosition();

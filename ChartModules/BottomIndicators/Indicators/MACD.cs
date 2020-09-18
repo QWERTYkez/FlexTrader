@@ -22,22 +22,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace ChartModules.BottomIndicators.Indicators
 {
-    public class MACD : BottomIndicator
+    public class MACD : Indicator
     {
-        public MACD(IChart Chart, Grid BaseGrd, Grid ScaleGrd, DrawingCanvas CursorLinesLayer, DrawingCanvas TimeLine)
-            : base(Chart, BaseGrd, ScaleGrd, CursorLinesLayer, TimeLine, true)
+        public MACD(IChart Chart) : base(Chart, true)
         {
-            Sets.AddLevel("MA", new Setting[] 
+            N1 = 12;
+            N2 = 26;
+            MACDbr = Brushes.Teal;
+            FastPen = new Pen(Brushes.Lime, 2);
+            SlowPen = new Pen(Brushes.White, 2);
+
+            IniSets();
+
+            MACDbr.Freeze(); FastPen.Freeze(); SlowPen.Freeze();
+        }
+        public MACD(IChart Chart, uint FastPeriod, uint SlowPeriod, SolidColorBrush MACDbr,
+            Pen FastMAPen, Pen SlowMAPen) : base(Chart, true)
+        {  
+            N1 = (int)FastPeriod;
+            N2 = (int)SlowPeriod;
+            this.MACDbr = MACDbr;
+            FastPen = FastMAPen;
+            SlowPen = SlowMAPen;
+
+            IniSets();
+
+            MACDbr.Freeze(); FastPen.Freeze(); SlowPen.Freeze();
+        }
+
+        private void IniSets()
+        {
+            Sets.AddLevel("MA", new Setting[]
             {
                 new Setting(IntType.Slider, "Fast", () => N1, i =>
                 {
                     N1 = i; Redraw();
-                }, 
+                },
                 1, N2 - 1, null, act => { SetFastMax = act; }),
 
                 new Setting(IntType.Picker, "Slow", () => N2, i =>
@@ -49,25 +73,25 @@ namespace ChartModules.BottomIndicators.Indicators
                         SetFastMax.Invoke(i - 1);
                         Redraw();
                     }
-                }, 
+                },
                 2, null)
             });
             Sets.Add(new Setting("MACD", () => { return MACDbr; },
                 Br => { this.MACDbr = Br; Rendering(); }));
 
-            Sets.AddLevel("fast", new Setting[] 
+            Sets.AddLevel("fast", new Setting[]
             {
-                new Setting("color", () => { return FastPen.Brush; }, 
-                    Br => 
+                new Setting("color", () => { return FastPen.Brush; },
+                    Br =>
                     {
-                        Dispatcher.Invoke(() => 
+                        Dispatcher.Invoke(() =>
                         {
-                            FastPen = new Pen(Br, FastPen.Thickness); 
+                            FastPen = new Pen(Br, FastPen.Thickness);
                             FastPen.Freeze();
                         });
-                        RedrawSecond(); 
+                        RedrawSecond();
                     }),
-                new Setting(IntType.Slider, "weight", () => (int)(FastPen.Thickness * 10), 
+                new Setting(IntType.Slider, "weight", () => (int)(FastPen.Thickness * 10),
                     d => { FastPen = new Pen(FastPen.Brush, (double)d / 10); FastPen.Freeze(); RedrawSecond(); }, 10, 50)
             });
 
@@ -86,15 +110,15 @@ namespace ChartModules.BottomIndicators.Indicators
                 new Setting(IntType.Slider, "weight", () => (int)(SlowPen.Thickness * 10),
                     d => { SlowPen = new Pen(SlowPen.Brush, (double)d / 10); SlowPen.Freeze(); RedrawSecond(); }, 10, 50)
             });
-
-            FastPen.Freeze(); SlowPen.Freeze();
         }
 
+        private int N1;
+        private int N2;
         private Action<int> SetFastMax;
         private protected override string SetsName => "MACD";
-        private SolidColorBrush MACDbr = Brushes.Teal;
-        private Pen FastPen { get; set; } = new Pen(Brushes.Lime, 2);
-        private Pen SlowPen { get; set; } = new Pen(Brushes.White, 2);
+        private SolidColorBrush MACDbr;
+        private Pen FastPen;
+        private Pen SlowPen;
 
         private protected override void DestroyThis() { }
 
@@ -135,8 +159,6 @@ namespace ChartModules.BottomIndicators.Indicators
             }
         }
 
-        private int N1 = 12; //FastLength
-        private int N2 = 26; //SliwLength
         private readonly List<Data> Values = new List<Data>();
         private protected override void Calculate()
         {

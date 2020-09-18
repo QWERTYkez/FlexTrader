@@ -46,7 +46,7 @@ namespace FlexTrader.MVVM.Views
         private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;
 
-        private readonly BottomIndicatorManger BottomIndicatorManger;
+        private readonly BottomIndicatorsManger BottomIndicatorManger;
         private readonly CenterIndicatorManger CenterIndicatorManger;
 
         public IChartWindow MWindow { get; }
@@ -79,11 +79,10 @@ namespace FlexTrader.MVVM.Views
                 NewFSF?.Invoke(fsf);
             };
 
-            TimeLineModule = new TimeLineModule(this, GridLayerVertical, TimesLayer);
+            TimeLineModule = new TimeLineModule(this, GridLayerVertical);
             TimeLineModule.HorizontalСhanges += () => HorizontalСhanges.Invoke();
 
-            CursorModule = new CursorModule(this, CursorLinesLayer, CursorLayer, MagnetLayer,
-                CursorTimeMarkLayer, CursorPriceMarkLayer);
+            CursorModule = new CursorModule(this, CursorLayer, MagnetLayer, CursorTimeMarkLayer, CursorPriceMarkLayer);
 
             CandlesModule = new CandlesModule(this, CandlesLayer, PriceLineModule, TimeLineModule,
                 Translate, ScaleX, ScaleY, TimeLine, PriceLine,
@@ -93,10 +92,12 @@ namespace FlexTrader.MVVM.Views
             CandlesModule.NewXScale += sc => NewXScale?.Invoke(sc);
             CandlesModule.NewXTrans += tr => NewXTrans?.Invoke(tr);
 
-            BottomIndicatorManger = new BottomIndicatorManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD, CursorLinesLayer, TimesLayer);
-            CenterIndicatorManger = new CenterIndicatorManger(this, BackgroundIndLayer, ForegroundIndLayer, PaintingMarksLayer, PaintingTimeLayer);
+            BottomIndicatorManger = new BottomIndicatorsManger(this, IndicatorsGrid, IndicatorsRowRD, IndicatorsSplitterRD);
+            CenterIndicatorManger = new CenterIndicatorManger(this, BackgroundIndLayer, 
+                ForegroundIndLayer, PaintingMarksLayer, PaintingTimeLayer);
             
-            PaintingModule = new PaintingModule(this, PrototypeLayer, PrototypePriceLayer, PrototypeTimeLayer, CenterIndicatorManger.AddElement);
+            PaintingModule = new PaintingModule(this, PrototypeLayer, PrototypePriceLayer, 
+                PrototypeTimeLayer, CenterIndicatorManger.AddElement);
             MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
 
             HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
@@ -242,6 +243,8 @@ namespace FlexTrader.MVVM.Views
         public event Action<double> NewXTrans;
         public string FSF { get => PriceLineModule.Fsf; }
         public event Action<string> NewFSF;
+        public DrawingCanvas CursorLinesLayer { get => this.CursorLinesLr; }
+        public DrawingCanvas TimesLayer { get => this.TimesLr; }
         public Brush CandleBrushUp { get => CandlesModule.UpBrush; }
         public Brush CandleBrushDown { get => CandlesModule.DownBrush; }
         public Brush CursorFontBrush { get => CursorModule.FontBrush; }

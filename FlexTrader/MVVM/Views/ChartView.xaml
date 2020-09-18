@@ -106,7 +106,7 @@
             Grid.Row="4"
             Background="{StaticResource CursorGrabber}"
             ClipToBounds="True">
-            <CM:DrawingCanvas x:Name="TimesLayer" />
+            <CM:DrawingCanvas x:Name="TimesLr" />
             <CM:DrawingCanvas x:Name="CursorTimeMarkLayer" />
             <CM:DrawingCanvas x:Name="PaintingTimeLayer" />
             <CM:DrawingCanvas x:Name="HookTimeLayer" />
@@ -168,7 +168,7 @@
             </Button>
         </Grid>
         <Grid Grid.RowSpan="4" ClipToBounds="True">
-            <CM:DrawingCanvas x:Name="CursorLinesLayer" />
+            <CM:DrawingCanvas x:Name="CursorLinesLr" />
         </Grid>
     </Grid>
 </UserControl>

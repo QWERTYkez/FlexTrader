@@ -31,43 +31,43 @@ namespace ChartModules
 {
     public interface IChartWindow
     {
-        public void MoveCursor(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null);
-        public void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
+        void MoveCursor(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null);
+        void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
 
-        public void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook = null, Action RemoveHook = null);
-        public void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu);
-        public void ResetInstrument(string Name);
-        public IHaveInstruments InstrumentsHandler { get; set; }
-        public event Action ClearPrototypes;
-        public event Action<PInstrument> PrepareInstrument;
-        public event Action<CursorT> SetCursor;
-        public event Action RemoveHooks;
-        public event Action<bool> ToggleInteraction;
-        public event Action<bool> ToggleMagnet;
-        public Action MMInstrument { get; }
-        public bool Controlled { get; }
-        public bool ControlUsed { get; set; }
+        void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook = null, Action RemoveHook = null);
+        void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu);
+        void ResetInstrument(string Name);
+        IHaveInstruments InstrumentsHandler { get; set; }
+        event Action ClearPrototypes;
+        event Action<PInstrument> PrepareInstrument;
+        event Action<CursorT> SetCursor;
+        event Action RemoveHooks;
+        event Action<bool> ToggleInteraction;
+        event Action<bool> ToggleMagnet;
+        Action MMInstrument { get; }
+        bool Controlled { get; }
+        bool ControlUsed { get; set; }
     }
 
     public interface IHaveInstruments
     {
-        public Action<MouseButtonEventArgs> Interacion { get; set; }
-        public Action<MouseButtonEventArgs> Moving { get; set; }
-        public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
-        public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
+        Action<MouseButtonEventArgs> Interacion { get; set; }
+        Action<MouseButtonEventArgs> Moving { get; set; }
+        Action<MouseButtonEventArgs> PaintingLevel { get; set; }
+        Action<MouseButtonEventArgs> PaintingTrend { get; set; }
 
-        public Action HookElement { get; set; }
-        public Action DrawPrototype { get; set; }
+        Action HookElement { get; set; }
+        Action DrawPrototype { get; set; }
     }
 
     public interface IChart: IHaveInstruments
     {
-        public bool Manipulating { get; }
-        public IChartWindow MWindow { get; }
-        public Grid ChartGrid { get; }
-        public List<Point> PaintingPoints { get; set; }
+        bool Manipulating { get; }
+        IChartWindow MWindow { get; }
+        Grid ChartGrid { get; }
+        List<Point> PaintingPoints { get; set; }
         Dispatcher Dispatcher { get; }
         double TickSize { get; }
         double PriceToHeight(in double price);
@@ -82,7 +82,9 @@ namespace ChartModules
         TimeSpan DeltaTime { get; }
         Vector CurrentTranslate { get; }
         Vector CurrentScale { get; }
-        public List<MagnetPoint> MagnetPoints { get; }
+        List<MagnetPoint> MagnetPoints { get; }
+        DrawingCanvas CursorLinesLayer { get; }
+        DrawingCanvas TimesLayer { get; }
         Brush ChartBackground { get; }
         double PriceShift { get; }
         double ChWidth { get; }
@@ -100,26 +102,26 @@ namespace ChartModules
         event Action VerticalСhanges;
         event Action HorizontalСhanges;
         CursorPosition CursorPosition { get; }
-        public List<ICandle> AllCandles { get; }
-        public event Action<List<ICandle>> CandlesChanged;
-        public event Action<IEnumerable<ICandle>> AllHorizontalReset;
-        public event Action<double> NewXScale;
-        public event Action<double> NewXTrans;
-        public string FSF { get; }
-        public event Action<string> NewFSF;
-        public Brush CandleBrushUp { get; }
-        public Brush CandleBrushDown { get; }
-        public Brush CursorFontBrush { get; }
-        public Pen CursorMarksPen { get; }
-        public bool CursorHide { get; }
-        public DrawingVisual CursorLinesVisual { get; }
-        public DrawingVisual CursorVisual { get; }
-        public Action<MouseButtonEventArgs> MovingChart { get; }
-        public int Digits { get; }
+        List<ICandle> AllCandles { get; }
+        event Action<List<ICandle>> CandlesChanged;
+        event Action<IEnumerable<ICandle>> AllHorizontalReset;
+        event Action<double> NewXScale;
+        event Action<double> NewXTrans;
+        string FSF { get; }
+        event Action<string> NewFSF;
+        Brush CandleBrushUp { get; }
+        Brush CandleBrushDown { get; }
+        Brush CursorFontBrush { get; }
+        Pen CursorMarksPen { get; }
+        bool CursorHide { get; }
+        DrawingVisual CursorLinesVisual { get; }
+        DrawingVisual CursorVisual { get; }
+        Action<MouseButtonEventArgs> MovingChart { get; }
+        int Digits { get; }
     }
 
     public interface IHooksContainer
     {
-        public List<Hook> VisibleHooks { get; }
+        List<Hook> VisibleHooks { get; }
     }
 }

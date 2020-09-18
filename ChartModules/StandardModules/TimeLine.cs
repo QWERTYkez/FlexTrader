@@ -31,15 +31,13 @@ namespace ChartModules.StandardModules
         public DateTime TimeB = DateTime.FromBinary(0);
 
         private readonly DrawingCanvas GridLayer;
-        private readonly DrawingCanvas TimeLine;
-        public TimeLineModule(IChart chart, DrawingCanvas GridLayer, DrawingCanvas TimeLine) : base(chart)
+        public TimeLineModule(IChart chart, DrawingCanvas GridLayer) : base(chart)
         {
             this.GridLayer = GridLayer;
-            this.TimeLine = TimeLine;
 
             Chart.FontBrushChanged += () => Redraw();
             GridLayer.AddVisual(TimeGridVisual);
-            TimeLine.AddVisual(TimesVisual);
+            Chart.TimesLayer.AddVisual(TimesVisual);
         }
         private protected override string SetsName { get; }
         private Pen LinesPen => Chart.LinesPen;
@@ -51,7 +49,7 @@ namespace ChartModules.StandardModules
         {
             Chart.FontBrushChanged -= () => Redraw();
             GridLayer.RemoveVisual(TimeGridVisual);
-            TimeLine.RemoveVisual(TimesVisual);
+            Chart.TimesLayer.RemoveVisual(TimesVisual);
         }
 
         public event Action HorizontalСhanges;

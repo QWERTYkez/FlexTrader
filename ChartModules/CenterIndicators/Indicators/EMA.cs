@@ -49,6 +49,12 @@ namespace ChartModules.CenterIndicators.Indicators
             });
         }
 
+        public EMA(uint period, Pen pen) : this()
+        {
+            Per = (int)period;
+            LinePen = pen;
+        }
+
         private int Per = 10;
         private Pen LinePen = new Pen(Brushes.Gold, 3);
         private readonly List<ChartPoint> Data = new List<ChartPoint>();

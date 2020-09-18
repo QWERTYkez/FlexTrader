@@ -44,8 +44,9 @@ namespace ChartModules.CenterIndicators
             Chart.HorizontalСhanges += ResetHooks;
 
             ///////////
-            AddElement(new SMA());
-            AddElement(new EMA());
+            AddElement(new EMA(5, new Pen(Brushes.Gold, 3)));
+            AddElement(new EMA(10, new Pen(Brushes.Gold, 3)));
+            AddElement(new EMA(15, new Pen(Brushes.Gold, 3)));
         }
         private readonly DrawingCanvas BackgroundIndLayer;
         private readonly DrawingCanvas ForegroundIndLayer;

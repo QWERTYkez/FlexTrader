@@ -35,19 +35,16 @@ namespace ChartModules.StandardModules
             LinesPen.Freeze();
         }
 
-        private readonly DrawingCanvas CursorLinesLayer;
         private readonly DrawingCanvas CursorLayer;
         private readonly DrawingCanvas MagnetLayer;
         private readonly DrawingCanvas TimeLine;
         private readonly DrawingCanvas PriceLine;
-        public CursorModule(IChart chart,
-            DrawingCanvas CursorLinesLayer, DrawingCanvas CursorLayer,
+        public CursorModule(IChart chart, DrawingCanvas CursorLayer,
             DrawingCanvas MagnetLayer, DrawingCanvas TimeLine,
             DrawingCanvas PriceLine) : base(chart)
         {
             Cursors.Add(this);
 
-            this.CursorLinesLayer = CursorLinesLayer;
             this.CursorLayer = CursorLayer;
             this.MagnetLayer = MagnetLayer;
             this.TimeLine = TimeLine;
@@ -66,7 +63,7 @@ namespace ChartModules.StandardModules
                 });
             };
             SetCursorLines();
-            CursorLinesLayer.RenderTransform = CursorLinesTransform;
+            Chart.CursorLinesLayer.RenderTransform = CursorLinesTransform;
             CursorLayer.RenderTransform = CursorTransform;
             MagnetLayer.RenderTransform = MagnetTransform;
 
@@ -100,7 +97,7 @@ namespace ChartModules.StandardModules
         private readonly DrawingVisual CursorPriceVisual = new DrawingVisual();
         private void ShowCursor(object sender, MouseEventArgs e)
         {
-            CursorLinesLayer.AddVisual(CursorLinesVisual);
+            Chart.CursorLinesLayer.AddVisual(CursorLinesVisual);
             CursorLayer.AddVisual(CursorVisual);
             MagnetLayer.AddVisual(MagnetVisual);
             TimeLine.AddVisual(CursorTimeVisual);
@@ -108,7 +105,7 @@ namespace ChartModules.StandardModules
         }
         private void CursorLeave(object sender, MouseEventArgs e)
         {
-            CursorLinesLayer.RemoveVisual(CursorLinesVisual);
+            Chart.CursorLinesLayer.RemoveVisual(CursorLinesVisual);
             CursorLayer.RemoveVisual(CursorVisual);
             MagnetLayer.RemoveVisual(MagnetVisual);
             TimeLine.RemoveVisual(CursorTimeVisual);
