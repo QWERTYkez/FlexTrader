@@ -62,10 +62,11 @@ namespace FlexTrader.MVVM.Resources
             this.PreviewMouseLeftButtonDown += CW_PreviewMouseLeftButtonDown;
 
             //PreviewMouseLeftButtonDown
-            Interacion = e => InstrumentsHandler?.Interacion?.Invoke(e);
+            Interaction = e => InstrumentsHandler?.Interaction?.Invoke(e);
+            Selection = e => InstrumentsHandler?.Selection?.Invoke(e);
             Moving = e => InstrumentsHandler?.Moving?.Invoke(e);
-            PaintingLevel = e => InstrumentsHandler?.PaintingLevel.Invoke(e);
-            PaintingTrend = e => InstrumentsHandler?.PaintingTrend.Invoke(e);
+            PaintingLevel = e => InstrumentsHandler?.PaintingLevel(e);
+            PaintingTrend = e => InstrumentsHandler?.PaintingTrend(e);
 
             //MouseMove
             HookElement = () => InstrumentsHandler?.HookElement?.Invoke();
@@ -76,19 +77,23 @@ namespace FlexTrader.MVVM.Resources
         private protected void ChartsGRD_PreviewMouseLeftButtonDown(object s, MouseButtonEventArgs e)
         {
             RemoveHooks?.Invoke();
-            LBDInstrument.Invoke(e);
+            LBDInstrument(e);
         }
 
         public IHaveInstruments InstrumentsHandler { get; set; }
+        public List<IChart> SelectedCharts { get; private set; } = new List<IChart>();
+        public List<IClipCandles> ClipsCandles { get; private set; } = new List<IClipCandles>();
         private protected abstract Grid ChartsGRD { get; }
 
         public event Action<PInstrument> PrepareInstrument;
         public event Action<CursorT> SetCursor; 
         public event Action RemoveHooks;
         public event Action<bool> ToggleInteraction;
+        public event Action NonSelection;
 
         private Action<MouseButtonEventArgs> LBDInstrument { get; set; }
-        private readonly Action<MouseButtonEventArgs> Interacion;
+        private readonly Action<MouseButtonEventArgs> Interaction;
+        private readonly Action<MouseButtonEventArgs> Selection;
         private readonly Action<MouseButtonEventArgs> Moving;
         private readonly Action<MouseButtonEventArgs> PaintingLevel;
         private readonly Action<MouseButtonEventArgs> PaintingTrend;
@@ -99,7 +104,8 @@ namespace FlexTrader.MVVM.Resources
 
         private bool MagnetInstrument = false;
         public abstract void ResetInstrument(string Name);
-        private bool Interaction = false;
+        private bool InteractionF = false;
+        private bool SelectionF = false;
         private bool painting = false;
         private bool Painting
         {
@@ -119,36 +125,41 @@ namespace FlexTrader.MVVM.Resources
                 switch (InstrumentName)
                 {
                     case "PaintingLevels":
-                        LBDInstrument = PaintingLevel; PrepareInstrument.Invoke(PInstrument.Level);
+                        LBDInstrument = PaintingLevel; PrepareInstrument(PInstrument.Level);
                         Painting = true; MagnetInstrument = true; t = CursorT.Paint;
                         MMInstrument = DrawPrototype;
                         break;
 
                     case "PaintingTrends":
-                        LBDInstrument = PaintingTrend; PrepareInstrument.Invoke(PInstrument.Trend);
+                        LBDInstrument = PaintingTrend; PrepareInstrument(PInstrument.Trend);
                         Painting = true; MagnetInstrument = true; t = CursorT.Paint;
                         MMInstrument = DrawPrototype;
                         break;
 
                     case "Interacion":
-                        LBDInstrument = Interacion; Painting = false; Interaction = true;
+                        LBDInstrument = Interaction; Painting = false; InteractionF = true;
                         MagnetInstrument = true; t = CursorT.Hook;
-                        MMInstrument = HookElement; ToggleInteraction.Invoke(true);
+                        MMInstrument = HookElement; ToggleInteraction(true);
+                        break;
+
+                    case "Selection":
+                        LBDInstrument = Selection; Painting = false; SelectionF = true;
+                        MagnetInstrument = false; t = CursorT.Select;
+                        MMInstrument = null;
                         break;
 
                     default:
-                        LBDInstrument = Moving; Painting = false; //SetMenu(null, null, null, null, null);
+                        LBDInstrument = Moving; Painting = false;
                         MagnetInstrument = false; t = CursorT.Standart; 
                         MMInstrument = null; 
                         break; 
                 }
-                if (InstrumentName != "Interacion" && Interaction)
-                {
-                    ToggleInteraction.Invoke(false);
-                    Interaction = false;
-                }
+                if (InstrumentName != "Interacion" && InteractionF)
+                { ToggleInteraction(false); InteractionF = false; }
+                if (InstrumentName != "Selection" && SelectionF)
+                { NonSelection(); InteractionF = false; }
 
-                SetCursor.Invoke(t);
+                SetCursor(t);
                 SetMagnet();
             });
         }
@@ -156,7 +167,7 @@ namespace FlexTrader.MVVM.Resources
         private protected abstract bool CurrentMagnetState { get; set; }
         public event Action<bool> ToggleMagnet;
         private protected void SetMagnet() => 
-            ToggleMagnet.Invoke(MagnetInstrument && CurrentMagnetState);
+            ToggleMagnet(MagnetInstrument && CurrentMagnetState);
 
         public bool Controlled { get; private set; } = false;
         public bool ControlUsed { get; set; }
@@ -184,18 +195,22 @@ namespace FlexTrader.MVVM.Resources
         {
             if (Controlled) Task.Run(() =>
             {
-                if (Interaction || ControlUsed) ResetInstrument(null);
+                if (InteractionF || ControlUsed) ResetInstrument(null);
                 Controlled = false;
             });
         }
+
+        public event Action<bool> ToggleClipTime;
+        private protected void SetClipTime(bool b) => ToggleClipTime(b);
         #endregion
 
         #region Обработка таскания мышью
         private Point StartPosition;
         private Action<Vector?> ActA;
         private Action ActB;
-        public void MoveCursor(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null)
+        public void MoveElement(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null)
         {
+            e.Handled = true;
             StartPosition = e.GetPosition(this); this.ActA = ActA; this.ActB = ActB;
 
             this.MouseLeftButtonUp += (obj, e) => EndMoving();
@@ -204,15 +219,36 @@ namespace FlexTrader.MVVM.Resources
         private void MovingAct(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Released) EndMoving();
-            ActA?.Invoke(e.GetPosition(this) - StartPosition);
+            ActA.Invoke(e.GetPosition(this) - StartPosition);
         }
         private void EndMoving()
         {
-            ActA?.Invoke(null);
             this.MouseMove -= MovingAct;
-            ActA = null;
+            ActA.Invoke(null);
             ActB?.Invoke();
-            ActB = null;
+        }
+        private List<Func<Vector?, Task>> ActsA;
+        private List<Func<Task>> ActsB;
+        public void MoveElements(MouseButtonEventArgs e, List<Func<Vector?, Task>> ActsA, List<Func<Task>> ActsB = null)
+        {
+            e.Handled = true;
+            StartPosition = e.GetPosition(this); this.ActsA = ActsA; this.ActsB = ActsB;
+
+            this.MouseLeftButtonUp += (obj, e) => EndMovings();
+            this.MouseMove += MovingActs;
+        }
+        private void MovingActs(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Released) EndMovings();
+            var vec = e.GetPosition(this) - StartPosition;
+            foreach (var act in ActsA) Task.Run(() => act.Invoke(vec));
+        }
+        private void EndMovings()
+        {
+            this.MouseMove -= MovingActs;
+
+            foreach (var act in ActsA) act.Invoke(null);
+            if(ActsB != null) foreach (var act in ActsB) act.Invoke();
         }
         #endregion
 
@@ -361,7 +397,7 @@ namespace FlexTrader.MVVM.Resources
                                             OverlayMenu.Visibility = Visibility.Hidden;
                                             TopPanel.Visibility = Visibility.Visible;
                                             set.Delete();
-                                            RemoveHook.Invoke();
+                                            RemoveHook();
                                         };
                                         BaseButtonsGrd.Children.Add(dpb);
                                         break;
@@ -509,7 +545,7 @@ namespace FlexTrader.MVVM.Resources
                         };
                         btn.Click += (s, e) =>
                         {
-                            Task.Run(() => item.Act.Invoke());
+                            Task.Run(() => item.Act());
                             InvokeRemoveHook();
                             ContextMenuPopup.IsOpen = false;
                         };

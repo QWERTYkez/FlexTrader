@@ -42,6 +42,7 @@ namespace FlexTrader.MVVM.Views
         private readonly TimeLineModule TimeLineModule;
         private readonly PriceLineModule PriceLineModule;
         private readonly CandlesModule CandlesModule;
+        public IClipCandles ClipCandles { get => CandlesModule; }
 
         private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;
@@ -63,6 +64,9 @@ namespace FlexTrader.MVVM.Views
                     MWindow.InstrumentsHandler = null;
             };
             this.ShowSettings += MWindow.ShowSettings;
+
+            Selection = Selecting;
+            MWindow.NonSelection += Unselect;
 
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
@@ -184,13 +188,47 @@ namespace FlexTrader.MVVM.Views
 
         #region Instruments
         //LBDInstrument
-        public Action<MouseButtonEventArgs> Interacion { get; set; }
+        public Action<MouseButtonEventArgs> Interaction { get; set; }
+        public Action<MouseButtonEventArgs> Selection { get; set; }
         public Action<MouseButtonEventArgs> Moving { get; set; }
         public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
         public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
         //MMInstrument
         public Action HookElement { get; set; }
         public Action DrawPrototype { get; set; }
+
+        #region Instruments
+        private bool SelectedF = false;
+        private void Selecting(MouseButtonEventArgs e)
+        {
+            SelectedF = !SelectedF;
+
+            switch (SelectedF)
+            {
+                case true:
+                    {
+                        SelectionBorder.BorderThickness = new Thickness(3);
+                        MWindow.SelectedCharts.Add(this);
+                    }
+                    break;
+                case false:
+                    {
+                        SelectionBorder.BorderThickness = new Thickness(0);
+                        MWindow.SelectedCharts.Remove(this);
+                    }
+                    break;
+            }
+        }
+        private void Unselect()
+        {
+            if (SelectedF)
+            {
+                SelectedF = false;
+                Dispatcher.Invoke(() => SelectionBorder.BorderThickness = new Thickness(0));
+                MWindow.SelectedCharts.Remove(this);
+            }
+        }
+        #endregion
         #endregion
 
         public List<Point> PaintingPoints { get; set; }
@@ -215,7 +253,7 @@ namespace FlexTrader.MVVM.Views
                 if (e.HeightChanged) CandlesModule.VerticalReset();
             });
         }
-        private void MouseWheelSpinning(object sender, MouseWheelEventArgs e) => CandlesModule.WhellScalling(e);
+        private void MouseWheelSpinning(object sender, MouseWheelEventArgs e) => CandlesModule.WheelSpinning(e);
 
         public double TickSize { get; private set; } = 0.00000001;
         public double ChHeight { get; private set; }
@@ -252,7 +290,8 @@ namespace FlexTrader.MVVM.Views
         public bool CursorHide { get => CursorModule.Hide; }
         public DrawingVisual CursorLinesVisual { get => CursorModule.CursorLinesVisual; }
         public DrawingVisual CursorVisual { get => CursorModule.CursorVisual; }
-        public Action<MouseButtonEventArgs> MovingChart { get => CandlesModule.MovingChart; }
+        public Action<object, MouseEventArgs> SetMoving { get => CandlesModule.SetMoving; }
+        public Action<object, MouseEventArgs> BreakMoving { get => CandlesModule.BreakMoving; }
 
         public event Action VerticalСhanges;
         public event Action HorizontalСhanges;

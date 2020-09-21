@@ -41,6 +41,9 @@ namespace FlexTrader.MVVM.Resources
     public class Gear : UserControl { }
     public class Reset : UserControl { }
     public class Magnet : UserControl { }
+    public class ClipCursor : UserControl { }
+    public class ClipInd : UserControl { }
+    public class ClipTime : UserControl { }
     public class CheckMark : UserControl { }
     public class Lock : UserControl 
     {

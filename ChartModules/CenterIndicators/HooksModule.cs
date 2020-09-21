@@ -48,8 +48,8 @@ namespace ChartModules
             Chart.VerticalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
             Chart.HorizontalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
 
-            Chart.ChartGrid.MouseEnter += (s, e) => Chart.Interacion = MoveHook;
-            Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Interacion == MoveHook) Chart.Interacion = null; };
+            Chart.ChartGrid.MouseEnter += (s, e) => Chart.Interaction = MoveHook;
+            Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Interaction == MoveHook) Chart.Interaction = null; };
             Chart.HookElement = HookElement;
             Chart.MWindow.RemoveHooks += () => Task.Run(() => RemoveHook?.Invoke());
             Chart.MWindow.ToggleInteraction += b =>
@@ -305,7 +305,7 @@ namespace ChartModules
 
                             if (!NewHook.Locked)
                             {
-                                Chart.MWindow.MoveCursor(e,
+                                Chart.MWindow.MoveElement(e,
                                 vec =>
                                 {
                                     if (vec.HasValue)
@@ -339,7 +339,7 @@ namespace ChartModules
                             }
                             else
                             {
-                                Chart.MWindow.MoveCursor(e,
+                                Chart.MWindow.MoveElement(e,
                                 vec =>
                                 {
                                     if (vec == null)

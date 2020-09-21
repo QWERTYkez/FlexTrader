@@ -98,7 +98,7 @@ namespace ChartModules.CenterIndicators.Indicators
         }
 
         public override string ElementName => "SMA";
-        public override double GetMagnetRadius() => LinePen.Thickness / 2 + 2;
+        public override double GetMagnetRadius() => Dispatcher.Invoke(() => { return LinePen.Thickness / 2 + 2; });
         public override bool VisibilityOnChart 
         { 
             get 

@@ -44,13 +44,13 @@ namespace ChartModules.BottomIndicators
             GridCanvas.AddVisual(GridVisual);
             ScaleCanvas.AddVisual(ScaleVisual);
 
-            BaseGrd.MouseEnter += (s, e) => Chart.Interacion = ShoWMenu;
-            BaseGrd.MouseLeave += (s, e) => { if (Chart.Interacion == ShoWMenu) Chart.Interacion = null; };
+            BaseGrd.MouseEnter += (s, e) => Chart.Interaction = ShoWMenu;
+            BaseGrd.MouseLeave += (s, e) => { if (Chart.Interaction == ShoWMenu) Chart.Interaction = null; };
             BaseGrd.MouseEnter += CursorShow;
             BaseGrd.MouseLeave += CursorLeave;
             BaseGrd.MouseMove += CursorRedraw;
-            BaseGrd.MouseEnter += (s, e) => Chart.Moving = Chart.MovingChart;
-            BaseGrd.MouseLeave += (s, e) => { if (Chart.Moving == Chart.MovingChart) Chart.Moving = null; };
+            BaseGrd.MouseEnter += (s, e) => Chart.SetMoving(s, e);
+            BaseGrd.MouseLeave += (s, e) => Chart.BreakMoving(s, e);
             BaseGrd.SizeChanged += BaseGrd_SizeChanged;
 
             BaseGrd.Children.Add(Selector);

@@ -28,7 +28,7 @@ using System.Windows.Media;
 
 namespace ChartModules.StandardModules
 {
-    public class CandlesModule : ChartModule
+    public class CandlesModule : ChartModule, IClipCandles
     {
         private List<ICandle> allCandles = new List<ICandle>();
         public event Action<List<ICandle>> CandlesChanged;
@@ -76,12 +76,14 @@ namespace ChartModules.StandardModules
                 Redraw();
             });
 
-            TimeLine.MouseEnter += (s, e) => Chart.Moving = TimeLine_MouseDown;
-            TimeLine.MouseLeave += (s, e) => { if (Chart.Moving == TimeLine_MouseDown) Chart.Moving = null; };
+            TimeLine.MouseEnter += (s, e) =>
+            { if (ClipTime) Chart.Moving = TimeScaleAll; else Chart.Moving = TimeScale; };
+            TimeLine.MouseLeave += (s, e) =>
+            { if (Chart.Moving == TimeScale || Chart.Moving == TimeScaleAll) Chart.Moving = null; };
             PriceLine.MouseEnter += (s, e) => Chart.Moving = PriceLine_MouseDown;
             PriceLine.MouseLeave += (s, e) => { if (Chart.Moving == PriceLine_MouseDown) Chart.Moving = null; };
-            Chart.ChartGrid.MouseEnter += (s, e) => Chart.Moving = MovingChart;
-            Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Moving == MovingChart) Chart.Moving = null; };
+            Chart.ChartGrid.MouseEnter += SetMoving;
+            Chart.ChartGrid.MouseLeave += BreakMoving;
             Chart.MWindow.ToggleMagnet += b =>
             {
                 Task.Run(() =>
@@ -91,6 +93,7 @@ namespace ChartModules.StandardModules
                     else ResetMagnetData();
                 });
             };
+            Chart.MWindow.ToggleClipTime += b => ClipTime = b;
 
             Sets.AddLevel("Бычья свеча", new Setting[]
             {
@@ -108,6 +111,8 @@ namespace ChartModules.StandardModules
         }
 
         private protected override string SetsName => "Настройки свечей";
+
+        private bool ClipTime = false;
 
         private double Delta = 1;
         private double Min;
@@ -160,6 +165,7 @@ namespace ChartModules.StandardModules
             }
         }
 
+        private List<IClipCandles> Clips { get => Chart.MWindow.ClipsCandles.Where(c => c.DeltaTime == this.DeltaTime).ToList(); }
         #region Перерассчет шкал
         public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         private bool VerticalLock = true;
@@ -224,103 +230,145 @@ namespace ChartModules.StandardModules
             if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
             LastScaleY = CurrentScale.Y;
             VerticalLock = false;
-            Chart.MWindow.MoveCursor(e, vec =>
+            Chart.MWindow.MoveElement(e, async vec =>
             {
                 if (vec == null) return;
-                Task.Run(async () =>
+                var X = vec.Value.Y / 50;
+                if (vec.Value.Y < 0)
                 {
-                    var X = vec.Value.Y / 50;
-                    if (vec.Value.Y < 0)
-                    {
-                        var Z = Chart.ChHeight / (CurrentScale.Y * Chart.TickSize) - 5 * Chart.ChHeight;
-                        if (Z <= 0) return;
-                        CurrentScale.Y = LastScaleY * (1 - X);
-                    }
-                    else if (vec.Value.Y > 0) CurrentScale.Y = LastScaleY / (1 + X);
-                    await Dispatcher.InvokeAsync(() => ScaleY.ScaleY = CurrentScale.Y);
+                    var Z = Chart.ChHeight / (CurrentScale.Y * Chart.TickSize) - 5 * Chart.ChHeight;
+                    if (Z <= 0) return;
+                    CurrentScale.Y = LastScaleY * (1 - X);
+                }
+                else if (vec.Value.Y > 0) CurrentScale.Y = LastScaleY / (1 + X);
+                await Dispatcher.InvokeAsync(() => ScaleY.ScaleY = CurrentScale.Y);
 
-                    _ = PriceLineModule.Redraw();
-                    await UpdateMagnetData();
-                });
+                _ = PriceLineModule.Redraw();
+                await UpdateMagnetData();
             });
         }
         #endregion
         #region скалирование по временной шкале
-        private double LastScaleX;
+        public double LastScaleX { get; set; }
         private const double MaxCandleWidth = 175;
-        private async void TimeLine_MouseDown(MouseButtonEventArgs e)
+        private void TimeScale(MouseButtonEventArgs e)
         {
-            e.Handled = true;
-            if (e.ClickCount == 2)
+            if (e.ClickCount == 2) 
+                ResetTimeScale();
+            else
             {
-                CurrentScale.X = 1;
-                ScaleX.ScaleX = 1;
-                CurrentTranslate.X = 0;
-                Translate.X = 0;
-                HorizontalReset();
-                NewXScale.Invoke(1);
-                NewXTrans.Invoke(0);
-
-                await UpdateMagnetData();
-                return;
+                LastScaleX = CurrentScale.X;
+                Chart.MWindow.MoveElement(e, vec => TimeScaling(vec));
             }
-            LastScaleX = CurrentScale.X;
-            Chart.MWindow.MoveCursor(e, vec =>
+        }
+        private void TimeScaleAll(MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2) 
+                foreach (var cl in Clips) 
+                    cl.ResetTimeScale(); 
+            else
             {
-                if (vec == null) return;
-
-                Task.Run(async () =>
+                var fl = new List<Func<Vector?, Task>>();
+                foreach (var cl in Clips)
                 {
-                    var Y = -vec.Value.X / 50;
-                    IEnumerable<ICandle> currentCandles = null;
-                    if (vec.Value.X > 0)
-                    {
-                        CurrentScale.X = LastScaleX / (1 - Y);
-                        await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
-                    }
-                    else if (vec.Value.X < 0)
-                    {
-                        var nScale = LastScaleX * (1 + Y);
-                        var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
-                        var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
-                        currentCandles = from c in AllCandles
-                                             where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
-                                             select c;
-
-
-                        if (currentCandles.Count() < 2 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
-                        CurrentScale.X = nScale;
-                        await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
-                    }
-                    HorizontalReset(currentCandles);
-                    NewXScale.Invoke(CurrentScale.X);
+                    cl.LastScaleX = CurrentScale.X;
+                    fl.Add(cl.TimeScaling);
+                }
+                Chart.MWindow.MoveElements(e, fl);
+            }
+        }
+        public void ResetTimeScale()
+        {
+            Task.Run(() => 
+            {
+                Dispatcher.Invoke(async () =>
+                {
+                    CurrentScale.X = 1;
+                    ScaleX.ScaleX = 1;
+                    CurrentTranslate.X = 0;
+                    Translate.X = 0;
+                    HorizontalReset();
+                    NewXScale.Invoke(1);
+                    NewXTrans.Invoke(0);
 
                     await UpdateMagnetData();
                 });
             });
         }
+        public Task TimeScaling(Vector? vec)
+        {
+            return Task.Run(async () =>
+            {
+                if (vec == null) return;
+                var Y = -vec.Value.X / 50;
+                IEnumerable<ICandle> currentCandles = null;
+                if (vec.Value.X > 0)
+                {
+                    CurrentScale.X = LastScaleX / (1 - Y);
+                    await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
+                }
+                else if (vec.Value.X < 0)
+                {
+                    var nScale = LastScaleX * (1 + Y);
+                    var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
+                    var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
+                    currentCandles = from c in AllCandles
+                                     where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
+                                     select c;
+
+
+                    if (currentCandles.Count() < 2 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;
+                    CurrentScale.X = nScale;
+                    await Dispatcher.InvokeAsync(() => ScaleX.ScaleX = CurrentScale.X);
+                }
+                HorizontalReset(currentCandles);
+                NewXScale.Invoke(CurrentScale.X);
+
+                await UpdateMagnetData();
+            });
+        }
         #endregion
         #region перемещение графика 
-        private Vector LastTranslateVector;
+        public Vector LastTranslateVector { get; set; }
         public event Action<double> NewXTrans;
-        public void MovingChart(MouseButtonEventArgs e)
+        public void SetMoving(object sender, MouseEventArgs e)
+        { if (ClipTime) Chart.Moving = MovingAllCharts; else Chart.Moving = MovingChart; }
+        public void BreakMoving(object sender, MouseEventArgs e)
+        { if (Chart.Moving == MovingChart || Chart.Moving == MovingAllCharts) Chart.Moving = null; }
+        private void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
-            Chart.MWindow.MoveCursor(e, async vec => 
+            Chart.MWindow.MoveElement(e, vec => MovingChart(vec));
+        }
+        private void MovingAllCharts(MouseButtonEventArgs e)
+        {
+            var fl = new List<Func<Vector?, Task>>();
+            foreach (var cl in Clips)
+            {
+                cl.LastTranslateVector = CurrentTranslate;
+                fl.Add(cl.MovingChart);
+            }
+            Chart.MWindow.MoveElements(e, fl);
+        }
+        public Task MovingChart(Vector? vec)
+        {
+            return Task.Run(async () => 
             {
                 if (vec == null) return;
                 var X = LastTranslateVector.X + vec.Value.X / CurrentScale.X;
+
                 var TimeA = StartTime - Math.Floor(((Chart.ChWidth / CurrentScale.X + X) / 15)) * DeltaTime;
                 var TimeB = StartTime - Math.Ceiling((X / 15)) * DeltaTime;
                 var currentCandles = from c in AllCandles
                                      where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
                                      select c;
 
-                if (currentCandles.Count() < 1) 
+                if (currentCandles.Count() < 1)
                 {
                     if (!(TimeB < AllCandles.First().TimeStamp && CurrentTranslate.X < X)) return;
                     if (!(TimeA < AllCandles.Last().TimeStamp && CurrentTranslate.X > X)) return;
                 }
+
                 CurrentTranslate.X = X;
                 if (VerticalLock)
                 {
@@ -330,7 +378,7 @@ namespace ChartModules.StandardModules
                     });
                     HorizontalReset(currentCandles);
                     NewXTrans.Invoke(CurrentTranslate.X);
-                } 
+                }
                 else
                 {
                     CurrentTranslate.Y = LastTranslateVector.Y + vec.Value.Y / CurrentScale.Y;
@@ -350,9 +398,20 @@ namespace ChartModules.StandardModules
         #region Скалирование колесом 
         public event Action WhellScalled;
         public event Action<double> NewXScale;
-        public Task WhellScalling(MouseWheelEventArgs e)
+        public Task WheelSpinning(MouseWheelEventArgs e)
         {
             e.Handled = true;
+            if (ClipTime)
+            {
+                var tl = new List<Task>();
+                foreach (var cl in Clips)
+                    tl.Add(cl.WhellScalling(e));
+                return Task.WhenAll(tl);
+            }
+            else return WhellScalling(e);
+        }
+        public Task WhellScalling(MouseWheelEventArgs e)
+        {
             return Task.Run(async () =>
             {
                 IEnumerable<ICandle> currentCandles = null;
@@ -362,8 +421,8 @@ namespace ChartModules.StandardModules
                     var TimeA = StartTime - Math.Ceiling(((Chart.ChWidth / nScale + CurrentTranslate.X) / 15)) * DeltaTime;
                     var TimeB = StartTime - Math.Floor((CurrentTranslate.X / 15)) * DeltaTime;
                     currentCandles = from c in AllCandles
-                                         where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
-                                         select c;
+                                     where c.TimeStamp >= TimeA && c.TimeStamp <= TimeB
+                                     select c;
 
 
                     if (currentCandles.Count() < 2 || Chart.ChWidth / MaxCandleWidth > (TimeB - TimeA) / DeltaTime) return;

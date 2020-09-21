@@ -353,6 +353,144 @@ namespace ChartModules.StandardModules
                             });
                         }
                         break;
+                    case CursorT.Select:
+                        {
+                            Correcting = false;
+                            var geo = new PathGeometry(new[] { new PathFigure(new Point(0, 0),
+                            new[]
+                            {
+                                new LineSegment(new Point(0, 75), true),
+                                new LineSegment(new Point(75, 0), true)
+                            },
+                            true)}); geo.Freeze();
+
+                            var clip = new GeometryGroup();
+                            #region Clip Geometry
+                            clip.Children.Add(new CombinedGeometry 
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Exclude,
+                                Geometry1 = new EllipseGeometry() 
+                                {
+                                    Center = new Point(150, 235),
+                                    RadiusX = 65, RadiusY = 65
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(60, 100), new Size(180, 135)))
+                            });
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Exclude,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(150, 235),
+                                    RadiusX = 50,
+                                    RadiusY = 50
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(60, 100), new Size(180, 135)))
+                            });
+
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Exclude,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(135, 50),
+                                    RadiusX = 50,
+                                    RadiusY = 50
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(85, 50), new Size(180, 150)))
+                            });
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Exclude,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(135, 50),
+                                    RadiusX = 35,
+                                    RadiusY = 35
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(85, 50), new Size(180, 150)))
+                            });
+
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Exclude,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(150, 200),
+                                    RadiusX = 35,
+                                    RadiusY = 35
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(85, 100), new Size(100, 100)))
+                            });
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Exclude,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(150, 200),
+                                    RadiusX = 20,
+                                    RadiusY = 20
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(85, 100), new Size(100, 100)))
+                            });
+
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Union,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(122.5, 80),
+                                    RadiusX = 7.5,
+                                    RadiusY = 7.5
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(115, 80), new Size(15, 120)))
+                            });
+                            clip.Children.Add(new CombinedGeometry
+                            {
+                                GeometryCombineMode = GeometryCombineMode.Union,
+                                Geometry1 = new EllipseGeometry()
+                                {
+                                    Center = new Point(207.5, 80),
+                                    RadiusX = 7.5,
+                                    RadiusY = 7.5
+                                },
+                                Geometry2 = new RectangleGeometry(new Rect(
+                                    new Point(200, 80), new Size(15, 155)))
+                            });
+
+                            clip.Children.Add(new RectangleGeometry(new Rect(new Point(85, 50), new Size(15, 185))));
+                            clip.Children.Add(new RectangleGeometry(new Rect(new Point(170, 50), new Size(15, 150))));
+                            #endregion
+                            clip.Freeze();
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                using var dc = CursorVisual.RenderOpen();
+                                //dc.PushTransform(new TranslateTransform(-4, 3));
+                                //dc.PushTransform(new RotateTransform(-30));
+                                //dc.PushTransform(new ScaleTransform(1.5, 1.5));
+
+                                //dc.DrawGeometry(LinesPen.Brush, null, geo);
+
+                                //dc.Pop();
+                                //dc.Pop();
+                                //dc.Pop();
+
+                                //dc.PushTransform(new TranslateTransform(0, 0));
+                                dc.PushTransform(new ScaleTransform(0.10, 0.10));
+
+                                dc.DrawGeometry(LinesPen.Brush, null, geo);
+                                dc.DrawGeometry(LinesPen.Brush, null, clip);
+                            });
+                        }
+                        break;
                     case CursorT.Hook:
                         {
                             Correcting = false;
@@ -393,7 +531,7 @@ namespace ChartModules.StandardModules
                 }
                 if (MagnetState) MagnetAdd();
 
-                if (t == CursorT.Hook)
+                if (t == CursorT.Hook || t == CursorT.Select)
                 {
                     Hide = true;
                     Dispatcher.Invoke(() => 
@@ -453,6 +591,7 @@ namespace ChartModules.StandardModules
     {
         Paint,
         Standart,
+        Select,
         Hook,
         None
     }

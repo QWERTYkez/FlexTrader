@@ -57,6 +57,7 @@ namespace ChartModules.CenterIndicators.Indicators
 
         private int Per = 10;
         private Pen LinePen = new Pen(Brushes.Gold, 3);
+        
         private readonly List<ChartPoint> Data = new List<ChartPoint>();
         private protected override void CalculateData()
         {
@@ -104,7 +105,7 @@ namespace ChartModules.CenterIndicators.Indicators
         }
 
         public override string ElementName => "EMA";
-        public override double GetMagnetRadius() => LinePen.Thickness / 2 + 2;
+        public override double GetMagnetRadius() => Dispatcher.Invoke(() => { return LinePen.Thickness / 2 + 2; });
         public override bool VisibilityOnChart 
         { 
             get 

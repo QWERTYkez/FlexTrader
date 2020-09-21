@@ -32,143 +32,145 @@
     <UserControl.DataContext>
         <vm:ChartViewModel />
     </UserControl.DataContext>
-    <Grid
-        Background="{Binding ChartBackground}"
-        ClipToBounds="True"
-        PreviewMouseWheel="MouseWheelSpinning">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition x:Name="PriceLineCD" Width="70" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="4*" />
-            <RowDefinition x:Name="IndicatorsSplitterRD" Height="Auto" />
-            <RowDefinition x:Name="IndicatorsRowRD" Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition x:Name="TimeLineRD" Height="50" />
-        </Grid.RowDefinitions>
-        <Grid Grid.RowSpan="4" ClipToBounds="True">
-            <CM:DrawingCanvas x:Name="GridLayerVertical" />
-        </Grid>
+    <Border x:Name="SelectionBorder" BorderBrush="Yellow">
         <Grid
-            x:Name="ChartGRD"
-            Background="{StaticResource CursorGrabber}"
+            Background="{Binding ChartBackground}"
             ClipToBounds="True"
-            Cursor="None"
-            SizeChanged="ChartGrid_SizeChanged">
-            <CM:DrawingCanvas x:Name="GridLayerHorizontal" />
-            <CM:DrawingCanvas x:Name="BackgroundIndLayer" />
-            <Grid ClipToBounds="True">
-                <Grid RenderTransformOrigin="1,0.5">
-                    <Grid RenderTransformOrigin="0.5,0.5">
-                        <ItemsControl x:Name="LowerLayers" />
-                        <CM:DrawingCanvas x:Name="CandlesLayer" />
-                        <ItemsControl x:Name="TopLayers" />
+            PreviewMouseWheel="MouseWheelSpinning">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="PriceLineCD" Width="70" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="4*" />
+                <RowDefinition x:Name="IndicatorsSplitterRD" Height="Auto" />
+                <RowDefinition x:Name="IndicatorsRowRD" Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition x:Name="TimeLineRD" Height="50" />
+            </Grid.RowDefinitions>
+            <Grid Grid.RowSpan="4" ClipToBounds="True">
+                <CM:DrawingCanvas x:Name="GridLayerVertical" />
+            </Grid>
+            <Grid
+                x:Name="ChartGRD"
+                Background="{StaticResource CursorGrabber}"
+                ClipToBounds="True"
+                Cursor="None"
+                SizeChanged="ChartGrid_SizeChanged">
+                <CM:DrawingCanvas x:Name="GridLayerHorizontal" />
+                <CM:DrawingCanvas x:Name="BackgroundIndLayer" />
+                <Grid ClipToBounds="True">
+                    <Grid RenderTransformOrigin="1,0.5">
+                        <Grid RenderTransformOrigin="0.5,0.5">
+                            <ItemsControl x:Name="LowerLayers" />
+                            <CM:DrawingCanvas x:Name="CandlesLayer" />
+                            <ItemsControl x:Name="TopLayers" />
+                            <Grid.RenderTransform>
+                                <TransformGroup>
+                                    <RotateTransform Angle="180" />
+                                    <TranslateTransform x:Name="Translate" />
+                                    <ScaleTransform x:Name="ScaleY" />
+                                </TransformGroup>
+                            </Grid.RenderTransform>
+                        </Grid>
                         <Grid.RenderTransform>
-                            <TransformGroup>
-                                <RotateTransform Angle="180" />
-                                <TranslateTransform x:Name="Translate" />
-                                <ScaleTransform x:Name="ScaleY" />
-                            </TransformGroup>
+                            <ScaleTransform x:Name="ScaleX" />
                         </Grid.RenderTransform>
                     </Grid>
-                    <Grid.RenderTransform>
-                        <ScaleTransform x:Name="ScaleX" />
-                    </Grid.RenderTransform>
+                </Grid>
+                <CM:DrawingCanvas x:Name="ForegroundIndLayer" />
+                <Grid x:Name="SubLayers">
+                    <CM:DrawingCanvas x:Name="LevelsLayer" />
+                    <CM:DrawingCanvas x:Name="PaintingsLayer" />
+                </Grid>
+                <CM:DrawingCanvas x:Name="HooksLayer" />
+                <Grid>
+                    <CM:DrawingCanvas x:Name="PrototypeLayer" />
+                    <CM:DrawingCanvas x:Name="CursorLayer" />
+                    <CM:DrawingCanvas x:Name="MagnetLayer" />
                 </Grid>
             </Grid>
-            <CM:DrawingCanvas x:Name="ForegroundIndLayer" />
-            <Grid x:Name="SubLayers">
-                <CM:DrawingCanvas x:Name="LevelsLayer" />
-                <CM:DrawingCanvas x:Name="PaintingsLayer" />
+            <Grid
+                x:Name="PriceLine"
+                Grid.Column="2"
+                Background="{StaticResource CursorGrabber}"
+                ClipToBounds="True">
+                <CM:DrawingCanvas x:Name="PricesLayer" />
+                <CM:DrawingCanvas x:Name="PaintingMarksLayer" />
+                <CM:DrawingCanvas x:Name="HookPriceLayer" />
+                <CM:DrawingCanvas x:Name="CursorPriceMarkLayer" />
+                <CM:DrawingCanvas x:Name="PrototypePriceLayer" />
             </Grid>
-            <CM:DrawingCanvas x:Name="HooksLayer" />
-            <Grid>
-                <CM:DrawingCanvas x:Name="PrototypeLayer" />
-                <CM:DrawingCanvas x:Name="CursorLayer" />
-                <CM:DrawingCanvas x:Name="MagnetLayer" />
+            <Grid
+                x:Name="TimeLine"
+                Grid.Row="4"
+                Background="{StaticResource CursorGrabber}"
+                ClipToBounds="True">
+                <CM:DrawingCanvas x:Name="TimesLr" />
+                <CM:DrawingCanvas x:Name="CursorTimeMarkLayer" />
+                <CM:DrawingCanvas x:Name="PaintingTimeLayer" />
+                <CM:DrawingCanvas x:Name="HookTimeLayer" />
+                <CM:DrawingCanvas x:Name="PrototypeTimeLayer" />
             </Grid>
-        </Grid>
-        <Grid
-            x:Name="PriceLine"
-            Grid.Column="2"
-            Background="{StaticResource CursorGrabber}"
-            ClipToBounds="True">
-            <CM:DrawingCanvas x:Name="PricesLayer" />
-            <CM:DrawingCanvas x:Name="PaintingMarksLayer" />
-            <CM:DrawingCanvas x:Name="HookPriceLayer" />
-            <CM:DrawingCanvas x:Name="CursorPriceMarkLayer" />
-            <CM:DrawingCanvas x:Name="PrototypePriceLayer" />
-        </Grid>
-        <Grid
-            x:Name="TimeLine"
-            Grid.Row="4"
-            Background="{StaticResource CursorGrabber}"
-            ClipToBounds="True">
-            <CM:DrawingCanvas x:Name="TimesLr" />
-            <CM:DrawingCanvas x:Name="CursorTimeMarkLayer" />
-            <CM:DrawingCanvas x:Name="PaintingTimeLayer" />
-            <CM:DrawingCanvas x:Name="HookTimeLayer" />
-            <CM:DrawingCanvas x:Name="PrototypeTimeLayer" />
-        </Grid>
-        <Grid
-            x:Name="IndicatorsGrid"
-            Grid.Row="2"
-            Grid.ColumnSpan="3"
-            VerticalAlignment="Stretch">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="4" />
-                <ColumnDefinition x:Name="PriceLineCD2" Width="70" />
-            </Grid.ColumnDefinitions>
-        </Grid>
-        <GridSplitter
-            Grid.Row="1"
-            Grid.ColumnSpan="3"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Center"
-            BorderBrush="Gray"
-            BorderThickness="2"
-            ShowsPreview="False" />
-        <Border
-            Grid.Row="3"
-            Grid.ColumnSpan="3"
-            BorderBrush="Gray"
-            BorderThickness="2" />
-        <Border
-            Grid.RowSpan="6"
-            Grid.Column="1"
-            BorderBrush="Gray"
-            BorderThickness="2" />
-
-        <Grid Grid.Row="4" Grid.Column="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Button
-                Grid.Column="0"
-                Background="{x:Null}"
-                BorderBrush="{x:Null}"
-                Click="ShowBaseSettings"
-                Foreground="{x:Null}">
-                <Button.Content>
-                    <res:Gear Foreground="{Binding FontBrush}" />
-                </Button.Content>
-            </Button>
-            <Button
+            <Grid
+                x:Name="IndicatorsGrid"
+                Grid.Row="2"
+                Grid.ColumnSpan="3"
+                VerticalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="4" />
+                    <ColumnDefinition x:Name="PriceLineCD2" Width="70" />
+                </Grid.ColumnDefinitions>
+            </Grid>
+            <GridSplitter
+                Grid.Row="1"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                BorderBrush="Gray"
+                BorderThickness="2"
+                ShowsPreview="False" />
+            <Border
+                Grid.Row="3"
+                Grid.ColumnSpan="3"
+                BorderBrush="Gray"
+                BorderThickness="2" />
+            <Border
+                Grid.RowSpan="6"
                 Grid.Column="1"
-                Background="{x:Null}"
-                BorderBrush="{x:Null}"
-                Foreground="{x:Null}">
-                <Button.Content>
-                    <res:Gear Foreground="{Binding FontBrush}" />
-                </Button.Content>
-            </Button>
+                BorderBrush="Gray"
+                BorderThickness="2" />
+
+            <Grid Grid.Row="4" Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Background="{x:Null}"
+                    BorderBrush="{x:Null}"
+                    Click="ShowBaseSettings"
+                    Foreground="{x:Null}">
+                    <Button.Content>
+                        <res:Gear Foreground="{Binding FontBrush}" />
+                    </Button.Content>
+                </Button>
+                <Button
+                    Grid.Column="1"
+                    Background="{x:Null}"
+                    BorderBrush="{x:Null}"
+                    Foreground="{x:Null}">
+                    <Button.Content>
+                        <res:Gear Foreground="{Binding FontBrush}" />
+                    </Button.Content>
+                </Button>
+            </Grid>
+            <Grid Grid.RowSpan="4" ClipToBounds="True">
+                <CM:DrawingCanvas x:Name="CursorLinesLr" />
+            </Grid>
         </Grid>
-        <Grid Grid.RowSpan="4" ClipToBounds="True">
-            <CM:DrawingCanvas x:Name="CursorLinesLr" />
-        </Grid>
-    </Grid>
+    </Border>
 </UserControl>

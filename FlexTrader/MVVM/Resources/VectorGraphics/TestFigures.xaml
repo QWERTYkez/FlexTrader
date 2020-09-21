@@ -5,38 +5,132 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:FlexTrader.MVVM.Resources.VectorGraphics"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="1000"
-    d:DesignWidth="1000"
+    d:DesignHeight="300"
+    d:DesignWidth="300"
     mc:Ignorable="d">
     <Viewbox Stretch="Uniform">
-        <Path
-            Width="1000"
-            Height="1000"
-            Fill="White">
-            <Path.Data>
-                <PathGeometry>
-                    <PathFigure IsClosed="True" StartPoint="470,530">
-                        <LineSegment Point="470,1000" />
-                        <LineSegment Point="530,1000" />
-                        <LineSegment Point="530,530" />
-                        <LineSegment Point="1000,530" />
-                        <LineSegment Point="1000,470" />
-                        <LineSegment Point="530,470" />
-                        <LineSegment Point="530,0" />
-                        <LineSegment Point="470,0" />
-                        <LineSegment Point="470,470" />
-                        <LineSegment Point="0,470" />
-                        <LineSegment Point="0,530" />
-                    </PathFigure>
-                </PathGeometry>
-            </Path.Data>
-            <Path.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform ScaleX="1.334" ScaleY="1.334" />
-                    <RotateTransform Angle="45" CenterX="500" CenterY="500" />
-                    <TranslateTransform Y="-236" />
-                </TransformGroup>
-            </Path.RenderTransform>
-        </Path>
+        <Grid>
+            <Path
+                Width="300"
+                Height="300"
+                Fill="White">
+                <Path.Data>
+                    <GeometryGroup>
+                        <GeometryGroup>
+
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="150,235"
+                                        RadiusX="65"
+                                        RadiusY="65" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <RectangleGeometry Rect="60,100 180,135" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="150,235"
+                                        RadiusX="50"
+                                        RadiusY="50" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <RectangleGeometry Rect="60,100 180,135" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="135,50"
+                                        RadiusX="50"
+                                        RadiusY="50" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <RectangleGeometry Rect="85,50 180,150" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="135,50"
+                                        RadiusX="35"
+                                        RadiusY="35" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <RectangleGeometry Rect="85,50 180,150" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="150,200"
+                                        RadiusX="35"
+                                        RadiusY="35" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <RectangleGeometry Rect="85,100 100,100" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+                            <CombinedGeometry GeometryCombineMode="Exclude">
+                                <CombinedGeometry.Geometry1>
+                                    <EllipseGeometry
+                                        Center="150,200"
+                                        RadiusX="20"
+                                        RadiusY="20" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <RectangleGeometry Rect="85,100 100,100" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+
+                            <CombinedGeometry GeometryCombineMode="Union">
+                                <CombinedGeometry.Geometry1>
+                                    <RectangleGeometry Rect="115,80 15,120" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <EllipseGeometry
+                                        Center="122.5,80"
+                                        RadiusX="7.5"
+                                        RadiusY="7.5" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+
+                            <RectangleGeometry Rect="85,50 15,185" />
+                            <RectangleGeometry Rect="170,50 15,150" />
+
+                            <CombinedGeometry GeometryCombineMode="Union">
+                                <CombinedGeometry.Geometry1>
+                                    <RectangleGeometry Rect="200,80 15,155" />
+                                </CombinedGeometry.Geometry1>
+                                <CombinedGeometry.Geometry2>
+                                    <EllipseGeometry
+                                        Center="207.5,80"
+                                        RadiusX="7.5"
+                                        RadiusY="7.5" />
+                                </CombinedGeometry.Geometry2>
+                            </CombinedGeometry>
+                            <GeometryGroup.Transform>
+                                <TransformGroup>
+                                    <TranslateTransform X="-180" Y="23" />
+                                    <RotateTransform Angle="-70" />
+                                </TransformGroup>
+                            </GeometryGroup.Transform>
+                        </GeometryGroup>
+                    </GeometryGroup>
+                </Path.Data>
+            </Path>
+            <Label
+                Margin="0,0,0,-30"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Content="Ind"
+                FontFamily="Consolas"
+                FontSize="140"
+                Foreground="White" />
+        </Grid>
     </Viewbox>
 </UserControl>

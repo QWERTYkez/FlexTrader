@@ -20,6 +20,7 @@ using ChartModules.CenterIndicators;
 using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -31,7 +32,8 @@ namespace ChartModules
 {
     public interface IChartWindow
     {
-        void MoveCursor(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null);
+        void MoveElement(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null);
+        void MoveElements(MouseButtonEventArgs e, List<Func<Vector?, Task>> ActsA, List<Func<Task>> ActsB = null);
         void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
@@ -40,12 +42,16 @@ namespace ChartModules
         void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu);
         void ResetInstrument(string Name);
         IHaveInstruments InstrumentsHandler { get; set; }
+        List<IChart> SelectedCharts { get; }
+        List<IClipCandles> ClipsCandles { get; }
         event Action ClearPrototypes;
         event Action<PInstrument> PrepareInstrument;
         event Action<CursorT> SetCursor;
         event Action RemoveHooks;
         event Action<bool> ToggleInteraction;
         event Action<bool> ToggleMagnet;
+        event Action<bool> ToggleClipTime;
+        event Action NonSelection;
         Action MMInstrument { get; }
         bool Controlled { get; }
         bool ControlUsed { get; set; }
@@ -53,7 +59,8 @@ namespace ChartModules
 
     public interface IHaveInstruments
     {
-        Action<MouseButtonEventArgs> Interacion { get; set; }
+        Action<MouseButtonEventArgs> Interaction { get; set; }
+        Action<MouseButtonEventArgs> Selection { get; set; }
         Action<MouseButtonEventArgs> Moving { get; set; }
         Action<MouseButtonEventArgs> PaintingLevel { get; set; }
         Action<MouseButtonEventArgs> PaintingTrend { get; set; }
@@ -62,9 +69,21 @@ namespace ChartModules
         Action DrawPrototype { get; set; }
     }
 
-    public interface IChart: IHaveInstruments
+    public interface IClipCandles
+    {
+        TimeSpan DeltaTime { get; }
+        void ResetTimeScale();
+        double LastScaleX { get; set; }
+        Task TimeScaling(Vector? vec);
+        Vector LastTranslateVector { get; set; }
+        Task MovingChart(Vector? vec);
+        Task WhellScalling(MouseWheelEventArgs e);
+    }
+
+    public interface IChart : IHaveInstruments
     {
         bool Manipulating { get; }
+        IClipCandles ClipCandles { get; }
         IChartWindow MWindow { get; }
         Grid ChartGrid { get; }
         List<Point> PaintingPoints { get; set; }
@@ -116,7 +135,8 @@ namespace ChartModules
         bool CursorHide { get; }
         DrawingVisual CursorLinesVisual { get; }
         DrawingVisual CursorVisual { get; }
-        Action<MouseButtonEventArgs> MovingChart { get; }
+        Action<object, MouseEventArgs> SetMoving { get; }
+        Action<object, MouseEventArgs> BreakMoving { get; }
         int Digits { get; }
     }
 
