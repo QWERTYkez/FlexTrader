@@ -46,10 +46,6 @@ namespace FlexTrader.MVVM.Views
             ((ViewModels.MainViewModel)DataContext).Initialize(this);
 
             SetInsrument(CurrentInstrument); SetMagnet();
-
-            ////////
-            ClipsCandles.Add(((ViewModels.MainViewModel)DataContext).Chart.ClipCandles);
-            ClipsCandles.Add(((ViewModels.MainViewModel)DataContext).Chart2.ClipCandles);
         }
 
         private Popup Pop1;

@@ -83,7 +83,6 @@ namespace ChartModules
     public interface IChart : IHaveInstruments
     {
         bool Manipulating { get; }
-        IClipCandles ClipCandles { get; }
         IChartWindow MWindow { get; }
         Grid ChartGrid { get; }
         List<Point> PaintingPoints { get; set; }

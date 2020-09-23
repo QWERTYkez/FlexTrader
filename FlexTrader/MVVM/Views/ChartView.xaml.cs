@@ -42,7 +42,6 @@ namespace FlexTrader.MVVM.Views
         private readonly TimeLineModule TimeLineModule;
         private readonly PriceLineModule PriceLineModule;
         private readonly CandlesModule CandlesModule;
-        public IClipCandles ClipCandles { get => CandlesModule; }
 
         private readonly PaintingModule PaintingModule;
         private readonly HooksModule HooksModule;

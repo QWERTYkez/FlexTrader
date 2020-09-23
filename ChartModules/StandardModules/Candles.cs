@@ -54,6 +54,8 @@ namespace ChartModules.StandardModules
             TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
             ScaleTransform ScaleY, Grid TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
         {
+            Chart.MWindow.ClipsCandles.Add(this);
+
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
             this.TimeLineModule = TimeLineModule;

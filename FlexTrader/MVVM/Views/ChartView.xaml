@@ -168,7 +168,10 @@
                     </Button.Content>
                 </Button>
             </Grid>
-            <Grid Grid.RowSpan="4" ClipToBounds="True">
+            <Grid
+                Grid.RowSpan="4"
+                ClipToBounds="True"
+                Cursor="None">
                 <CM:DrawingCanvas x:Name="CursorLinesLr" />
             </Grid>
         </Grid>
