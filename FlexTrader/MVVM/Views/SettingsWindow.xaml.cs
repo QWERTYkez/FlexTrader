@@ -67,12 +67,12 @@ namespace FlexTrader.MVVM.Views
                                 break;
                             case SetType.Brush:
 
-                                AddSetting(sp, bs.Sets[i], () => new ColorPicker(bs.Sets[i].GetBrush() as SolidColorBrush, bs.Sets[i].SetBrush));
+                                AddSetting(sp, bs.Sets[i], i, i => new ColorPicker(bs.Sets[i].GetBrush() as SolidColorBrush, bs.Sets[i].SetBrush));
 
                                 break;
                             case SetType.Double:
 
-                                AddSetting(sp, bs.Sets[i], () =>
+                                AddSetting(sp, bs.Sets[i], i, i =>
                                         new NumericPicker(
                                             bs.Sets[i].GetDouble(),
                                             bs.Sets[i].SetDouble,
@@ -83,7 +83,7 @@ namespace FlexTrader.MVVM.Views
                                 break;
                             case SetType.IntPicker:
 
-                                AddSetting(sp, bs.Sets[i], () =>
+                                AddSetting(sp, bs.Sets[i], i, i =>
                                         new NumericPicker(
                                             bs.Sets[i].GetInt(),
                                             bs.Sets[i].SetInt,
@@ -94,7 +94,7 @@ namespace FlexTrader.MVVM.Views
                                 break;
                             case SetType.IntSlider:
 
-                                AddSetting(sp, bs.Sets[i], () => 
+                                AddSetting(sp, bs.Sets[i], i, i => 
                                         new IntSlider(
                                             bs.Sets[i].GetInt(),
                                             bs.Sets[i].SetInt,
@@ -193,7 +193,7 @@ namespace FlexTrader.MVVM.Views
             sp.Children.Add(exp);
             return nsp;
         }
-        private void AddSetting(StackPanel sp, Setting s, Func<Control> GetEl = null)
+        private void AddSetting(StackPanel sp, Setting s, int i, Func<int, Control> GetEl = null)
         {
             var grd = new Grid { Margin = new Thickness(20, 2, 50, 2) };
             grd.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
@@ -211,7 +211,7 @@ namespace FlexTrader.MVVM.Views
 
             if (GetEl != null)
             {
-                var El = GetEl();
+                var El = GetEl(i);
                 El.HorizontalAlignment = HorizontalAlignment.Right;
                 El.Width = 200;
                 El.Height = 30;
@@ -234,7 +234,7 @@ namespace FlexTrader.MVVM.Views
                         s.Reset();
                         grd.Children.Remove(El);
 
-                        El = GetEl();
+                        El = GetEl(i);
                         El.HorizontalAlignment = HorizontalAlignment.Right;
                         El.Width = 200;
                         El.Height = 30;

@@ -56,6 +56,7 @@ namespace FlexTrader.MVVM.Views
             this.MWindow = mainView;
 
             InitializeComponent();
+            MWindow.ToggleClipTime += b => Clipped = b;
             this.MouseEnter += (s, e) => MWindow.InstrumentsHandler = this;
             this.MouseLeave += (s, e) =>
             {
@@ -63,9 +64,6 @@ namespace FlexTrader.MVVM.Views
                     MWindow.InstrumentsHandler = null;
             };
             this.ShowSettings += MWindow.ShowSettings;
-
-            Selection = Selecting;
-            MWindow.NonSelection += Unselect;
 
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
@@ -178,7 +176,7 @@ namespace FlexTrader.MVVM.Views
                     case "NewCandles":
                         {
                             if (DC.NewCandles != null && DC.NewCandles.Count > 0)
-                                CandlesModule.AddCandles(DC.NewCandles);
+                                CandlesModule.NewCandles(DC.NewCandles);
                         }
                         break;
                 }
@@ -188,7 +186,6 @@ namespace FlexTrader.MVVM.Views
         #region Instruments
         //LBDInstrument
         public Action<MouseButtonEventArgs> Interaction { get; set; }
-        public Action<MouseButtonEventArgs> Selection { get; set; }
         public Action<MouseButtonEventArgs> Moving { get; set; }
         public Action<MouseButtonEventArgs> PaintingLevel { get; set; }
         public Action<MouseButtonEventArgs> PaintingTrend { get; set; }
@@ -196,7 +193,7 @@ namespace FlexTrader.MVVM.Views
         public Action HookElement { get; set; }
         public Action DrawPrototype { get; set; }
 
-        #region Instruments
+        #region Selecting
         private bool SelectedF = false;
         private void Selecting(MouseButtonEventArgs e)
         {
@@ -258,6 +255,7 @@ namespace FlexTrader.MVVM.Views
         public double ChHeight { get; private set; }
         public double ChWidth { get; private set; }
         public string TickPriceFormat { get; private set; }
+        public bool Clipped { get; private set; } = false;
 
         public List<CandlesModule.MagnetPoint> MagnetPoints { get => CandlesModule.MagnetPoints; }
         public Brush ChartBackground { get => (DataContext as ChartViewModel).ChartBackground; }

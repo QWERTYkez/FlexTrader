@@ -226,21 +226,8 @@
                     <res:PaletteButton x:Name="MagnetBtn" Click="BTN_SetMagnetState">
                         <res:Magnet Foreground="White" />
                     </res:PaletteButton>
-                    <Border
-                        Margin="0,4,0,4"
-                        BorderBrush="#FF0B294D"
-                        BorderThickness="1" />
-                    <res:PaletteButton
-                        x:Name="ClipBtn"
-                        Click="PBC"
-                        Tag="Selection">
-                        <res:ClipCursor Foreground="White" />
-                    </res:PaletteButton>
-                    <res:PaletteButton x:Name="ClipInd">
-                        <res:ClipInd Foreground="White" />
-                    </res:PaletteButton>
                     <res:PaletteButton x:Name="ClipTime" Click="ClipTime_click">
-                        <res:ClipTime Foreground="White" />
+                        <res:Clip Foreground="White" />
                     </res:PaletteButton>
                 </StackPanel>
                 <Border

@@ -20,6 +20,7 @@ using ChartModules.CenterIndicators;
 using ChartModules.StandardModules;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,7 +44,10 @@ namespace ChartModules
         void ResetInstrument(string Name);
         IHaveInstruments InstrumentsHandler { get; set; }
         List<IChart> SelectedCharts { get; }
-        List<IClipCandles> ClipsCandles { get; }
+        List<IClipCandles> Candles { get; }
+        ILookup<TimeSpan, IClipCandles> ClipsCandles { get; }
+        void ResetClips();
+
         event Action ClearPrototypes;
         event Action<PInstrument> PrepareInstrument;
         event Action<CursorT> SetCursor;
@@ -51,7 +55,6 @@ namespace ChartModules
         event Action<bool> ToggleInteraction;
         event Action<bool> ToggleMagnet;
         event Action<bool> ToggleClipTime;
-        event Action NonSelection;
         Action MMInstrument { get; }
         bool Controlled { get; }
         bool ControlUsed { get; set; }
@@ -60,7 +63,6 @@ namespace ChartModules
     public interface IHaveInstruments
     {
         Action<MouseButtonEventArgs> Interaction { get; set; }
-        Action<MouseButtonEventArgs> Selection { get; set; }
         Action<MouseButtonEventArgs> Moving { get; set; }
         Action<MouseButtonEventArgs> PaintingLevel { get; set; }
         Action<MouseButtonEventArgs> PaintingTrend { get; set; }
@@ -82,6 +84,7 @@ namespace ChartModules
 
     public interface IChart : IHaveInstruments
     {
+        bool Clipped { get; }
         bool Manipulating { get; }
         IChartWindow MWindow { get; }
         Grid ChartGrid { get; }

@@ -54,7 +54,7 @@ namespace ChartModules.StandardModules
             TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
             ScaleTransform ScaleY, Grid TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
         {
-            Chart.MWindow.ClipsCandles.Add(this);
+            Chart.MWindow.Candles.Add(this);
 
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
@@ -79,7 +79,7 @@ namespace ChartModules.StandardModules
             });
 
             TimeLine.MouseEnter += (s, e) =>
-            { if (ClipTime) Chart.Moving = TimeScaleAll; else Chart.Moving = TimeScale; };
+            { if (Chart.Clipped) Chart.Moving = TimeScaleAll; else Chart.Moving = TimeScale; };
             TimeLine.MouseLeave += (s, e) =>
             { if (Chart.Moving == TimeScale || Chart.Moving == TimeScaleAll) Chart.Moving = null; };
             PriceLine.MouseEnter += (s, e) => Chart.Moving = PriceLine_MouseDown;
@@ -95,7 +95,6 @@ namespace ChartModules.StandardModules
                     else ResetMagnetData();
                 });
             };
-            Chart.MWindow.ToggleClipTime += b => ClipTime = b;
 
             Sets.AddLevel("Бычья свеча", new Setting[]
             {
@@ -114,14 +113,17 @@ namespace ChartModules.StandardModules
 
         private protected override string SetsName => "Настройки свечей";
 
-        private bool ClipTime = false;
-
         private double Delta = 1;
         private double Min;
 
-        public void AddCandles(List<ICandle> NewCandles)
+        public void NewCandles(List<ICandle> NewCandles)
         {
             DeltaTime = (NewCandles[1].TimeStamp - NewCandles[0].TimeStamp);
+            Chart.MWindow.ResetClips();
+            AllCandles.Clear();  AddCandles(NewCandles);
+        }
+        public void AddCandles(List<ICandle> NewCandles)
+        {
             AllCandles.AddRange(NewCandles);
             AllCandles = AllCandles.OrderBy(c => c.TimeStamp).ToList();
 
@@ -167,7 +169,7 @@ namespace ChartModules.StandardModules
             }
         }
 
-        private List<IClipCandles> Clips { get => Chart.MWindow.ClipsCandles.Where(c => c.DeltaTime == this.DeltaTime).ToList(); }
+        private IEnumerable<IClipCandles> Clips => Chart.MWindow.ClipsCandles[DeltaTime];
         #region Перерассчет шкал
         public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         private bool VerticalLock = true;
@@ -334,7 +336,7 @@ namespace ChartModules.StandardModules
         public Vector LastTranslateVector { get; set; }
         public event Action<double> NewXTrans;
         public void SetMoving(object sender, MouseEventArgs e)
-        { if (ClipTime) Chart.Moving = MovingAllCharts; else Chart.Moving = MovingChart; }
+        { if (Chart.Clipped) Chart.Moving = MovingAllCharts; else Chart.Moving = MovingChart; }
         public void BreakMoving(object sender, MouseEventArgs e)
         { if (Chart.Moving == MovingChart || Chart.Moving == MovingAllCharts) Chart.Moving = null; }
         private void MovingChart(MouseButtonEventArgs e)
@@ -403,7 +405,7 @@ namespace ChartModules.StandardModules
         public Task WheelSpinning(MouseWheelEventArgs e)
         {
             e.Handled = true;
-            if (ClipTime)
+            if (Chart.Clipped)
             {
                 var tl = new List<Task>();
                 foreach (var cl in Clips)

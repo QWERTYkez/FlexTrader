@@ -22,6 +22,7 @@ using ChartModules.StandardModules;
 using FlexTrader.MVVM.Views;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -63,7 +64,6 @@ namespace FlexTrader.MVVM.Resources
 
             //PreviewMouseLeftButtonDown
             Interaction = e => InstrumentsHandler?.Interaction?.Invoke(e);
-            Selection = e => InstrumentsHandler?.Selection?.Invoke(e);
             Moving = e => InstrumentsHandler?.Moving?.Invoke(e);
             PaintingLevel = e => InstrumentsHandler?.PaintingLevel(e);
             PaintingTrend = e => InstrumentsHandler?.PaintingTrend(e);
@@ -82,18 +82,19 @@ namespace FlexTrader.MVVM.Resources
 
         public IHaveInstruments InstrumentsHandler { get; set; }
         public List<IChart> SelectedCharts { get; private set; } = new List<IChart>();
-        public List<IClipCandles> ClipsCandles { get; private set; } = new List<IClipCandles>();
+        public List<IClipCandles> Candles { get; private set; } = new List<IClipCandles>();
+        public ILookup<TimeSpan, IClipCandles> ClipsCandles { get; private set; }
+        public void ResetClips() => ClipsCandles = Candles.ToLookup(c => c.DeltaTime);
+
         private protected abstract Grid ChartsGRD { get; }
 
         public event Action<PInstrument> PrepareInstrument;
         public event Action<CursorT> SetCursor; 
         public event Action RemoveHooks;
         public event Action<bool> ToggleInteraction;
-        public event Action NonSelection;
 
         private Action<MouseButtonEventArgs> LBDInstrument { get; set; }
         private readonly Action<MouseButtonEventArgs> Interaction;
-        private readonly Action<MouseButtonEventArgs> Selection;
         private readonly Action<MouseButtonEventArgs> Moving;
         private readonly Action<MouseButtonEventArgs> PaintingLevel;
         private readonly Action<MouseButtonEventArgs> PaintingTrend;
@@ -142,12 +143,6 @@ namespace FlexTrader.MVVM.Resources
                         MMInstrument = HookElement; ToggleInteraction(true);
                         break;
 
-                    case "Selection":
-                        LBDInstrument = Selection; Painting = false; SelectionF = true;
-                        MagnetInstrument = false; t = CursorT.Select;
-                        MMInstrument = null;
-                        break;
-
                     default:
                         LBDInstrument = Moving; Painting = false;
                         MagnetInstrument = false; t = CursorT.Standart; 
@@ -156,8 +151,6 @@ namespace FlexTrader.MVVM.Resources
                 }
                 if (InstrumentName != "Interacion" && InteractionF)
                 { ToggleInteraction(false); InteractionF = false; }
-                if (InstrumentName != "Selection" && SelectionF)
-                { NonSelection(); InteractionF = false; }
 
                 SetCursor(t);
                 SetMagnet();
