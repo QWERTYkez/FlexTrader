@@ -29,8 +29,6 @@ namespace ChartModules.CenterIndicators.Indicators
     {
         public EMA()
         {
-            LinePen.Freeze();
-
             Sets.Add(new Setting(IntType.Picker, "Period", () => Per, i => { Per = i; ApplyDataChanges(); }, 2, null));
             Sets.AddLevel("Line", new Setting[]
             {
@@ -53,6 +51,7 @@ namespace ChartModules.CenterIndicators.Indicators
         {
             Per = (int)period;
             LinePen = pen;
+            LinePen.Freeze();
         }
 
         private int Per = 10;
