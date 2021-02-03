@@ -57,6 +57,7 @@ namespace FlexTrader.MVVM.Views
 
             InitializeComponent();
             MWindow.ToggleClipTime += b => Clipped = b;
+            this.PreviewMouseDown += (s, e) => MWindow.ChartGotFocus(this);
             this.MouseEnter += (s, e) => MWindow.InstrumentsHandler = this;
             this.MouseLeave += (s, e) =>
             {
@@ -183,6 +184,26 @@ namespace FlexTrader.MVVM.Views
             });
         }
 
+        #region Selecting
+        public bool Selected 
+        { 
+            set 
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (value)
+                    {
+                        SelectionBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(255,174,0,255));
+                    }
+                    else
+                    {
+                        SelectionBorder.BorderBrush = Brushes.Transparent;
+                    }
+                });
+            } 
+        }
+        #endregion
+
         #region Instruments
         //LBDInstrument
         public Action<MouseButtonEventArgs> Interaction { get; set; }
@@ -192,39 +213,6 @@ namespace FlexTrader.MVVM.Views
         //MMInstrument
         public Action HookElement { get; set; }
         public Action DrawPrototype { get; set; }
-
-        #region Selecting
-        private bool SelectedF = false;
-        private void Selecting(MouseButtonEventArgs e)
-        {
-            SelectedF = !SelectedF;
-
-            switch (SelectedF)
-            {
-                case true:
-                    {
-                        SelectionBorder.BorderThickness = new Thickness(3);
-                        MWindow.SelectedCharts.Add(this);
-                    }
-                    break;
-                case false:
-                    {
-                        SelectionBorder.BorderThickness = new Thickness(0);
-                        MWindow.SelectedCharts.Remove(this);
-                    }
-                    break;
-            }
-        }
-        private void Unselect()
-        {
-            if (SelectedF)
-            {
-                SelectedF = false;
-                Dispatcher.Invoke(() => SelectionBorder.BorderThickness = new Thickness(0));
-                MWindow.SelectedCharts.Remove(this);
-            }
-        }
-        #endregion
         #endregion
 
         public List<Point> PaintingPoints { get; set; }

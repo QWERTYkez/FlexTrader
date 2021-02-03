@@ -32,7 +32,7 @@
     <UserControl.DataContext>
         <vm:ChartViewModel />
     </UserControl.DataContext>
-    <Border x:Name="SelectionBorder" BorderBrush="Yellow">
+    <Border x:Name="SelectionBorder" BorderThickness="1">
         <Grid
             Background="{Binding ChartBackground}"
             ClipToBounds="True"

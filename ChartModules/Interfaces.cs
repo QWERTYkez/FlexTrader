@@ -43,10 +43,10 @@ namespace ChartModules
         void ShowContextMenu((List<(string Name, Action Act)> Items, Action DrawHook, Action RemoveHook) Menu);
         void ResetInstrument(string Name);
         IHaveInstruments InstrumentsHandler { get; set; }
-        List<IChart> SelectedCharts { get; }
         List<IClipCandles> Candles { get; }
         ILookup<TimeSpan, IClipCandles> ClipsCandles { get; }
         void ResetClips();
+        void ChartGotFocus(IChart sender);
 
         event Action ClearPrototypes;
         event Action<PInstrument> PrepareInstrument;
@@ -69,6 +69,8 @@ namespace ChartModules
 
         Action HookElement { get; set; }
         Action DrawPrototype { get; set; }
+
+        bool Selected { set; }
     }
 
     public interface IClipCandles

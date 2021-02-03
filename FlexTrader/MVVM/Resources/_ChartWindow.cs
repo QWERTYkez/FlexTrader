@@ -73,15 +73,17 @@ namespace FlexTrader.MVVM.Resources
             DrawPrototype = () => InstrumentsHandler?.DrawPrototype?.Invoke();
         }
 
-        #region Инструменты
+
         private protected void ChartsGRD_PreviewMouseLeftButtonDown(object s, MouseButtonEventArgs e)
         {
             RemoveHooks?.Invoke();
             LBDInstrument(e);
+
+            ChartGotFocus(InstrumentsHandler as IChart);
         }
 
+        #region Инструменты
         public IHaveInstruments InstrumentsHandler { get; set; }
-        public List<IChart> SelectedCharts { get; private set; } = new List<IChart>();
         public List<IClipCandles> Candles { get; private set; } = new List<IClipCandles>();
         public ILookup<TimeSpan, IClipCandles> ClipsCandles { get; private set; }
         public void ResetClips() => ClipsCandles = Candles.ToLookup(c => c.DeltaTime);
@@ -106,7 +108,6 @@ namespace FlexTrader.MVVM.Resources
         private bool MagnetInstrument = false;
         public abstract void ResetInstrument(string Name);
         private bool InteractionF = false;
-        private bool SelectionF = false;
         private bool painting = false;
         private bool Painting
         {
@@ -556,6 +557,16 @@ namespace FlexTrader.MVVM.Resources
                 }
             }
             ContextMenuPopup.IsOpen = true;
+        }
+        #endregion
+
+        #region ВыборЧарта
+        public IChart SelectedChart { get; private set; }
+        public void ChartGotFocus(IChart sender)
+        {
+            if (SelectedChart != null) SelectedChart.Selected = false;
+            sender.Selected = true;
+            SelectedChart = sender;
         }
         #endregion
 
