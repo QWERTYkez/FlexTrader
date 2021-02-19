@@ -1,4 +1,4 @@
-﻿<!--
+﻿/* 
     Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
 
     This file is part of FlexTrader
@@ -14,25 +14,30 @@
 
     You should have received a copy of the GNU General Public License
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
-!-->
+*/
 
-<Window
-    x:Class="FlexTrader.MVVM.Views.MainView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:FlexTrader.MVVM.Views"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="MainView"
-    MinWidth="500"
-    MinHeight="500"
-    Background="Transparent"
-    mc:Ignorable="d">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <ContentPresenter x:Name="Content" />
-    </Grid>
-</Window>
+using System.Collections.Generic;
+using System.Windows.Threading;
+
+namespace ChartsCore.Core
+{
+    public abstract class ChartModule
+    {
+        private protected View Chart;
+        private protected Dispatcher Dispatcher;
+        public ChartModule(View chart)
+        {
+            Chart = chart;
+            Dispatcher = Chart.Dispatcher;
+        }
+        public void Restruct()
+        {
+            Chart = null;
+            Destroy();
+        }
+        private protected abstract void Destroy();
+        public (string SetsName, List<Setting> Sets) GetSets() => (SetsName, Sets);
+        private protected List<Setting> Sets { get; } = new List<Setting>();
+        private protected abstract string SetsName { get; }
+    }
+}

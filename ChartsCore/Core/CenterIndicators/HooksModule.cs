@@ -16,16 +16,17 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartModules.CenterIndicators;
+using ChartsCore.Core.CenterIndicators;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace ChartModules
+namespace ChartsCore.Core
 {
     public class HooksModule : ChartModule
     {
@@ -33,7 +34,7 @@ namespace ChartModules
         private readonly DrawingCanvas HookPriceLayer;
         private readonly DrawingCanvas HookTimeLayer;
 
-        public HooksModule(IChart chart, DrawingCanvas HooksLayer, DrawingCanvas HookPriceLayer, DrawingCanvas HookTimeLayer,
+        public HooksModule(View chart, DrawingCanvas HooksLayer, DrawingCanvas HookPriceLayer, DrawingCanvas HookTimeLayer,
             Func<Pen> GetCursorPen, CenterIndicatorManger CenterIndicatorManger, List<FrameworkElement> OtherLayers) : base(chart)
         {
             this.OtherLayers = OtherLayers;

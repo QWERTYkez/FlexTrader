@@ -1,4 +1,4 @@
-﻿<!--
+﻿/* 
     Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
 
     This file is part of FlexTrader
@@ -14,25 +14,25 @@
 
     You should have received a copy of the GNU General Public License
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
-!-->
+*/
 
-<Window
-    x:Class="FlexTrader.MVVM.Views.MainView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:FlexTrader.MVVM.Views"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="MainView"
-    MinWidth="500"
-    MinHeight="500"
-    Background="Transparent"
-    mc:Ignorable="d">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <ContentPresenter x:Name="Content" />
-    </Grid>
-</Window>
+using System;
+
+namespace ChartsCore
+{
+    public interface ICandle
+    {
+        public bool UP { get; }
+        public DateTime TimeStamp { get; }
+        public decimal Open { get; }
+        public double OpenD { get; }
+        public decimal High { get; }
+        public double HighD { get; }
+        public decimal Low { get; }
+        public double LowD { get; }
+        public decimal Close { get; }
+        public double CloseD { get; }
+        public decimal Volume { get; }
+        public double VolumeD { get; }
+    }
+}

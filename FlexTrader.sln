@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexTrader", "FlexTrader\FlexTrader.csproj", "{4F2069C8-B168-4B9B-A149-E1327631F454}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartModules", "ChartModules\ChartModules.csproj", "{E3C17328-7078-4251-B4C1-D8AA841309DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChartsCore", "ChartsCore\ChartsCore.csproj", "{EC10FB83-ADD7-4DD0-B3C1-173921313476}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{4F2069C8-B168-4B9B-A149-E1327631F454}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F2069C8-B168-4B9B-A149-E1327631F454}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F2069C8-B168-4B9B-A149-E1327631F454}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

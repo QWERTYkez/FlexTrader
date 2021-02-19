@@ -16,8 +16,6 @@
   <ItemGroup>
     <None Remove=".gitattributes" />
     <None Remove=".gitignore" />
-    <None Remove="MVVM\Resources\ColorPickerAlpha.png" />
-    <None Remove="MVVM\Resources\ColorPickerAlphaBig.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,12 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ChartModules\ChartModules.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="MVVM\Resources\ColorPickerAlpha.png" />
-    <Resource Include="MVVM\Resources\ColorPickerAlphaBig.png" />
+    <ProjectReference Include="..\ChartsCore\ChartsCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

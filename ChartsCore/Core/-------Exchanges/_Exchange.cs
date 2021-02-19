@@ -16,13 +16,12 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace FlexTrader.Exchanges
+namespace ChartsCore.Core.Exchanges
 {
     public abstract class Exchange
     {
@@ -90,9 +89,18 @@ namespace FlexTrader.Exchanges
 
     public struct Candle: ICandle
     {
+        public static DateTime BaseDT { get; } =
+            new DateTime(1970, 1, 1).
+            AddHours(Convert.ToInt32((DateTime.Now - DateTime.UtcNow).TotalHours));
+
+        public static DateTime MillisecondsToDateTime(long milliseconds) =>
+            BaseDT.AddMilliseconds(milliseconds);
+        public static long DateTimeToMilliseconds(DateTime dt) =>
+            Convert.ToInt64((dt - BaseDT).TotalMilliseconds);
+
         public Candle(decimal TimeStamp, decimal Open, decimal High, decimal Low, decimal Close, decimal Volume)
         {
-            this.TimeStamp = App.BaseDT.AddMilliseconds(Convert.ToInt64(TimeStamp));
+            this.TimeStamp = BaseDT.AddMilliseconds(Convert.ToInt64(TimeStamp));
             this.Open = Open;
             this.High = High;
             this.Low = Low;

@@ -16,17 +16,30 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Windows;
+using ChartsCore.Core;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Threading;
 
-namespace FlexTrader.MVVM.Views
+namespace ChartsCore
 {
-    public partial class MainView : Window
+    class ChartVievModel : INotifyPropertyChanged
     {
-        public MainView()
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
-            InitializeComponent();
-
-            Content.Content = new ChartsCore.ChartViev();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
+
+        public Dispatcher Dispatcher { get; internal set; }
+        internal void Initialize(ChartViev mainView)
+        {
+            Dispatcher = mainView.Dispatcher;
+            Chart = new View(mainView);
+            Chart2 = new View(mainView);
+        }
+
+        public View Chart { get; set; }
+        public View Chart2 { get; set; }
     }
 }

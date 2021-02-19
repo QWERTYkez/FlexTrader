@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 
-namespace ChartModules
+namespace ChartsCore.Core
 {
     public class Setting
     {
