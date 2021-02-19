@@ -33,8 +33,14 @@ namespace ChartModules
 {
     public interface IChartWindow
     {
-        void MoveElement(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null);
-        void MoveElements(MouseButtonEventArgs e, List<Func<Vector?, Task>> ActsA, List<Func<Task>> ActsB = null);
+        void MoveElement(MouseButtonEventArgs e, Action<Vector> ActA, Action ActB = null);
+        void EndMoving(Dispatcher Dispatcher);
+        void EndMoving();
+
+        void MoveElements(MouseButtonEventArgs e, List<Func<Vector, Task>> ActsA, List<Func<Task>> ActsB = null);
+        void EndMovings(Dispatcher Dispatcher);
+        void EndMovings();
+
         void ShowSettings(List<(string SetsName, List<Setting> Sets)> sb,
                                  List<(string SetsName, List<Setting> Sets)> sn,
                                  List<(string SetsName, List<Setting> Sets)> st);
@@ -78,9 +84,9 @@ namespace ChartModules
         TimeSpan DeltaTime { get; }
         void ResetTimeScale();
         double LastScaleX { get; set; }
-        Task TimeScaling(Vector? vec);
+        Task TimeScaling(Vector vec);
         Vector LastTranslateVector { get; set; }
-        Task MovingChart(Vector? vec);
+        Task MovingChart(Vector vec);
         Task WhellScalling(MouseWheelEventArgs e);
     }
 

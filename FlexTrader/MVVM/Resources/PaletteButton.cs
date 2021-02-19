@@ -21,15 +21,38 @@ using System.Windows.Controls;
 
 namespace FlexTrader.MVVM.Resources
 {
-    public class PaletteButton : Button
+    public class PaletteButtonLeft : Button
     {
         public static readonly DependencyProperty IsActiveProperty;
         public static readonly DependencyProperty ColorProperty;
 
-        static PaletteButton()
+        static PaletteButtonLeft()
         {
-            IsActiveProperty = DependencyProperty.Register("IsActive", typeof(bool), typeof(PaletteButton), new PropertyMetadata { DefaultValue = false });
-            ColorProperty = DependencyProperty.Register("Color", typeof(PaletteButtonColor), typeof(PaletteButton), new PropertyMetadata { DefaultValue = PaletteButtonColor.Blue });
+            IsActiveProperty = DependencyProperty.Register("IsActive", typeof(bool), typeof(PaletteButtonLeft), new PropertyMetadata { DefaultValue = false });
+            ColorProperty = DependencyProperty.Register("Color", typeof(PaletteButtonColor), typeof(PaletteButtonLeft), new PropertyMetadata { DefaultValue = PaletteButtonColor.Blue });
+        }
+
+        public bool IsActive
+        {
+            get { return (bool)GetValue(IsActiveProperty); }
+            set { SetValue(IsActiveProperty, value); }
+        }
+        public PaletteButtonColor Color
+        {
+            get { return (PaletteButtonColor)GetValue(ColorProperty); }
+            set { SetValue(ColorProperty, value); }
+        }
+    }
+
+    public class PaletteButtonTop : Button
+    {
+        public static readonly DependencyProperty IsActiveProperty;
+        public static readonly DependencyProperty ColorProperty;
+
+        static PaletteButtonTop()
+        {
+            IsActiveProperty = DependencyProperty.Register("IsActive", typeof(bool), typeof(PaletteButtonTop), new PropertyMetadata { DefaultValue = false });
+            ColorProperty = DependencyProperty.Register("Color", typeof(PaletteButtonColor), typeof(PaletteButtonTop), new PropertyMetadata { DefaultValue = PaletteButtonColor.Blue });
         }
 
         public bool IsActive

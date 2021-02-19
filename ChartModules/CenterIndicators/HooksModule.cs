@@ -19,6 +19,7 @@
 using ChartModules.CenterIndicators;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -59,6 +60,8 @@ namespace ChartModules
                 {
                     Task.Run(() =>
                     {
+                        if (Manipulating) Chart.MWindow.EndMoving(Dispatcher);
+
                         RemoveHook = RemoveLastHook;
 
                         Dispatcher.Invoke(() => 
@@ -277,12 +280,20 @@ namespace ChartModules
                                 {
                                     LastValue = LastCP.ToPoint(Chart);
 
+                                    TranslateTransform TT = null;
+
                                     NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
-                                    NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
+                                    if (Manipulating)
+                                    {
+                                        var vec = Chart.CursorPosition.Magnet_Current - LastValue;
+                                        NewHook.DrawOver(vec, OverVisual, OverPriceVisual, OverTimeVisual);
+                                        TT = new TranslateTransform(vec.X, vec.Y); TT.Freeze();
+                                    }
+                                    else NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
 
                                     Dispatcher.Invoke(() =>
                                     {
-                                        PointVisual.Transform = null;
+                                        PointVisual.Transform = TT;
                                         using var dc = PointVisual.RenderOpen();
                                         dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
                                         dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
@@ -308,33 +319,30 @@ namespace ChartModules
                                 Chart.MWindow.MoveElement(e,
                                 vec =>
                                 {
-                                    if (vec.HasValue)
+                                    vec = Chart.CursorPosition.Magnet_Current - LastValue;
+                                    NewHook.DrawOver(vec, OverVisual, OverPriceVisual, OverTimeVisual);
+                                    PointVisual.Transform = new TranslateTransform(vec.X, vec.Y);
+                                },
+                                () => 
+                                {
+                                    Manipulating = false;
+
+                                    NewHook.AcceptNewCoordinates();
+                                    LastValue = NewHook.GetHookPoint(Chart.CursorPosition.Current);
+                                    SetMenu(NewHook.ElementName, NewHook.Sets, () =>
                                     {
-                                        vec = Chart.CursorPosition.Magnet_Current - LastValue;
-                                        NewHook.DrawOver(vec, OverVisual, OverPriceVisual, OverTimeVisual);
-                                        PointVisual.Transform = new TranslateTransform(vec.Value.X, vec.Value.Y);
-                                    }
-                                    else
-                                    {
-                                        Manipulating = false;
+                                        using var dc = PointVisual.RenderOpen();
+                                        dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
+                                        dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
+                                    });
+                                    LastCP = LastValue.ToChartPoint(Chart);
+                                    NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
 
-                                        NewHook.AcceptNewCoordinates();
-                                        SetMenu(NewHook.ElementName, NewHook.Sets, () =>
-                                        {
-                                            using var dc = PointVisual.RenderOpen();
-                                            dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y + 10), new Point(LastValue.X - 10, LastValue.Y - 10));
-                                            dc.DrawLine(pn, new Point(LastValue.X + 10, LastValue.Y - 10), new Point(LastValue.X - 10, LastValue.Y + 10));
-                                        });
-
-                                        LastValue = NewHook.GetHookPoint(Chart.CursorPosition.Current);
-                                        LastCP = LastValue.ToChartPoint(Chart);
-                                        NewHook.DrawShadow(ShadowVisual, ShadowPriceVisual, ShadowTimeVisual);
-
-                                        OverVisual.Transform = null;
-                                        OverPriceVisual.Transform = null;
-                                        OverTimeVisual.Transform = null;
-                                        NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
-                                    }
+                                    PointVisual.Transform = null;
+                                    OverVisual.Transform = null;
+                                    OverPriceVisual.Transform = null;
+                                    OverTimeVisual.Transform = null;
+                                    NewHook.DrawOver(null, OverVisual, OverPriceVisual, OverTimeVisual);
                                 });
                             }
                             else

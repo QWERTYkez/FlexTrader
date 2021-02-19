@@ -22,6 +22,7 @@ using ChartModules.StandardModules;
 using FlexTrader.MVVM.Views;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -29,6 +30,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace FlexTrader.MVVM.Resources
 {
@@ -200,48 +202,55 @@ namespace FlexTrader.MVVM.Resources
 
         #region Обработка таскания мышью
         private Point StartPosition;
-        private Action<Vector?> ActA;
+        private Action<Vector> ActA;
         private Action ActB;
-        public void MoveElement(MouseButtonEventArgs e, Action<Vector?> ActA, Action ActB = null)
+        public void MoveElement(MouseButtonEventArgs e, Action<Vector> ActA, Action ActB = null)
         {
             e.Handled = true;
             StartPosition = e.GetPosition(this); this.ActA = ActA; this.ActB = ActB;
 
-            this.MouseLeftButtonUp += (obj, e) => EndMoving();
+            this.MouseLeftButtonUp += (obj, e) => 
+            {
+                e.Handled = true;
+                EndMoving(); 
+            };
             this.MouseMove += MovingAct;
         }
         private void MovingAct(object sender, MouseEventArgs e)
         {
+            e.Handled = true;
             if (e.LeftButton == MouseButtonState.Released) EndMoving();
-            ActA.Invoke(e.GetPosition(this) - StartPosition);
+            var vec = e.GetPosition(this) - StartPosition;
+            ActA.Invoke(vec);
         }
-        private void EndMoving()
+        public void EndMoving(Dispatcher Dispatcher) => Dispatcher.Invoke(EndMoving);
+        public void EndMoving()
         {
             this.MouseMove -= MovingAct;
-            ActA.Invoke(null);
             ActB?.Invoke();
         }
-        private List<Func<Vector?, Task>> ActsA;
+        private List<Func<Vector, Task>> ActsA;
         private List<Func<Task>> ActsB;
-        public void MoveElements(MouseButtonEventArgs e, List<Func<Vector?, Task>> ActsA, List<Func<Task>> ActsB = null)
+        public void MoveElements(MouseButtonEventArgs e, List<Func<Vector, Task>> ActsA, List<Func<Task>> ActsB = null)
         {
             e.Handled = true;
             StartPosition = e.GetPosition(this); this.ActsA = ActsA; this.ActsB = ActsB;
 
-            this.MouseLeftButtonUp += (obj, e) => EndMovings();
+            this.MouseLeftButtonUp += (obj, e) => { e.Handled = true; EndMovings(); };
             this.MouseMove += MovingActs;
         }
         private void MovingActs(object sender, MouseEventArgs e)
         {
+            e.Handled = true;
             if (e.LeftButton == MouseButtonState.Released) EndMovings();
             var vec = e.GetPosition(this) - StartPosition;
             foreach (var act in ActsA) Task.Run(() => act.Invoke(vec));
         }
-        private void EndMovings()
+        public void EndMovings(Dispatcher Dispatcher) => Dispatcher.Invoke(EndMovings);
+        public void EndMovings()
         {
             this.MouseMove -= MovingActs;
 
-            foreach (var act in ActsA) act.Invoke(null);
             if(ActsB != null) foreach (var act in ActsB) act.Invoke();
         }
         #endregion
@@ -311,7 +320,7 @@ namespace FlexTrader.MVVM.Resources
                     OverlayMenu.Visibility = Visibility.Visible;
                     TopPanel.Visibility = Visibility.Hidden;
 
-                    BWP = new WrapPanel { Height = 52, HorizontalAlignment = HorizontalAlignment.Left };
+                    BWP = new WrapPanel { Height = 50, HorizontalAlignment = HorizontalAlignment.Left };
                     {
                         BWP.Children.Add(new Viewbox
                         {
@@ -352,7 +361,7 @@ namespace FlexTrader.MVVM.Resources
                                             Foreground = Brushes.White,
                                             Locked = set.GetBool()
                                         };
-                                        var lpb = new PaletteButton()
+                                        var lpb = new PaletteButtonLeft()
                                         {
                                             VerticalAlignment = VerticalAlignment.Center,
                                             Margin = new Thickness(2.5, 0, 2.5, 0),
@@ -374,7 +383,7 @@ namespace FlexTrader.MVVM.Resources
                                         BaseButtonsGrd.Children.Add(mv);
                                         break;
                                     case SetType.Delete:
-                                        var dpb = new PaletteButton()
+                                        var dpb = new PaletteButtonLeft()
                                         {
                                             VerticalAlignment = VerticalAlignment.Center,
                                             Margin = new Thickness(2.5, 0, 2.5, 0),

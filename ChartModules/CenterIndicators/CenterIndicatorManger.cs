@@ -70,6 +70,7 @@ namespace ChartModules.CenterIndicators
             }
 
             ResetHooks();
+            el.Rendering();
         }
         private void DeleteElement(HookElement el)
         {

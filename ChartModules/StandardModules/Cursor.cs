@@ -165,7 +165,8 @@ namespace ChartModules.StandardModules
 
                             }
                             else CursorPosition.NMP();
-                        } else CursorPosition.NMP();
+                        } 
+                        else CursorPosition.NMP();
                     }
                 } else CursorPosition.NMP();
 

@@ -77,18 +77,18 @@ namespace ChartModules.CenterIndicators
         
         private protected void ApplyChangesToAll()
         {
-            ApplyChanges();
             Changed.Invoke(null);
+            Rendering();
         }
         private protected void ApplyChangesToAll(double Price)
         {
-            ApplyChanges();
             Changed.Invoke((ChangesElementType.Price, Price));
+            Rendering();
         }
         private protected void ApplyChangesToAll(Point Point)
         {
-            ApplyChanges();
             Changed.Invoke((ChangesElementType.Point, Point));
+            Rendering();
         }
 
         public Hook Hook { get; }
@@ -96,7 +96,7 @@ namespace ChartModules.CenterIndicators
         public void AcceptNewCoordinates()
         {
             this.NewCoordinates();
-            this.ApplyChanges();
+            this.Rendering();
         }
         private protected abstract double GetDistance(Point P);
         private protected abstract Point GetHookPoint(Point P);
@@ -110,7 +110,8 @@ namespace ChartModules.CenterIndicators
             Task.Run(() =>
             {
                 Action<DrawingContext>[] acts;
-                if (PriceVisual == null) acts = PrepareToDrawing(vec, 0, DrawOver);
+                if (PriceVisual == null) 
+                    acts = PrepareToDrawing(vec, 0, DrawOver);
                 else 
                     acts = PrepareToDrawing(vec, VisualTreeHelper.GetDpi(PriceVisual).PixelsPerDip, DrawOver);
 

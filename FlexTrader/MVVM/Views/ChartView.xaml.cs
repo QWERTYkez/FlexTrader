@@ -130,7 +130,7 @@ namespace FlexTrader.MVVM.Views
                 MWindow.ShowContextMenu(items.Value);
             };
 
-            CandlesModule.WhellScalled += () => CursorModule.Redraw(CursorPosition.Current);
+            CandlesModule.WheelScalled += () => CursorModule.Redraw(CursorPosition.Current);
 
             var DC = DataContext as ChartViewModel;
             DC.PropertyChanged += DC_PropertyChanged;

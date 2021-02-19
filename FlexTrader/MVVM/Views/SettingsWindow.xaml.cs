@@ -149,7 +149,7 @@ namespace FlexTrader.MVVM.Views
                             Foreground = Brushes.White,
                             Locked = LockSetting.GetBool()
                         };
-                        var lpb = new PaletteButton()
+                        var lpb = new PaletteButtonLeft()
                         {
                             VerticalAlignment = VerticalAlignment.Center,
                             Margin = new Thickness(0, 0, 2.5, 0),
@@ -167,7 +167,7 @@ namespace FlexTrader.MVVM.Views
 
                     {// Delete button
 
-                        var lpb = new PaletteButton()
+                        var lpb = new PaletteButtonLeft()
                         {
                             VerticalAlignment = VerticalAlignment.Center,
                             Margin = new Thickness(2.5, 0, 0, 0),

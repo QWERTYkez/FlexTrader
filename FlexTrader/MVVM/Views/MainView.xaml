@@ -108,12 +108,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Thickness
-            x:Key="PaletteButtonMargin"
-            Bottom="2.5"
-            Left="0"
-            Right="0"
-            Top="2.5" />
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -131,10 +125,57 @@
                 HorizontalScrollBarVisibility="Auto"
                 PreviewMouseWheel="ScrollingBar"
                 VerticalScrollBarVisibility="Disabled">
-                <WrapPanel Height="42" Margin="5">
-                    <res:PaletteButton Margin="2.5,0,2.5,0" VerticalAlignment="Center">
+                <WrapPanel Height="40" Margin="5">
+                    <res:PaletteButtonTop Margin="2.5,0,2.5,0" VerticalAlignment="Center">
                         <res:Lock />
-                    </res:PaletteButton>
+                    </res:PaletteButtonTop>
+                    <Grid MouseEnter="PaletteButton_MouseEnter" MouseLeave="PaletteButton_MouseLeave">
+                        <res:PaletteButtonTop Click="PBC" Tag="PaintingLevels">
+                            <res:PaintingLevel Foreground="White" />
+                        </res:PaletteButtonTop>
+                        <Popup Style="{StaticResource pop1style}">
+                            <res:Arrow ArrowDirection="Left" Foreground="White" />
+                        </Popup>
+                        <Popup
+                            MouseEnter="PopSP_MouseEnter"
+                            MouseLeave="PopSP_MouseLeave"
+                            Style="{StaticResource pop2style}">
+                            <Border Style="{StaticResource popborder}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="7" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <res:PaletteButtonLeft
+                                        Grid.Row="0"
+                                        Click="PBCmenu"
+                                        Tag="PaintingLevels">
+                                        <res:PaintingLevel Foreground="White" />
+                                    </res:PaletteButtonLeft>
+                                    <res:PaletteButtonLeft
+                                        Grid.Row="1"
+                                        Click="PBCmenu"
+                                        Tag="PaintingTrends">
+                                        <res:PaintingTrend Foreground="White" />
+                                    </res:PaletteButtonLeft>
+                                    <Label
+                                        Grid.Row="0"
+                                        Content="Уровни"
+                                        Style="{StaticResource pallab}" />
+                                    <Label
+                                        Grid.Row="1"
+                                        Content="Тренды"
+                                        Style="{StaticResource pallab}" />
+                                </Grid>
+                            </Border>
+                        </Popup>
+                    </Grid>
                 </WrapPanel>
             </ScrollViewer>
             <ScrollViewer
@@ -163,19 +204,19 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Margin="5">
-                    <res:PaletteButton x:Name="PaletteButtonNormal" Click="PBC">
+                    <res:PaletteButtonLeft x:Name="PaletteButtonNormal" Click="PBC">
                         <res:CrossHair Foreground="White" />
-                    </res:PaletteButton>
-                    <res:PaletteButton
+                    </res:PaletteButtonLeft>
+                    <res:PaletteButtonLeft
                         x:Name="PaletteButtonInteracion"
                         Click="PBC"
                         Tag="Interacion">
                         <res:InteractArrow Foreground="White" />
-                    </res:PaletteButton>
+                    </res:PaletteButtonLeft>
                     <Grid MouseEnter="PaletteButton_MouseEnter" MouseLeave="PaletteButton_MouseLeave">
-                        <res:PaletteButton Click="PBC" Tag="PaintingLevels">
+                        <res:PaletteButtonLeft Click="PBC" Tag="PaintingLevels">
                             <res:PaintingLevel Foreground="White" />
-                        </res:PaletteButton>
+                        </res:PaletteButtonLeft>
                         <Popup Style="{StaticResource pop1style}">
                             <res:Arrow ArrowDirection="Left" Foreground="White" />
                         </Popup>
@@ -195,18 +236,18 @@
                                         <ColumnDefinition Width="7" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <res:PaletteButton
+                                    <res:PaletteButtonLeft
                                         Grid.Row="0"
                                         Click="PBCmenu"
                                         Tag="PaintingLevels">
                                         <res:PaintingLevel Foreground="White" />
-                                    </res:PaletteButton>
-                                    <res:PaletteButton
+                                    </res:PaletteButtonLeft>
+                                    <res:PaletteButtonLeft
                                         Grid.Row="1"
                                         Click="PBCmenu"
                                         Tag="PaintingTrends">
                                         <res:PaintingTrend Foreground="White" />
-                                    </res:PaletteButton>
+                                    </res:PaletteButtonLeft>
                                     <Label
                                         Grid.Row="0"
                                         Content="Уровни"
@@ -223,12 +264,12 @@
                         Margin="0,4,0,4"
                         BorderBrush="#FF0B294D"
                         BorderThickness="1" />
-                    <res:PaletteButton x:Name="MagnetBtn" Click="BTN_SetMagnetState">
+                    <res:PaletteButtonLeft x:Name="MagnetBtn" Click="BTN_SetMagnetState">
                         <res:Magnet Foreground="White" />
-                    </res:PaletteButton>
-                    <res:PaletteButton x:Name="ClipTime" Click="ClipTime_click">
+                    </res:PaletteButtonLeft>
+                    <res:PaletteButtonLeft x:Name="ClipTime" Click="ClipTime_click">
                         <res:Clip Foreground="White" />
-                    </res:PaletteButton>
+                    </res:PaletteButtonLeft>
                 </StackPanel>
                 <Border
                     Grid.Column="1"

@@ -185,7 +185,7 @@ namespace ChartModules.CenterIndicators.Paintings
         private protected override void DrawShadow(DrawingVisual ElementsVisual, DrawingVisual PricesVisual, DrawingVisual TimesVisual)
         {
             var c = Dispatcher.Invoke(() => { return ((SolidColorBrush)Chart.ChartBackground).Color; });
-            var br = new SolidColorBrush(c);
+            var br = new SolidColorBrush(c); br.Freeze();
 
             var br2 = new SolidColorBrush(Color.FromArgb(255,
                 (byte)(c.R - 15),
