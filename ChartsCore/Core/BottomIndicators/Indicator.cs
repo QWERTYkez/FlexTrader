@@ -135,7 +135,7 @@ namespace ChartsCore.Core.BottomIndicators
             };
             sets.AddRange(Sets);
 
-            Chart.MWindow.SetMenu(SetsName, sets,
+            Chart.Shell.SetMenu(SetsName, sets,
                 () => Selector.Visibility = Visibility.Visible,
                 () => Dispatcher.Invoke(() => Selector.Visibility = Visibility.Collapsed));
         }

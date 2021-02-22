@@ -21,7 +21,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ChartsCore.Resources">
 
-    <local:ElementToWidthConverter x:Key="ElementToWidthConverter"/>
+    <local:ElementToWidthConverter x:Key="ElementToWidthConverter" />
     <local:BrushToHexConverter x:Key="BrushToHexConverter" />
     <local:BrushToChannelConverter x:Key="BrushToChannelConverter" />
     <local:BrushToColorConverter x:Key="BrushToColorConverter" />

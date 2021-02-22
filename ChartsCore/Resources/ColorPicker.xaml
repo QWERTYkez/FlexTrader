@@ -28,6 +28,8 @@
     Background="Transparent"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <local:BrushToColorConverter x:Key="BrushToColorConverter" />
+        <local:BrushToHexConverter x:Key="BrushToHexConverter" />
         <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
         <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
         <Style x:Key="TabControlStyle1" TargetType="{x:Type TabControl}">

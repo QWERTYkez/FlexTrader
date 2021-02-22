@@ -16,17 +16,17 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Windows;
+using ChartsCore.Core;
 
 namespace FlexTrader.MVVM.Views
 {
-    public partial class MainView : Window
+    public partial class MainView : ChartWindow
     {
         public MainView()
         {
             InitializeComponent();
 
-            Content.Content = new ChartsCore.ChartViev();
+            Content.Content = new ChartsCore.ChartViev(this);
         }
     }
 }

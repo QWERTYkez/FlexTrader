@@ -19,7 +19,6 @@
 using ChartsCore.Core.CenterIndicators;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -44,7 +43,7 @@ namespace ChartsCore.Core
             this.GetCursorPen = GetCursorPen;
             this.CIM = CenterIndicatorManger;
 
-            this.SetMenuAct = chart.MWindow.SetMenu;
+            this.SetMenuAct = chart.Shell.SetMenu;
 
             Chart.VerticalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
             Chart.HorizontalСhanges += () => Task.Run(() => ResizeHook?.Invoke());
@@ -52,19 +51,19 @@ namespace ChartsCore.Core
             Chart.ChartGrid.MouseEnter += (s, e) => Chart.Interaction = MoveHook;
             Chart.ChartGrid.MouseLeave += (s, e) => { if (Chart.Interaction == MoveHook) Chart.Interaction = null; };
             Chart.HookElement = HookElement;
-            Chart.MWindow.RemoveHooks += () => Task.Run(() => RemoveHook?.Invoke());
-            Chart.MWindow.ToggleInteraction += b =>
+            Chart.Shell.RemoveHooks += () => Task.Run(() => RemoveHook?.Invoke());
+            Chart.Shell.ToggleInteraction += b =>
             {
                 if (b) RemoveHook = null;
                 else
                 {
                     Task.Run(() =>
                     {
-                        if (Manipulating) Chart.MWindow.EndMoving(Dispatcher);
+                        if (Manipulating) Chart.Window.EndMoving(Dispatcher);
 
                         RemoveHook = RemoveLastHook;
 
-                        Dispatcher.Invoke(() => 
+                        Dispatcher.Invoke(() =>
                         {
                             foreach (var l in OtherLayers)
                                 l.Visibility = Visibility.Visible;
@@ -105,25 +104,8 @@ namespace ChartsCore.Core
         private readonly List<FrameworkElement> OtherLayers;
 
         private readonly Action<string, List<Setting>, Action, Action> SetMenuAct;
-        private void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook) => 
-            SetMenuAct.Invoke(SetsName, Sets, DrawHook, () => 
-            {
-                ResizeHook = null;
-                Dispatcher.Invoke(() =>
-                {
-                    RemoveHook = null;
-
-                    ShadowVisual.RenderOpen().Close();
-                    ShadowPriceVisual.RenderOpen().Close();
-                    ShadowTimeVisual.RenderOpen().Close();
-                    OverVisual.RenderOpen().Close();
-                    OverPriceVisual.RenderOpen().Close();
-                    OverTimeVisual.RenderOpen().Close();
-                    PointVisual.RenderOpen().Close();
-
-                    RestoreChart();
-                });
-            });
+        private void SetMenu(string SetsName, List<Setting> Sets, Action DrawHook) =>
+            SetMenuAct.Invoke(SetsName, Sets, DrawHook, FullRestore);
         private Action RemoveHook;
         private Action ResizeHook;
 
@@ -135,7 +117,7 @@ namespace ChartsCore.Core
         private readonly DrawingVisual OverPriceVisual = new DrawingVisual();
         private readonly DrawingVisual OverTimeVisual = new DrawingVisual();
 
-        public (List<(string Name, Action Act)> Menus, Action DrawHook, Action RemoveHook)? 
+        public (List<(string Name, Action Act)> Menus, Action DrawHook, Action RemoveHook)?
             ShowContextMenu(object s, MouseEventArgs e)
         {
             var P = e.GetPosition((IInputElement)Chart);
@@ -210,7 +192,7 @@ namespace ChartsCore.Core
         public void HookElement()
         {
             if (Manipulating) return;
-            Task.Run(() => 
+            Task.Run(() =>
             {
                 var pn = GetCursorPen.Invoke();
                 var P = Chart.CursorPosition.Current;
@@ -224,7 +206,7 @@ namespace ChartsCore.Core
                     {
                         CurrentHook?.ClearEvents();
 
-                        Dispatcher.Invoke(() => 
+                        Dispatcher.Invoke(() =>
                         {
                             ShadowVisual.RenderOpen().Close();
                             ShadowPriceVisual.RenderOpen().Close();
@@ -316,14 +298,14 @@ namespace ChartsCore.Core
 
                             if (!NewHook.Locked)
                             {
-                                Chart.MWindow.MoveElement(e,
+                                Chart.Window.MoveElement(e,
                                 vec =>
                                 {
                                     vec = Chart.CursorPosition.Magnet_Current - LastValue;
                                     NewHook.DrawOver(vec, OverVisual, OverPriceVisual, OverTimeVisual);
                                     PointVisual.Transform = new TranslateTransform(vec.X, vec.Y);
                                 },
-                                () => 
+                                () =>
                                 {
                                     Manipulating = false;
 
@@ -347,7 +329,7 @@ namespace ChartsCore.Core
                             }
                             else
                             {
-                                Chart.MWindow.MoveElement(e,
+                                Chart.Window.MoveElement(e,
                                 vec =>
                                 {
                                     if (vec == null)
@@ -355,7 +337,7 @@ namespace ChartsCore.Core
                                 });
                             }
                         };
-                        Dispatcher.Invoke(() => 
+                        Dispatcher.Invoke(() =>
                         {
                             foreach (var l in OtherLayers)
                                 l.Visibility = Visibility.Hidden;
@@ -376,7 +358,7 @@ namespace ChartsCore.Core
             Dispatcher.Invoke(() =>
             {
                 RemoveHook = null;
-                
+
                 SetMenuAct(null, null, null, null);
 
                 RestoreChart();
@@ -400,8 +382,18 @@ namespace ChartsCore.Core
                 OverTimeVisual.RenderOpen().Close();
             });
         }
-    }
 
+        public void FullRestore()
+        {
+            ResizeHook = null;
+            RemoveHook = null;
+            Dispatcher.Invoke(() =>
+            {
+                RestoreChart();
+                PointVisual.RenderOpen().Close();
+            });
+        }
+    }
 
     public class Hook
     {

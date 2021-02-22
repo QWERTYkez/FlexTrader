@@ -16,7 +16,6 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core;
 using ChartsCore.Core.BottomIndicators;
 using ChartsCore.Core.CenterIndicators;
 using ChartsCore.Core.StandardModules;
@@ -48,22 +47,24 @@ namespace ChartsCore.Core
         private readonly BottomIndicatorsManger BottomIndicatorManger;
         private readonly CenterIndicatorManger CenterIndicatorManger;
 
-        public ChartShell MWindow { get; }
+        public ChartWindow Window { get; }
+        public ChartShell Shell { get; }
         public View() { } //конструктор для intellisense
-        public View(ChartShell mainView)
+        public View(ChartWindow Window, ChartShell Shell)
         {
-            this.MWindow = mainView;
+            this.Window = Window;
+            this.Shell = Shell;
 
             InitializeComponent();
-            MWindow.ToggleClipTime += b => Clipped = b;
-            this.PreviewMouseDown += (s, e) => MWindow.ChartGotFocus(this);
-            this.MouseEnter += (s, e) => MWindow.InstrumentsHandler = this;
+            this.Shell.ToggleClipTime += b => Clipped = b;
+            this.PreviewMouseDown += (s, e) => this.Shell.ChartGotFocus(this);
+            this.MouseEnter += (s, e) => this.Shell.InstrumentsHandler = this;
             this.MouseLeave += (s, e) =>
             {
-                if (MWindow.InstrumentsHandler == this)
-                    MWindow.InstrumentsHandler = null;
+                if (this.Shell.InstrumentsHandler == this)
+                    this.Shell.InstrumentsHandler = null;
             };
-            this.ShowSettings += MWindow.ShowSettings;
+            this.ShowSettings += this.Shell.ShowSettings;
 
             PriceMarksModule = new PriceMarksModule(this, LevelsLayer, PaintingMarksLayer);
 
@@ -99,7 +100,7 @@ namespace ChartsCore.Core
 
             PaintingModule = new PaintingModule(this, PrototypeLayer, PrototypePriceLayer,
                 PrototypeTimeLayer, CenterIndicatorManger.AddElement);
-            MWindow.ClearPrototypes += PaintingModule.ClearPrototype;
+            this.Shell.ClearPrototypes += PaintingModule.ClearPrototype;
 
             HooksModule = new HooksModule(this, HooksLayer, HookPriceLayer, HookTimeLayer,
                 () => CursorModule.LinesPen, CenterIndicatorManger,
@@ -126,7 +127,7 @@ namespace ChartsCore.Core
                     },
                     null, null);
                 }
-                MWindow.ShowContextMenu(items.Value);
+                this.Shell.ShowContextMenu(items.Value);
             };
 
             CandlesModule.WheelScalled += () => CursorModule.Redraw(CursorPosition.Current);
@@ -191,6 +192,7 @@ namespace ChartsCore.Core
                     else
                     {
                         SelectionBorder.BorderBrush = Brushes.Transparent;
+                        HooksModule.FullRestore();
                     }
                 });
             }

@@ -53,12 +53,12 @@ namespace ChartsCore.Core.CenterIndicators
                 PrototypePriceCanvas.Visibility = Visibility.Hidden;
                 PrototypeTimeCanvas.Visibility = Visibility.Hidden;
             };
-            Chart.MWindow.PrepareInstrument += PrepareInstrument;
+            Chart.Shell.PrepareInstrument += PrepareInstrument;
             Chart.DrawPrototype = () => DrawPrototype?.Invoke(Chart,
                 PrototypeVisual, PrototypePriceVisual, PrototypeTimeVisual);
-            this.SetMenuAct = chart.MWindow.SetMenu;
+            this.SetMenuAct = chart.Shell.SetMenu;
 
-            this.ResetInstrument = Chart.MWindow.ResetInstrument;
+            this.ResetInstrument = Chart.Shell.ResetInstrument;
 
             Chart.PaintingLevel = PaintingLevel;
 
@@ -130,8 +130,8 @@ namespace ChartsCore.Core.CenterIndicators
         {
             AddElement(new Level(Chart.HeightToPrice(Chart.CursorPosition.Magnet_Current.Y)));
 
-            if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
-            else Chart.MWindow.ControlUsed = true;
+            if (!Chart.Shell.Controlled) ResetInstrument.Invoke(null);
+            else Chart.Shell.ControlUsed = true;
         }
         private void PaintingTrend(MouseButtonEventArgs e)
         {
@@ -143,8 +143,8 @@ namespace ChartsCore.Core.CenterIndicators
                 AddElement(new Trend(Chart.PaintingPoints[0].ToChartPoint(Chart), 
                     Chart.CursorPosition.Magnet_Current.ToChartPoint(Chart)));
 
-                if (!Chart.MWindow.Controlled) ResetInstrument.Invoke(null);
-                else Chart.MWindow.ControlUsed = true;
+                if (!Chart.Shell.Controlled) ResetInstrument.Invoke(null);
+                else Chart.Shell.ControlUsed = true;
             };
         }
 

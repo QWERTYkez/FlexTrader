@@ -284,7 +284,7 @@
             <Grid
                 x:Name="ChartsGrid"
                 Grid.Column="1"
-                PreviewMouseLeftButtonDown="ChartsGRD_PreviewMouseLeftButtonDown">
+                PreviewMouseLeftButtonDown="ChartInstrumentAction">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />

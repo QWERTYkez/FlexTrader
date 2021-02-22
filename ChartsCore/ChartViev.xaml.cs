@@ -30,7 +30,7 @@ namespace ChartsCore
 {
     public partial class ChartViev : ChartShell
     {
-        public ChartViev()
+        public ChartViev(ChartWindow Parent) : base(Parent)
         {
             InitializeComponent();
 
@@ -41,10 +41,10 @@ namespace ChartsCore
             Palette.Tag = PaletteButtonNormal;
             PaletteButtonNormal.IsActive = true;
 
-            OverlayMenu.MouseEnter += (s, e) => this.PreviewMouseLeftButtonDown -= CW_PreviewMouseLeftButtonDown;
-            OverlayMenu.MouseLeave += (s, e) => this.PreviewMouseLeftButtonDown += CW_PreviewMouseLeftButtonDown;
+            OverlayMenu.MouseEnter += (s, e) => this.PreviewMouseLeftButtonDown -= SetMenu;
+            OverlayMenu.MouseLeave += (s, e) => this.PreviewMouseLeftButtonDown += SetMenu;
 
-            ((ChartVievModel)DataContext).Initialize(this);
+            ((ChartVievModel)DataContext).Initialize(Parent, this);
 
             SetInsrument(CurrentInstrument); SetMagnet();
         }

@@ -54,7 +54,7 @@ namespace ChartsCore.Core.StandardModules
             TimeLineModule TimeLineModule, TranslateTransform Translate, ScaleTransform ScaleX, 
             ScaleTransform ScaleY, Grid TimeLine, Grid PriceLine, Vector CurrentScale) : base(chart)
         {
-            Chart.MWindow.Candles.Add(this);
+            Chart.Shell.Candles.Add(this);
 
             this.CandlesLayer = CandlesLayer;
             this.PriceLineModule = PriceLineModule;
@@ -86,7 +86,7 @@ namespace ChartsCore.Core.StandardModules
             PriceLine.MouseLeave += (s, e) => { if (Chart.Moving == PriceLine_MouseDown) Chart.Moving = null; };
             Chart.ChartGrid.MouseEnter += SetMoving;
             Chart.ChartGrid.MouseLeave += BreakMoving;
-            Chart.MWindow.ToggleMagnet += b =>
+            Chart.Shell.ToggleMagnet += b =>
             {
                 Task.Run(() =>
                 {
@@ -119,7 +119,7 @@ namespace ChartsCore.Core.StandardModules
         public void NewCandles(List<ICandle> NewCandles)
         {
             DeltaTime = (NewCandles[1].TimeStamp - NewCandles[0].TimeStamp);
-            Chart.MWindow.ResetClips();
+            Chart.Shell.ResetClips();
             AllCandles.Clear();  AddCandles(NewCandles);
         }
         public void AddCandles(List<ICandle> NewCandles)
@@ -169,7 +169,7 @@ namespace ChartsCore.Core.StandardModules
             }
         }
 
-        private IEnumerable<CandlesModule> Clips => Chart.MWindow.ClipsCandles[DeltaTime];
+        private IEnumerable<CandlesModule> Clips => Chart.Shell.ClipsCandles[DeltaTime];
         #region Перерассчет шкал
         public event Action<IEnumerable<ICandle>> AllHorizontalReset;
         private bool VerticalLock = true;
@@ -234,7 +234,7 @@ namespace ChartsCore.Core.StandardModules
             if (e.ClickCount == 2) { VerticalLock = true; VerticalReset(); return; }
             LastScaleY = CurrentScale.Y;
             VerticalLock = false;
-            Chart.MWindow.MoveElement(e, async vec =>
+            Chart.Window.MoveElement(e, async vec =>
             {
                 var X = vec.Y / 50;
                 if (vec.Y < 0)
@@ -261,7 +261,7 @@ namespace ChartsCore.Core.StandardModules
             else
             {
                 LastScaleX = CurrentScale.X;
-                Chart.MWindow.MoveElement(e, vec => TimeScaling(vec));
+                Chart.Window.MoveElement(e, vec => TimeScaling(vec));
             }
         }
         private void TimeScaleAll(MouseButtonEventArgs e)
@@ -277,7 +277,7 @@ namespace ChartsCore.Core.StandardModules
                     cl.LastScaleX = CurrentScale.X;
                     fl.Add(cl.TimeScaling);
                 }
-                Chart.MWindow.MoveElements(e, fl);
+                Chart.Window.MoveElements(e, fl);
             }
         }
         public void ResetTimeScale()
@@ -340,7 +340,7 @@ namespace ChartsCore.Core.StandardModules
         private void MovingChart(MouseButtonEventArgs e)
         {
             LastTranslateVector = CurrentTranslate;
-            Chart.MWindow.MoveElement(e, vec => MovingChart(vec));
+            Chart.Window.MoveElement(e, vec => MovingChart(vec));
         }
         private void MovingAllCharts(MouseButtonEventArgs e)
         {
@@ -350,7 +350,7 @@ namespace ChartsCore.Core.StandardModules
                 cl.LastTranslateVector = CurrentTranslate;
                 fl.Add(cl.MovingChart);
             }
-            Chart.MWindow.MoveElements(e, fl);
+            Chart.Window.MoveElements(e, fl);
         }
         public Task MovingChart(Vector vec)
         {

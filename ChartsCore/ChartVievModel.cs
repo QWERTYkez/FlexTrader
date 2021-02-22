@@ -32,11 +32,11 @@ namespace ChartsCore
         }
 
         public Dispatcher Dispatcher { get; internal set; }
-        internal void Initialize(ChartViev mainView)
+        internal void Initialize(ChartWindow Window, ChartViev mainView)
         {
             Dispatcher = mainView.Dispatcher;
-            Chart = new View(mainView);
-            Chart2 = new View(mainView);
+            Chart = new View(Window, mainView);
+            Chart2 = new View(Window, mainView);
         }
 
         public View Chart { get; set; }

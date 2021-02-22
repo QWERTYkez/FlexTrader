@@ -53,8 +53,8 @@ namespace ChartsCore.Core.StandardModules
             Chart.ChartGrid.MouseEnter += ShowCursor;
             Chart.ChartGrid.MouseLeave += CursorLeave;
             Chart.ChartGrid.MouseMove += Redraw;
-            Chart.MWindow.SetCursor += SetCursor;
-            Chart.MWindow.ToggleMagnet += b =>
+            Chart.Shell.SetCursor += SetCursor;
+            Chart.Shell.ToggleMagnet += b =>
             {
                 Task.Run(() =>
                 {
@@ -171,7 +171,7 @@ namespace ChartsCore.Core.StandardModules
                 } else CursorPosition.NMP();
 
                 ////////
-                Chart.MWindow.MMInstrument?.Invoke();
+                Chart.Shell.MMInstrument?.Invoke();
 
                 if (Hide)
                 {

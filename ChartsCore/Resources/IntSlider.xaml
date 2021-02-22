@@ -26,7 +26,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid >
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition x:Name="CDW" Width="Auto" />
@@ -48,9 +48,9 @@
             FontWeight="Bold"
             Foreground="Black" />
         <Label
-            VerticalContentAlignment="Center"
             Grid.Column="1"
             Margin="{Binding Margin, ElementName=label}"
+            VerticalContentAlignment="Center"
             Content="{Binding Maximum, ElementName=slider}"
             FontSize="16"
             FontWeight="Bold"
