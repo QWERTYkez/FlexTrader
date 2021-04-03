@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexTrader", "FlexTrader\FlexTrader.csproj", "{4F2069C8-B168-4B9B-A149-E1327631F454}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChartsCore", "ChartsCore\ChartsCore.csproj", "{EC10FB83-ADD7-4DD0-B3C1-173921313476}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartModules", "ChartModules\ChartModules.csproj", "{E3C17328-7078-4251-B4C1-D8AA841309DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexUserConrols", "FlexUserConrols\FlexUserConrols.csproj", "{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexExchangesCore", "FlexExchangesCore\FlexExchangesCore.csproj", "{6A4F4315-C41B-49CA-8405-9B10C8558D7B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexTrader", "FlexTrader\FlexTrader.csproj", "{93C0185C-D240-43FF-94C9-DA10476E30CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +17,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4F2069C8-B168-4B9B-A149-E1327631F454}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4F2069C8-B168-4B9B-A149-E1327631F454}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4F2069C8-B168-4B9B-A149-E1327631F454}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4F2069C8-B168-4B9B-A149-E1327631F454}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E3C17328-7078-4251-B4C1-D8AA841309DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC10FB83-ADD7-4DD0-B3C1-173921313476}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A4F4315-C41B-49CA-8405-9B10C8558D7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A4F4315-C41B-49CA-8405-9B10C8558D7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A4F4315-C41B-49CA-8405-9B10C8558D7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A4F4315-C41B-49CA-8405-9B10C8558D7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93C0185C-D240-43FF-94C9-DA10476E30CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93C0185C-D240-43FF-94C9-DA10476E30CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93C0185C-D240-43FF-94C9-DA10476E30CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93C0185C-D240-43FF-94C9-DA10476E30CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

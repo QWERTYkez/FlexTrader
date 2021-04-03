@@ -23,17 +23,7 @@
     xmlns:local="clr-namespace:FlexTrader">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="MVVM\Resources\TextBoxes.xaml" />
-                <ResourceDictionary Source="MVVM\Resources\Buttons.xaml" />
-                <ResourceDictionary Source="MVVM\Resources\VectorGraphics\Figures.xaml" />
-                <ResourceDictionary Source="MVVM\Resources\Converters.xaml" />
-                <ResourceDictionary Source="MVVM\Resources\ScrollBar.xaml" />
-                <ResourceDictionary Source="MVVM\Resources\SlidingRes.xaml" />
-                <ResourceDictionary>
-                    <SolidColorBrush x:Key="CursorGrabber" Color="#00000000" />
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary.MergedDictionaries />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

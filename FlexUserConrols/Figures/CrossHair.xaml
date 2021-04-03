@@ -1,0 +1,75 @@
+﻿<!--
+    Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
+
+    This file is part of FlexTrader
+    FlexTrader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FlexTrader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
+!-->
+
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:FlexUserConrols.Figures">
+
+    <Style TargetType="{x:Type local:CrossHair}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:CrossHair}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Viewbox Stretch="Uniform">
+                            <Path
+                                x:Name="PAth"
+                                Width="1000"
+                                Height="1000"
+                                Fill="{TemplateBinding Foreground}">
+                                <Path.Data>
+                                    <PathGeometry>
+                                        <PathFigure IsClosed="True" StartPoint="470,530">
+                                            <LineSegment Point="470,1000" />
+                                            <LineSegment Point="530,1000" />
+                                            <LineSegment Point="530,530" />
+                                            <LineSegment Point="1000,530" />
+                                            <LineSegment Point="1000,470" />
+                                            <LineSegment Point="530,470" />
+                                            <LineSegment Point="530,0" />
+                                            <LineSegment Point="470,0" />
+                                            <LineSegment Point="470,470" />
+                                            <LineSegment Point="0,470" />
+                                            <LineSegment Point="0,530" />
+                                        </PathFigure>
+                                    </PathGeometry>
+                                </Path.Data>
+                            </Path>
+                        </Viewbox>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Rotated" Value="true">
+                            <Setter TargetName="PAth" Property="RenderTransform">
+                                <Setter.Value>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="1.334" ScaleY="1.334" />
+                                        <RotateTransform Angle="45" CenterX="500" CenterY="500" />
+                                        <TranslateTransform Y="-236" />
+                                    </TransformGroup>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -17,16 +17,29 @@
 */
 
 using ChartsCore.Core;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Threading;
 
-namespace FlexTrader.MVVM.Views
+namespace ChartsCore
 {
-    public partial class MainView : ChartWindow
+    class ChartVievModel : INotifyPropertyChanged
     {
-        public MainView()
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
-            InitializeComponent();
-
-            Content.Content = new ChartsCore.ChartViev(this);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
+
+        public Dispatcher Dispatcher { get; internal set; }
+        internal void Initialize(ChartWindow Window, ChartViev mainView)
+        {
+            Dispatcher = mainView.Dispatcher;
+            Chart = new View(Window, mainView);
+            Chart2 = new View(Window, mainView);
+        }
+
+        public View Chart { get; set; }
+        public View Chart2 { get; set; }
     }
 }

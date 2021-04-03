@@ -16,17 +16,24 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core;
+using System;
+using System.Globalization;
+using System.Windows.Data;
+using System.Windows.Media;
+using System.Windows.Media.Effects;
 
-namespace FlexTrader.MVVM.Views
+namespace FlexUserConrols.Converters
 {
-    public partial class MainView : ChartWindow
+    public class BrushToEffectConverter : IValueConverter
     {
-        public MainView()
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            InitializeComponent();
-
-            Content.Content = new ChartsCore.ChartViev(this);
+            double d;
+            try { d = System.Convert.ToDouble(parameter); } catch { d = 0; }
+            return new DropShadowEffect { Color = (value as SolidColorBrush).Color, ShadowDepth = 0, BlurRadius = d };
         }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            new SolidColorBrush((value as DropShadowEffect).Color);
     }
 }

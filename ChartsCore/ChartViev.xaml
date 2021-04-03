@@ -1,0 +1,335 @@
+﻿<!--
+    Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
+
+    This file is part of FlexTrader
+    FlexTrader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FlexTrader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
+!-->
+
+<Core:ChartShell
+    x:Class="ChartsCore.ChartViev"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Core="clr-namespace:ChartsCore.Core"
+    xmlns:Figures="clr-namespace:FlexUserConrols.Figures;assembly=FlexUserConrols"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ChartsCore"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:FlexUserConrols.Buttons;assembly=FlexUserConrols"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.DataContext>
+        <local:ChartVievModel />
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <Style x:Key="pop1style" TargetType="Popup">
+                        <Setter Property="Width" Value="5" />
+                        <Setter Property="Height" Value="30" />
+                        <Setter Property="AllowsTransparency" Value="True" />
+                        <Setter Property="HorizontalOffset" Value="45" />
+                        <Setter Property="Placement" Value="Relative" />
+                        <Setter Property="PopupAnimation" Value="Fade" />
+                        <Setter Property="VerticalOffset" Value="10" />
+                    </Style>
+                    <Style x:Key="pop2style" TargetType="Popup">
+                        <Setter Property="AllowsTransparency" Value="True" />
+                        <Setter Property="HorizontalOffset" Value="10" />
+                        <Setter Property="Placement" Value="Right" />
+                        <Setter Property="PopupAnimation" Value="Fade" />
+                    </Style>
+                    <Style x:Key="popborder" TargetType="Border">
+                        <Setter Property="Padding" Value="7" />
+                        <Setter Property="Background" Value="DimGray" />
+                        <Setter Property="BorderBrush" Value="White" />
+                        <Setter Property="BorderThickness" Value="2" />
+                        <Setter Property="CornerRadius" Value="10" />
+                    </Style>
+                    <Style x:Key="pallab" TargetType="Label">
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="FontWeight" Value="Bold" />
+                        <Setter Property="Foreground" Value="White" />
+                        <Setter Property="Grid.Column" Value="2" />
+                    </Style>
+                    <SolidColorBrush x:Key="PaletteBrush" Color="#FF142B30" />
+                    <Style x:Key="FocusVisual">
+                        <Setter Property="Control.Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <Rectangle
+                                        Margin="2"
+                                        SnapsToDevicePixels="true"
+                                        Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                                        StrokeDashArray="1 2"
+                                        StrokeThickness="1" />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style x:Key="LabelStyle1" TargetType="{x:Type Label}">
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Padding" Value="5" />
+                        <Setter Property="HorizontalContentAlignment" Value="Left" />
+                        <Setter Property="VerticalContentAlignment" Value="Top" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type Label}">
+                                    <Border
+                                        Padding="{TemplateBinding Padding}"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        SnapsToDevicePixels="true">
+                                        <ContentPresenter
+                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                            RecognizesAccessKey="True"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsEnabled" Value="false">
+                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid Grid.Column="0" Background="{StaticResource PaletteBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ScrollViewer
+                x:Name="xTopPanel"
+                CanContentScroll="True"
+                HorizontalScrollBarVisibility="Auto"
+                PreviewMouseWheel="ScrollingBar"
+                VerticalScrollBarVisibility="Disabled">
+                <WrapPanel Height="40" Margin="5">
+                    <res:PaletteButton VerticalAlignment="Center" Type="Horizontal">
+                        <Figures:Lock />
+                    </res:PaletteButton>
+                    <Grid MouseEnter="PaletteButton_MouseEnter" MouseLeave="PaletteButton_MouseLeave">
+                        <res:PaletteButton
+                            Click="PBC"
+                            Tag="PaintingLevels"
+                            Type="Horizontal">
+                            <Figures:PaintingLevel Foreground="White" />
+                        </res:PaletteButton>
+                        <Popup Style="{StaticResource pop1style}">
+                            <Figures:Arrow ArrowDirection="Left" Foreground="White" />
+                        </Popup>
+                        <Popup
+                            MouseEnter="PopSP_MouseEnter"
+                            MouseLeave="PopSP_MouseLeave"
+                            Style="{StaticResource pop2style}">
+                            <Border Style="{StaticResource popborder}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="7" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <res:PaletteButton
+                                        Grid.Row="0"
+                                        Click="PBCmenu"
+                                        Tag="PaintingLevels"
+                                        Type="Vertical">
+                                        <Figures:PaintingLevel Foreground="White" />
+                                    </res:PaletteButton>
+                                    <res:PaletteButton
+                                        Grid.Row="1"
+                                        Click="PBCmenu"
+                                        Tag="PaintingTrends"
+                                        Type="Vertical">
+                                        <Figures:PaintingTrend Foreground="White" />
+                                    </res:PaletteButton>
+                                    <Label
+                                        Grid.Row="0"
+                                        Content="Уровни"
+                                        Style="{StaticResource pallab}" />
+                                    <Label
+                                        Grid.Row="1"
+                                        Content="Тренды"
+                                        Style="{StaticResource pallab}" />
+                                </Grid>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </WrapPanel>
+            </ScrollViewer>
+            <ScrollViewer
+                x:Name="xOverlayMenu"
+                CanContentScroll="True"
+                HorizontalScrollBarVisibility="Auto"
+                PreviewMouseWheel="ScrollingBar"
+                VerticalScrollBarVisibility="Disabled"
+                Visibility="Hidden" />
+            <Border
+                Grid.Row="1"
+                BorderBrush="Gray"
+                BorderThickness="1" />
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid
+                x:Name="Palette"
+                Grid.Column="0"
+                Background="{StaticResource PaletteBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Margin="5">
+                    <res:PaletteButton
+                        x:Name="PaletteButtonNormal"
+                        Click="PBC"
+                        Type="Vertical">
+                        <Figures:CrossHair Foreground="White" />
+                    </res:PaletteButton>
+                    <res:PaletteButton
+                        x:Name="PaletteButtonInteracion"
+                        Click="PBC"
+                        Tag="Interacion"
+                        Type="Vertical">
+                        <Figures:InteractArrow Foreground="White" />
+                    </res:PaletteButton>
+                    <Grid MouseEnter="PaletteButton_MouseEnter" MouseLeave="PaletteButton_MouseLeave">
+                        <res:PaletteButton
+                            Click="PBC"
+                            Tag="PaintingLevels"
+                            Type="Vertical">
+                            <Figures:PaintingLevel Foreground="White" />
+                        </res:PaletteButton>
+                        <Popup Style="{StaticResource pop1style}">
+                            <Figures:Arrow ArrowDirection="Left" Foreground="White" />
+                        </Popup>
+                        <Popup
+                            MouseEnter="PopSP_MouseEnter"
+                            MouseLeave="PopSP_MouseLeave"
+                            Style="{StaticResource pop2style}">
+                            <Border Style="{StaticResource popborder}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="7" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <res:PaletteButton
+                                        Grid.Row="0"
+                                        Click="PBCmenu"
+                                        Tag="PaintingLevels"
+                                        Type="Vertical">
+                                        <Figures:PaintingLevel Foreground="White" />
+                                    </res:PaletteButton>
+                                    <res:PaletteButton
+                                        Grid.Row="1"
+                                        Click="PBCmenu"
+                                        Tag="PaintingTrends"
+                                        Type="Vertical">
+                                        <Figures:PaintingTrend Foreground="White" />
+                                    </res:PaletteButton>
+                                    <Label
+                                        Grid.Row="0"
+                                        Content="Уровни"
+                                        Style="{StaticResource pallab}" />
+                                    <Label
+                                        Grid.Row="1"
+                                        Content="Тренды"
+                                        Style="{StaticResource pallab}" />
+                                </Grid>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <Border
+                        Margin="0,4,0,4"
+                        BorderBrush="#FF0B294D"
+                        BorderThickness="1" />
+                    <res:PaletteButton
+                        x:Name="MagnetBtn"
+                        Click="BTN_SetMagnetState"
+                        Type="Vertical">
+                        <Figures:Magnet Foreground="White" />
+                    </res:PaletteButton>
+                    <res:PaletteButton
+                        x:Name="ClipTime"
+                        Click="ClipTime_click"
+                        Type="Vertical">
+                        <Figures:Clip Foreground="White" />
+                    </res:PaletteButton>
+                </StackPanel>
+                <Border
+                    Grid.Column="1"
+                    BorderBrush="Gray"
+                    BorderThickness="1" />
+            </Grid>
+            <Grid
+                x:Name="ChartsGrid"
+                Grid.Column="1"
+                PreviewMouseLeftButtonDown="ChartInstrumentAction">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <ContentPresenter Margin="4" Content="{Binding Chart}" />
+                <ContentPresenter
+                    Grid.Column="1"
+                    Margin="4"
+                    Content="{Binding Chart2}" />
+            </Grid>
+            <Grid
+                Grid.Column="1"
+                Width="8"
+                HorizontalAlignment="Left">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Button Grid.Row="1" Click="HidePalette">
+                    <Button.Content>
+                        <Figures:Arrow x:Name="LeftArrow" ArrowDirection="Left" />
+                    </Button.Content>
+                </Button>
+            </Grid>
+        </Grid>
+    </Grid>
+</Core:ChartShell>

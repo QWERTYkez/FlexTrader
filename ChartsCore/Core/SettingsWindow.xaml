@@ -16,20 +16,38 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 !-->
 
-<Local:ChartWindow
-    x:Class="FlexTrader.MVVM.Views.MainView"
+<Window
+    x:Class="ChartsCore.Core.SettingsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Local="clr-namespace:ChartsCore.Core;assembly=ChartsCore"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:FlexTrader.MVVM.Views"
+    xmlns:local="clr-namespace:ChartsCore.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="MainView"
-    MinWidth="500"
-    MinHeight="500"
-    Background="Transparent"
+    Title="Settings"
+    Width="550"
+    Height="450"
+    ResizeMode="CanResize"
+    Topmost="True"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="ToolWindow"
     mc:Ignorable="d">
-    <Grid>
-        <ContentPresenter x:Name="Content" />
+    <Grid Background="#FF1E1E1E">
+        <TabControl>
+            <TabItem Header="Style">
+                <ScrollViewer>
+                    <StackPanel x:Name="BaseSP" />
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="SP1">
+                <ScrollViewer>
+                    <StackPanel x:Name="SP1" />
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="SP2">
+                <ScrollViewer>
+                    <StackPanel x:Name="SP2" />
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
     </Grid>
-</Local:ChartWindow>
+</Window>

@@ -1,4 +1,4 @@
-﻿<!--
+﻿/* 
     Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
 
     This file is part of FlexTrader
@@ -14,22 +14,29 @@
 
     You should have received a copy of the GNU General Public License
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
-!-->
+*/
 
-<Local:ChartWindow
-    x:Class="FlexTrader.MVVM.Views.MainView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Local="clr-namespace:ChartsCore.Core;assembly=ChartsCore"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:FlexTrader.MVVM.Views"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="MainView"
-    MinWidth="500"
-    MinHeight="500"
-    Background="Transparent"
-    mc:Ignorable="d">
-    <Grid>
-        <ContentPresenter x:Name="Content" />
-    </Grid>
-</Local:ChartWindow>
+using System;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Data;
+
+namespace FlexUserConrols.Converters
+{
+    public class ElementToWidthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double xx = 0;
+            if (value != null)
+            {
+                xx = (value as FrameworkElement).Width + 5;
+            }
+
+            return xx;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            throw new Exception();
+    }
+}

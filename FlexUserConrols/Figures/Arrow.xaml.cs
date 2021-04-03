@@ -16,17 +16,34 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core;
+using System.Windows;
+using System.Windows.Controls;
 
-namespace FlexTrader.MVVM.Views
+namespace FlexUserConrols.Figures
 {
-    public partial class MainView : ChartWindow
+    public class Arrow : Control
     {
-        public MainView()
-        {
-            InitializeComponent();
+        public static readonly DependencyProperty ArrowDirectionProperty = DependencyProperty.Register("ArrowDirection",
+            typeof(Direction), typeof(Arrow), new PropertyMetadata { DefaultValue = Direction.Right });
 
-            Content.Content = new ChartsCore.ChartViev(this);
+        public Direction ArrowDirection
+        {
+            get { return (Direction)GetValue(ArrowDirectionProperty); }
+            set { SetValue(ArrowDirectionProperty, value); }
         }
+
+        static Arrow()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(Arrow),
+                new FrameworkPropertyMetadata(typeof(Arrow)));
+        }
+    }
+
+    public enum Direction
+    {
+        Right,
+        Left,
+        Up,
+        Down
     }
 }
