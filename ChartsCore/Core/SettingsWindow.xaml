@@ -23,7 +23,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ChartsCore.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:res="clr-namespace:ChartsCore.Resources"
     Title="Settings"
     Width="550"
     Height="450"

@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core.Exchanges;
+using FlexExchangesCore;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -45,11 +45,11 @@ namespace ChartsCore.Core
             Binance ex = new Binance();
             //ex.GeneralInfo();
 
-            NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15).Select(c => c as ICandle).ToList();
+            NewCandles = ex.GetCandles("ETH", "USDT", CandleIntervalKey.m15).Select(c => c).ToList();
         }
 
         public double TickSize { get; set; }
-        public List<ICandle> NewCandles { get; set; }
+        public List<Candle> NewCandles { get; set; }
 
         public SolidColorBrush ChartBackground { get; set; }
         public double BaseFontSize { get; set; }

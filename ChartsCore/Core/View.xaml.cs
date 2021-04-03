@@ -19,6 +19,7 @@
 using ChartsCore.Core.BottomIndicators;
 using ChartsCore.Core.CenterIndicators;
 using ChartsCore.Core.StandardModules;
+using FlexExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -254,9 +255,9 @@ namespace ChartsCore.Core
         public CursorPosition CursorPosition { get => CursorModule.CursorPosition; }
         public Grid ChartGrid { get => ChartGRD; }
         public bool Manipulating { get => HooksModule.Manipulating; }
-        public List<ICandle> AllCandles { get => CandlesModule.AllCandles; }
-        public event Action<List<ICandle>> CandlesChanged;
-        public event Action<IEnumerable<ICandle>> AllHorizontalReset;
+        public List<Candle> AllCandles { get => CandlesModule.AllCandles; }
+        public event Action<List<Candle>> CandlesChanged;
+        public event Action<IEnumerable<Candle>> AllHorizontalReset;
         public event Action<double> NewXScale;
         public event Action<double> NewXTrans;
         public string FSF { get => PriceLineModule.Fsf; }

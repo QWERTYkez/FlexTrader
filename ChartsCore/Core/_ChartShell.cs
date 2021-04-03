@@ -18,10 +18,12 @@
 
 using ChartsCore.Core.CenterIndicators;
 using ChartsCore.Core.StandardModules;
-using ChartsCore.Resources;
+using FlexUserConrols.Buttons;
+using FlexUserConrols.ContentControls;
+using FlexUserConrols.Figures;
+using FlexUserConrols.Pickers;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -297,7 +299,7 @@ namespace ChartsCore.Core
                                             Foreground = Brushes.White,
                                             Locked = set.GetBool()
                                         };
-                                        var lpb = new PaletteButtonLeft()
+                                        var lpb = new PaletteButton(PaletteType.Vertical)
                                         {
                                             VerticalAlignment = VerticalAlignment.Center,
                                             Margin = new Thickness(2.5, 0, 2.5, 0),
@@ -319,7 +321,7 @@ namespace ChartsCore.Core
                                         BaseButtonsGrd.Children.Add(mv);
                                         break;
                                     case SetType.Delete:
-                                        var dpb = new PaletteButtonLeft()
+                                        var dpb = new PaletteButton(PaletteType.Vertical)
                                         {
                                             VerticalAlignment = VerticalAlignment.Center,
                                             Margin = new Thickness(2.5, 0, 2.5, 0),
@@ -342,8 +344,8 @@ namespace ChartsCore.Core
                                         break;
                                     case SetType.Brush:
                                         var cp = new ColorPicker(set.GetBrush(), set.SetBrush) { CornerRadius = 10 };
-                                        cp.Picker.MouseEnter += (s, e) => this.PreviewMouseLeftButtonDown -= SetMenu;
-                                        cp.Picker.MouseLeave += (s, e) => this.PreviewMouseLeftButtonDown += SetMenu;
+                                        cp.PickerMouseEnter += () => this.PreviewMouseLeftButtonDown -= SetMenu;
+                                        cp.PickerMouseLeave += () => this.PreviewMouseLeftButtonDown += SetMenu;
                                         WP.Children.Add(fe = new Sliding
                                         {
                                             Background = Brushes.Teal,

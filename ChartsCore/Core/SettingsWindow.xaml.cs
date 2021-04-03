@@ -16,8 +16,9 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core;
-using ChartsCore.Resources;
+using FlexUserConrols.Buttons;
+using FlexUserConrols.Figures;
+using FlexUserConrols.Pickers;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -149,7 +150,7 @@ namespace ChartsCore.Core
                             Foreground = Brushes.White,
                             Locked = LockSetting.GetBool()
                         };
-                        var lpb = new PaletteButtonLeft()
+                        var lpb = new PaletteButton(PaletteType.Vertical)
                         {
                             VerticalAlignment = VerticalAlignment.Center,
                             Margin = new Thickness(0, 0, 2.5, 0),
@@ -167,7 +168,7 @@ namespace ChartsCore.Core
 
                     {// Delete button
 
-                        var lpb = new PaletteButtonLeft()
+                        var lpb = new PaletteButton(PaletteType.Vertical)
                         {
                             VerticalAlignment = VerticalAlignment.Center,
                             Margin = new Thickness(2.5, 0, 0, 0),

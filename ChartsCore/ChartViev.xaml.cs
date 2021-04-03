@@ -17,7 +17,8 @@
 */
 
 using ChartsCore.Core;
-using ChartsCore.Resources;
+using FlexUserConrols.Buttons;
+using FlexUserConrols.Figures;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,7 +53,7 @@ namespace ChartsCore
         private Popup Pop1;
         private Popup Pop2;
 
-        private string CurrentInstrument => (string)(((PaletteButtonLeft)(Palette.Tag)).Tag);
+        private string CurrentInstrument => (string)(((PaletteButton)(Palette.Tag)).Tag);
 
         private void PaletteButton_MouseEnter(object sender, MouseEventArgs e)
         {
@@ -113,8 +114,8 @@ namespace ChartsCore
         }
         private void PBC(object sender, RoutedEventArgs e)
         {
-            if (Palette.Tag is PaletteButtonLeft lbtn) lbtn.IsActive = false;
-            var btn = sender as PaletteButtonLeft;
+            if (Palette.Tag is PaletteButton lbtn) lbtn.IsActive = false;
+            var btn = sender as PaletteButton;
             btn.IsActive = true;
             Palette.Tag = btn;
             SetInsrument((string)btn.Tag);
@@ -123,7 +124,7 @@ namespace ChartsCore
         {
             Dispatcher.Invoke(() =>
             {
-                if (Palette.Tag is PaletteButtonLeft lbtn) lbtn.IsActive = false;
+                if (Palette.Tag is PaletteButton lbtn) lbtn.IsActive = false;
                 var btn = Name switch
                 {
                     "Interacion" => PaletteButtonInteracion,
@@ -136,8 +137,8 @@ namespace ChartsCore
         }
         private void PBCmenu(object sender, RoutedEventArgs e)
         {
-            var newbtn = sender as PaletteButtonLeft;
-            var lastbtn = ((Grid)((Popup)((Border)((Grid)newbtn.Parent).Parent).Parent).Parent).Children[0] as PaletteButtonLeft;
+            var newbtn = sender as PaletteButton;
+            var lastbtn = ((Grid)((Popup)((Border)((Grid)newbtn.Parent).Parent).Parent).Parent).Children[0] as PaletteButton;
             if (CurrentInstrument == (string)lastbtn.Tag)
             {
                 SetInsrument((string)newbtn.Tag);

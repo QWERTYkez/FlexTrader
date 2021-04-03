@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core.StandardModules;
+using FlexExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +52,7 @@ namespace ChartsCore.Core.BottomIndicators.Indicators
 
         private protected override string SetsName => "Volume";
 
-        private protected override void GetBaseMinMax(IEnumerable<ICandle> currentCandles, out double min, out double max)
+        private protected override void GetBaseMinMax(IEnumerable<Candle> currentCandles, out double min, out double max)
         { min = 0; max = Convert.ToDouble(currentCandles.Max(c => c.Volume)); }
         private protected override void GetBaseMinMax(DateTime tA, DateTime tB, out double min, out double max)
         { 

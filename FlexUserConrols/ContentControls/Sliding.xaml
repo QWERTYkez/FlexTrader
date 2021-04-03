@@ -1,0 +1,111 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:FlexUserConrols.ContentControls">
+
+    <Style TargetType="{x:Type local:Sliding}">
+        <Setter Property="Background" Value="Lime" />
+        <Setter Property="Margin" Value="2.5,0,2.5,0" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:Sliding}">
+                    <Border
+                        Height="{TemplateBinding Height}"
+                        Margin="{TemplateBinding Margin}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="Black"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Label
+                                VerticalAlignment="Center"
+                                Content="{TemplateBinding Title}"
+                                FontWeight="Bold"
+                                Foreground="{TemplateBinding Foreground}" />
+                            <Grid
+                                x:Name="grda"
+                                Grid.Column="1"
+                                Width="0">
+                                <ContentPresenter
+                                    x:Name="ctprs"
+                                    MaxHeight="30"
+                                    Margin="0,5,5,5" />
+                            </Grid>
+                        </Grid>
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="MouseEnter">
+                                <EventTrigger.Actions>
+                                    <BeginStoryboard>
+                                        <Storyboard TargetProperty="Width" TargetName="grda">
+                                            <DoubleAnimation
+                                                From="0"
+                                                To="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                                Duration="0:0:0.2" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger.Actions>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="MouseLeave">
+                                <EventTrigger.Actions>
+                                    <BeginStoryboard>
+                                        <Storyboard TargetProperty="Width" TargetName="grda">
+                                            <DoubleAnimation
+                                                From="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                                To="0"
+                                                Duration="0:0:0.2" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger.Actions>
+                            </EventTrigger>
+                        </Border.Triggers>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="True" />
+                                <Condition Property="Freeze" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="True" />
+                                <Condition Property="Freeze" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="False" />
+                                <Condition Property="Freeze" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="{Binding ContentWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="AlwaysOpen" Value="False" />
+                                <Condition Property="Freeze" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="grda" Property="MinWidth" Value="0" />
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

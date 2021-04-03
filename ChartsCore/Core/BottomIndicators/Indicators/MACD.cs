@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using ChartsCore.Core.StandardModules;
+using FlexExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,7 +122,7 @@ namespace ChartsCore.Core.BottomIndicators.Indicators
 
         private protected override void DestroyThis() { }
 
-        private protected override void GetBaseMinMax(IEnumerable<ICandle> currentCandles, 
+        private protected override void GetBaseMinMax(IEnumerable<Candle> currentCandles, 
             out double min, out double max)
         {
             var TimeA = currentCandles.First().TimeStamp;

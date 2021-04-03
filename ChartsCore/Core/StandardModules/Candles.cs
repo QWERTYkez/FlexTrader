@@ -16,6 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
+using FlexExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,9 +31,9 @@ namespace ChartsCore.Core.StandardModules
 {
     public class CandlesModule : ChartModule
     {
-        private List<ICandle> allCandles = new List<ICandle>();
-        public event Action<List<ICandle>> CandlesChanged;
-        public List<ICandle> AllCandles { get => allCandles; private set 
+        private List<Candle> allCandles = new List<Candle>();
+        public event Action<List<Candle>> CandlesChanged;
+        public List<Candle> AllCandles { get => allCandles; private set 
             {
                 allCandles = value;
                 CandlesChanged.Invoke(value);
@@ -116,13 +117,13 @@ namespace ChartsCore.Core.StandardModules
         private double Delta = 1;
         private double Min;
 
-        public void NewCandles(List<ICandle> NewCandles)
+        public void NewCandles(List<Candle> NewCandles)
         {
             DeltaTime = (NewCandles[1].TimeStamp - NewCandles[0].TimeStamp);
             Chart.Shell.ResetClips();
             AllCandles.Clear();  AddCandles(NewCandles);
         }
-        public void AddCandles(List<ICandle> NewCandles)
+        public void AddCandles(List<Candle> NewCandles)
         {
             AllCandles.AddRange(NewCandles);
             AllCandles = AllCandles.OrderBy(c => c.TimeStamp).ToList();
@@ -171,7 +172,7 @@ namespace ChartsCore.Core.StandardModules
 
         private IEnumerable<CandlesModule> Clips => Chart.Shell.ClipsCandles[DeltaTime];
         #region Перерассчет шкал
-        public event Action<IEnumerable<ICandle>> AllHorizontalReset;
+        public event Action<IEnumerable<Candle>> AllHorizontalReset;
         private bool VerticalLock = true;
         public async void VerticalReset()
         {
@@ -187,7 +188,7 @@ namespace ChartsCore.Core.StandardModules
             }
             await PriceLineModule.Redraw();
         }
-        public void HorizontalReset(IEnumerable<ICandle> currentCandles = null)
+        public void HorizontalReset(IEnumerable<Candle> currentCandles = null)
         {
             TimeLineModule.Redraw();
             if (currentCandles == null)
@@ -303,7 +304,7 @@ namespace ChartsCore.Core.StandardModules
             return Task.Run(async () =>
             {
                 var Y = -vec.X / 50;
-                IEnumerable<ICandle> currentCandles = null;
+                IEnumerable<Candle> currentCandles = null;
                 if (vec.X > 0)
                 {
                     CurrentScale.X = LastScaleX / (1 - Y);
@@ -423,7 +424,7 @@ namespace ChartsCore.Core.StandardModules
                 if (x != WhellScallingCounter || x == 0) return;
                 WhellScallingCounter = 0;
 
-                IEnumerable<ICandle> currentCandles = null;
+                IEnumerable<Candle> currentCandles = null;
                 if (x > 0)
                 {
                     var nScale = CurrentScale.X * x switch

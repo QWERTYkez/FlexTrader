@@ -20,10 +20,10 @@
     x:Class="ChartsCore.Core.View"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Figures="clr-namespace:FlexUserConrols.Figures;assembly=FlexUserConrols"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ChartsCore.Core"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:res="clr-namespace:ChartsCore.Resources"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -156,7 +156,7 @@
                     Click="ShowBaseSettings"
                     Foreground="{x:Null}">
                     <Button.Content>
-                        <res:Gear Foreground="{Binding FontBrush}" />
+                        <Figures:Gear Foreground="{Binding FontBrush}" />
                     </Button.Content>
                 </Button>
                 <Button
@@ -165,7 +165,7 @@
                     BorderBrush="{x:Null}"
                     Foreground="{x:Null}">
                     <Button.Content>
-                        <res:Gear Foreground="{Binding FontBrush}" />
+                        <Figures:Gear Foreground="{Binding FontBrush}" />
                     </Button.Content>
                 </Button>
             </Grid>

@@ -17,6 +17,7 @@
 */
 
 using ChartsCore.Core.StandardModules;
+using FlexExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -298,7 +299,7 @@ namespace ChartsCore.Core.BottomIndicators
 
         private protected readonly DrawingVisual IndicatorVisualBase = new DrawingVisual();
         private protected readonly DrawingVisual IndicatorVisualSecond;
-        private protected List<ICandle> AllCandles { get => Chart.AllCandles; }
+        private protected List<Candle> AllCandles { get => Chart.AllCandles; }
         private protected double GrdHeight { get => BaseGrd.ActualHeight; }
         private protected double GrdWidth { get => BaseGrd.ActualWidth; }
         private protected DateTime StartTime { get => Chart.StartTime; }
@@ -306,7 +307,7 @@ namespace ChartsCore.Core.BottomIndicators
 
         private protected abstract void DestroyThis();
         private protected abstract void GetBaseMinMax(DateTime tA, DateTime tB, out double min, out double max);
-        private protected abstract void GetBaseMinMax(IEnumerable<ICandle> currentCandles, out double min, out double max);
+        private protected abstract void GetBaseMinMax(IEnumerable<Candle> currentCandles, out double min, out double max);
         private protected abstract void Calculate();
         private protected abstract void Rendering();
         private protected void Redraw()
@@ -365,7 +366,7 @@ namespace ChartsCore.Core.BottomIndicators
 
             await RedrawScale();
         }
-        public void HorizontalReset(IEnumerable<ICandle> currentCandles = null)
+        public void HorizontalReset(IEnumerable<Candle> currentCandles = null)
         {
             Task.Run(() =>
             {
