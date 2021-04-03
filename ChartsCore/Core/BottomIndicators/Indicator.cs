@@ -17,7 +17,7 @@
 */
 
 using ChartsCore.Core.StandardModules;
-using FlexExchangesCore;
+using ExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

@@ -16,7 +16,7 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using FlexExchangesCore;
+using ExchangesCore;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;

@@ -1,0 +1,532 @@
+﻿<!--
+    Copyright ©  2020  Andrej Melekhin <QWERTYkez@outlook.com>.
+
+    This file is part of FlexTrader
+    FlexTrader is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FlexTrader is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
+!-->
+
+<UserControl
+    x:Class="UserConrols.Pickers.ColorPicker"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:UserConrols.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="500"
+    d:DesignWidth="705"
+    Background="Transparent"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:BrushToColorConverter x:Key="BrushToColorConverter" />
+        <converters:BrushToHexConverter x:Key="BrushToHexConverter" />
+        <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
+        <Style TargetType="{x:Type TabControl}">
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{StaticResource TabItem.Selected.Background}" />
+            <Setter Property="BorderBrush" Value="{StaticResource TabItem.Selected.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabControl}">
+                        <Grid
+                            x:Name="templateRoot"
+                            ClipToBounds="true"
+                            KeyboardNavigation.TabNavigation="Local"
+                            SnapsToDevicePixels="true">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="ColumnDefinition0" />
+                                <ColumnDefinition x:Name="ColumnDefinition1" Width="0" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition x:Name="RowDefinition0" Height="Auto" />
+                                <RowDefinition x:Name="RowDefinition1" Height="*" />
+                            </Grid.RowDefinitions>
+                            <TabPanel
+                                x:Name="headerPanel"
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="2,2,2,0"
+                                Panel.ZIndex="1"
+                                Background="{x:Null}"
+                                IsItemsHost="true"
+                                KeyboardNavigation.TabIndex="1" />
+                            <Border
+                                x:Name="contentPanel"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                KeyboardNavigation.DirectionalNavigation="Contained"
+                                KeyboardNavigation.TabIndex="2"
+                                KeyboardNavigation.TabNavigation="Local">
+                                <ContentPresenter
+                                    x:Name="PART_SelectedContentHost"
+                                    Margin="{TemplateBinding Padding}"
+                                    ContentSource="SelectedContent"
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="TabStripPlacement" Value="Bottom">
+                                <Setter TargetName="headerPanel" Property="Grid.Row" Value="1" />
+                                <Setter TargetName="contentPanel" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="RowDefinition0" Property="Height" Value="*" />
+                                <Setter TargetName="RowDefinition1" Property="Height" Value="Auto" />
+                                <Setter TargetName="headerPanel" Property="Margin" Value="2,0,2,2" />
+                            </Trigger>
+                            <Trigger Property="TabStripPlacement" Value="Left">
+                                <Setter TargetName="headerPanel" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="contentPanel" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="headerPanel" Property="Grid.Column" Value="0" />
+                                <Setter TargetName="contentPanel" Property="Grid.Column" Value="1" />
+                                <Setter TargetName="ColumnDefinition0" Property="Width" Value="Auto" />
+                                <Setter TargetName="ColumnDefinition1" Property="Width" Value="*" />
+                                <Setter TargetName="RowDefinition0" Property="Height" Value="*" />
+                                <Setter TargetName="RowDefinition1" Property="Height" Value="0" />
+                                <Setter TargetName="headerPanel" Property="Margin" Value="2,2,0,2" />
+                            </Trigger>
+                            <Trigger Property="TabStripPlacement" Value="Right">
+                                <Setter TargetName="headerPanel" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="contentPanel" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="headerPanel" Property="Grid.Column" Value="1" />
+                                <Setter TargetName="contentPanel" Property="Grid.Column" Value="0" />
+                                <Setter TargetName="ColumnDefinition0" Property="Width" Value="*" />
+                                <Setter TargetName="ColumnDefinition1" Property="Width" Value="Auto" />
+                                <Setter TargetName="RowDefinition0" Property="Height" Value="*" />
+                                <Setter TargetName="RowDefinition1" Property="Height" Value="0" />
+                                <Setter TargetName="headerPanel" Property="Margin" Value="0,2,2,2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter TargetName="templateRoot" Property="TextElement.Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Rectangle
+            Margin="0.5"
+            RadiusX="{Binding CR}"
+            RadiusY="{Binding CR}"
+            Stroke="Black"
+            StrokeThickness="1">
+            <Rectangle.Fill>
+                <ImageBrush
+                    ImageSource="ColorPickerAlphaBig.png"
+                    Stretch="None"
+                    TileMode="None" />
+            </Rectangle.Fill>
+        </Rectangle>
+        <Grid MouseDown="ShowPicker">
+            <Rectangle
+                Fill="{Binding NewBrush}"
+                RadiusX="{Binding CR}"
+                RadiusY="{Binding CR}"
+                Stroke="Black"
+                StrokeThickness="1" />
+            <Popup
+                x:Name="Picker"
+                Width="715"
+                Height="520">
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="0.05*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="0.05*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.05*" />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition Height="0.05*" />
+                    </Grid.RowDefinitions>
+
+                    <Thumb
+                        Grid.RowSpan="5"
+                        Grid.ColumnSpan="5"
+                        Background="#FF1E1E1E"
+                        DragDelta="Thumb_DragDelta" />
+
+                    <TabControl
+                        x:Name="ColorsTabControl"
+                        Grid.Row="1"
+                        Grid.RowSpan="2"
+                        Grid.Column="1"
+                        Width="565"
+                        Background="{x:Null}">
+                        <TabItem
+                            BorderBrush="#FF686868"
+                            BorderThickness="2"
+                            Header="Palette">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Height="408" PreviewMouseDown="MiddleGridMouseDown">
+                                    <Grid
+                                        x:Name="MiddleGrid"
+                                        Width="539"
+                                        Height="388"
+                                        Margin="10"
+                                        SnapsToDevicePixels="True">
+                                        <Grid.Background>
+                                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                <GradientStop Color="White" />
+                                                <GradientStop Offset="1" Color="{Binding BottomSliderBrush, Converter={StaticResource BrushToColorConverter}}" />
+                                            </LinearGradientBrush>
+                                        </Grid.Background>
+                                    </Grid>
+                                    <Grid
+                                        Width="539"
+                                        Height="388"
+                                        Margin="10"
+                                        SnapsToDevicePixels="True">
+                                        <Grid.Background>
+                                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                                <GradientStop Offset="1" Color="Black" />
+                                                <GradientStop Offset="0" Color="#00000000" />
+                                            </LinearGradientBrush>
+                                        </Grid.Background>
+                                    </Grid>
+
+                                    <Ellipse
+                                        x:Name="MiddleSlider"
+                                        Width="20"
+                                        Height="20"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Fill="{Binding MiddleSliderBrush}"
+                                        MouseDown="MiddleSliderMouseDown"
+                                        Stroke="Black"
+                                        StrokeThickness="1" />
+                                </Grid>
+
+                                <Grid Grid.Row="1">
+                                    <Grid
+                                        Height="20"
+                                        Margin="10"
+                                        PreviewMouseDown="BottomGridMouseDown">
+                                        <Rectangle Margin="10,5,10,5">
+                                            <Rectangle.Fill>
+                                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                    <GradientStop Offset="0" Color="Red" />
+
+                                                    <GradientStop Offset="0.1666667" Color="Yellow" />
+                                                    <GradientStop Offset="0.3333333" Color="Lime" />
+                                                    <GradientStop Offset="0.5" Color="Cyan" />
+                                                    <GradientStop Offset="0.6666667" Color="Blue" />
+                                                    <GradientStop Offset="0.8333333" Color="Magenta" />
+
+                                                    <GradientStop Offset="1" Color="Red" />
+                                                </LinearGradientBrush>
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+
+                                        <Ellipse
+                                            Width="10"
+                                            Height="10"
+                                            Margin="5"
+                                            HorizontalAlignment="Left"
+                                            Fill="Red" />
+                                        <Ellipse
+                                            Width="10"
+                                            Height="10"
+                                            Margin="5"
+                                            HorizontalAlignment="Right"
+                                            Fill="Red" />
+
+                                        <Grid x:Name="BottomGrid">
+                                            <Ellipse
+                                                x:Name="BottomSlider"
+                                                Width="20"
+                                                Height="20"
+                                                HorizontalAlignment="Left"
+                                                Fill="{Binding BottomSliderBrush}"
+                                                MouseDown="BottomSliderMouseDown"
+                                                Stroke="Black"
+                                                StrokeThickness="1" />
+                                        </Grid>
+
+                                    </Grid>
+                                </Grid>
+
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Standard">
+                            <ScrollViewer VerticalScrollBarVisibility="Visible">
+                                <WrapPanel
+                                    x:Name="Standard"
+                                    Height="672"
+                                    HorizontalAlignment="Left"
+                                    Orientation="Vertical" />
+                            </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+
+                    <Grid Grid.RowSpan="4" Grid.Column="3">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Label
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Content="Red"
+                                FontSize="16"
+                                Foreground="White" />
+                            <TextBox
+                                x:Name="RedTextBox"
+                                Grid.Column="1"
+                                Width="50"
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#FF2D2D30"
+                                FontSize="16"
+                                Foreground="White" />
+                            <Slider
+                                x:Name="RedSlider"
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Maximum="255"
+                                TickFrequency="1" />
+                        </Grid>
+
+                        <Grid Grid.Row="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Label
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Content="Green"
+                                FontSize="16"
+                                Foreground="White" />
+                            <TextBox
+                                x:Name="GreenTextBox"
+                                Grid.Column="1"
+                                Width="50"
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#FF2D2D30"
+                                FontSize="16"
+                                Foreground="White" />
+                            <Slider
+                                x:Name="GreenSlider"
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Maximum="255"
+                                TickFrequency="1" />
+                        </Grid>
+
+                        <Grid Grid.Row="7">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Label
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Content="Blue"
+                                FontSize="16"
+                                Foreground="White" />
+                            <TextBox
+                                x:Name="BlueTextBox"
+                                Grid.Column="1"
+                                Width="50"
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#FF2D2D30"
+                                FontSize="16"
+                                Foreground="White" />
+                            <Slider
+                                x:Name="BlueSlider"
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Maximum="255"
+                                TickFrequency="1" />
+                        </Grid>
+
+                        <Grid Grid.Row="9">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Label
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Content="Alpha"
+                                FontSize="16"
+                                Foreground="White" />
+                            <TextBox
+                                x:Name="AlphaTextBox"
+                                Grid.Column="1"
+                                Width="50"
+                                Height="30"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#FF2D2D30"
+                                FontSize="16"
+                                Foreground="White" />
+                            <Slider
+                                x:Name="AlphaSlider"
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Maximum="255"
+                                TickFrequency="1" />
+                        </Grid>
+
+                        <StackPanel Grid.Row="11">
+                            <Label
+                                HorizontalAlignment="Center"
+                                Content="HEX"
+                                FontSize="16"
+                                Foreground="White" />
+                            <TextBox
+                                Width="100"
+                                Height="30"
+                                VerticalAlignment="Center"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#FF2D2D30"
+                                FontSize="16"
+                                Foreground="White"
+                                Text="{Binding NewBrush, Converter={StaticResource BrushToHexConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="13" Height="50">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid
+                                Grid.Column="0"
+                                Width="49.5"
+                                Height="49.5"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <Grid.Background>
+                                    <ImageBrush
+                                        ImageSource="ColorPickerAlpha.png"
+                                        Stretch="None"
+                                        TileMode="None" />
+                                </Grid.Background>
+                            </Grid>
+                            <Grid
+                                Grid.Column="1"
+                                Width="49.5"
+                                Height="49.5"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <Grid.Background>
+                                    <ImageBrush
+                                        ImageSource="ColorPickerAlpha.png"
+                                        Stretch="None"
+                                        TileMode="None" />
+                                </Grid.Background>
+                            </Grid>
+
+                            <Grid
+                                Grid.Column="0"
+                                Background="{Binding LastBrush}"
+                                MouseDown="GetBackground" />
+                            <Grid Grid.Column="1" Background="{Binding NewBrush}" />
+
+                        </Grid>
+
+                        <Button
+                            Grid.Row="15"
+                            Height="30"
+                            VerticalContentAlignment="Center"
+                            Click="Apply"
+                            Content="Apply"
+                            FontSize="18"
+                            FontWeight="Bold" />
+
+                        <Button
+                            Grid.Row="1"
+                            Width="30"
+                            Height="30"
+                            HorizontalAlignment="Right"
+                            Background="Black"
+                            Click="Cancel"
+                            FontSize="18"
+                            FontWeight="Bold">
+                            <Path Stroke="White" StrokeThickness="2">
+                                <Path.Data>
+                                    <GeometryGroup>
+                                        <LineGeometry StartPoint="0,0" EndPoint="26,26" />
+                                        <LineGeometry StartPoint="26,0" EndPoint="0,26" />
+                                    </GeometryGroup>
+                                </Path.Data>
+                            </Path>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Popup>
+        </Grid>
+    </Grid>
+</UserControl>

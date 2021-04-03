@@ -19,7 +19,7 @@
 using ChartsCore.Core.BottomIndicators;
 using ChartsCore.Core.CenterIndicators;
 using ChartsCore.Core.StandardModules;
-using FlexExchangesCore;
+using ExchangesCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

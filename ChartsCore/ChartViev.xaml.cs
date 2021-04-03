@@ -17,8 +17,8 @@
 */
 
 using ChartsCore.Core;
-using FlexUserConrols.Buttons;
-using FlexUserConrols.Figures;
+using UserConrols.Buttons;
+using UserConrols.Figures;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

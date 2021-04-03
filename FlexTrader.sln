@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChartsCore", "ChartsCore\ChartsCore.csproj", "{EC10FB83-ADD7-4DD0-B3C1-173921313476}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexUserConrols", "FlexUserConrols\FlexUserConrols.csproj", "{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserConrols", "UserConrols\UserConrols.csproj", "{A0C51E13-137C-4BE4-9AD2-3B9D51C06A56}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexExchangesCore", "FlexExchangesCore\FlexExchangesCore.csproj", "{6A4F4315-C41B-49CA-8405-9B10C8558D7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExchangesCore", "ExchangesCore\ExchangesCore.csproj", "{6A4F4315-C41B-49CA-8405-9B10C8558D7B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlexTrader", "FlexTrader\FlexTrader.csproj", "{93C0185C-D240-43FF-94C9-DA10476E30CD}"
 EndProject
