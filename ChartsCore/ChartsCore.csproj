@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FlexExchangesCore\ExchangesCore.csproj" />
-    <ProjectReference Include="..\FlexUserConrols\UserConrols.csproj" />
+    <ProjectReference Include="..\ExchangesCore\ExchangesCore.csproj" />
+    <ProjectReference Include="..\UserControls\UserControls.csproj" />
   </ItemGroup>
 
   <ItemGroup>

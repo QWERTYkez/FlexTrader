@@ -18,10 +18,10 @@
 
 using ChartsCore.Core.CenterIndicators;
 using ChartsCore.Core.StandardModules;
-using UserConrols.Buttons;
-using UserConrols.ContentControls;
-using UserConrols.Figures;
-using UserConrols.Pickers;
+using UserControls.Buttons;
+using UserControls.ContentControls;
+using UserControls.Figures;
+using UserControls.Pickers;
 using System;
 using System.Collections.Generic;
 using System.Linq;

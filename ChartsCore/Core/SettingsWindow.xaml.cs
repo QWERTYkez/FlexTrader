@@ -16,9 +16,9 @@
     along with FlexTrader. If not, see <http://www.gnu.org/licenses/>.
 */
 
-using UserConrols.Buttons;
-using UserConrols.Figures;
-using UserConrols.Pickers;
+using UserControls.Buttons;
+using UserControls.Figures;
+using UserControls.Pickers;
 using System;
 using System.Collections.Generic;
 using System.Windows;

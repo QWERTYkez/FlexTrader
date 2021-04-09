@@ -17,8 +17,8 @@
 */
 
 using ChartsCore.Core;
-using UserConrols.Buttons;
-using UserConrols.Figures;
+using UserControls.Buttons;
+using UserControls.Figures;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
